@@ -1,0 +1,18 @@
+Package: odin.dust
+Title: Compile Odin to Dust
+Version: 0.0.1
+Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
+                    email = "rich.fitzjohn@gmail.com"),
+             person("John", "Lees", role = "aut"),
+             person("Imperial College of Science, Technology and Medicine",
+                    role = "cph"))
+Description: Less painful than it sounds, this package compiles an
+    odin model to use dust, our new stochastic model system. Supports
+    only a subset of odin models (discrete time stochastic models with
+    no interpolation and no delays).
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Language: en-GB
+Suggests:
+    testthat
