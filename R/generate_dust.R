@@ -6,7 +6,7 @@ generate_dust <- function(ir, options) {
   }
 
   features <- vlapply(dat$features, identity)
-  supported <- c("initial_time_dependent", "has_user", # "has_array",
+  supported <- c("initial_time_dependent", "has_user", "has_array",
                  "discrete", "has_stochastic")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
@@ -92,15 +92,15 @@ generate_dust_core_initial <- function(dat, rewrite) {
     } else {
       ## See odin.js:::generate_js_core_initial_conditions; some work
       ## required here to get this right, but it's not too hard.
-      browser()
-      lhs <- c_variable_reference(el, data_info, dat$meta$state, rewrite)
-      sprintf_safe(
-        "memcpy(%s, %s, %s * sizeof(double));",
-        lhs, rewrite(el$initial), rewrite(data_info$dimnames$length))
+      src <- rewrite(el$initial)
+      sprintf(
+        "std::copy(%s.begin(), %s.end(), %s.begin() + %s);",
+        src, src, dat$meta$state, rewrite(el$offset))
     }
   }
 
   if (length(dat$components$initial$equations)) {
+    message("generate_dust_core_initial (2)")
     browser()
     subs <- lapply(dat$data$variable$contents, function(x) rewrite(x$initial))
     eqs_initial <- dat$equations[dat$components$initial$equations]
@@ -186,7 +186,12 @@ dust_unpack_variable <- function(name, dat, state, rewrite) {
   x <- dat$data$variable$contents[[name]]
   data_info <- dat$data$elements[[name]]
   rhs <- dust_extract_variable(x, dat$data$elements, state, rewrite)
-  sprintf("const %s %s = %s;", data_info$storage_type, x$name, rhs)
+  if (data_info$rank == 0L) {
+    fmt <- "const %s %s = %s;"
+  } else {
+    fmt <- "const %s * %s = %s;"
+  }
+  sprintf(fmt, data_info$storage_type, x$name, rhs)
 }
 
 
@@ -195,10 +200,9 @@ dust_extract_variable <- function(x, data_elements, state, rewrite) {
   if (d$rank == 0L) {
     sprintf("%s[%s]", state, rewrite(x$offset))
   } else {
-    browser()
+    ## Using a wrapper here would be more C++'ish but is it needed?
     offset <- rewrite(x$offset)
     len <- rewrite(d$dimnames$length)
-    sprintf("%s.slice(%s, %s + %s)", state, offset, offset,
-            len)
+    sprintf("%s.data() + %s", state, offset)
   }
 }

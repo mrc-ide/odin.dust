@@ -47,13 +47,7 @@ generate_dust_equation_alloc <- function(eq, data_info, dat, rewrite) {
   lhs <- rewrite(eq$lhs)
   ctype <- data_info$storage_type
   len <- rewrite(data_info$dimnames$length)
-
-  browser()
-  ## TODO: this is fine for now, but if we know that some variables
-  ## have constant size, then we do not have to ever free them.  It's
-  ## fairly harmless though.
-  c(sprintf("Free(%s);", lhs),
-    sprintf("%s = (%s*) Calloc(%s, %s);", lhs, ctype, len, ctype))
+  sprintf("%s = std::vector<%s>(%s);", lhs, ctype, len)
 }
 
 
@@ -70,6 +64,7 @@ generate_dust_equation_user <- function(eq, data_info, dat, rewrite) {
   previous <- lhs
 
   if (eq$user$dim) {
+    message("generate_dust_equation_user (1)")
     browser()
     free <- sprintf("Free(%s);", lhs)
     len <- data_info$dimnames$length
@@ -97,6 +92,7 @@ generate_dust_equation_user <- function(eq, data_info, dat, rewrite) {
         '%s = user_get_scalar<%s>(%s, "%s", %s, %s, %s);',
         lhs, data_info$storage_type, user, eq$lhs, lhs, min, max)
     } else {
+      message("generate_dust_equation_user (2)")
       browser()
       if (rank == 1L) {
         dim <- rewrite(data_info$dimnames$length)

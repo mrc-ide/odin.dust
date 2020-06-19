@@ -27,6 +27,16 @@ names_if <- function(...) {
 }
 
 
+squote <- function(...) {
+  odin:::squote(...)
+}
+
+
+dust_array_access <- function(...) {
+  odin:::c_array_access(...)
+}
+
+
 cpp_function <- function(return_type, name, args, body) {
   args_str <- paste(sprintf("%s %s", names(args), unname(args)),
                     collapse = ", ")
