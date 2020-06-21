@@ -83,10 +83,10 @@ void user_check_array_rank(Rcpp::RObject x, const char *name) {
 
 template <size_t N>
 void user_check_array_dim(Rcpp::RObject x, const char *name,
-                          const std::array<size_t, N>& dim_expected) {
+                          const std::array<int, N>& dim_expected) {
   Rcpp::IntegerVector dim = x.attr("dim");
   for (size_t i = 0; i < N; ++i) {
-    if ((size_t) dim[i] != dim_expected[i]) {
+    if (dim[i] != dim_expected[i]) {
       Rf_error("Incorrect size of dimension %d of '%s' (expected %d)",
                i + 1, name, dim_expected[i]);
     }
@@ -95,7 +95,7 @@ void user_check_array_dim(Rcpp::RObject x, const char *name,
 
 template <>
 void user_check_array_dim<1>(Rcpp::RObject x, const char *name,
-                             const std::array<size_t, 1>& dim_expected) {
+                             const std::array<int, 1>& dim_expected) {
   if (object_length(x) != dim_expected[0]) {
     Rcpp::stop("Expected length %d value for '%s'", dim_expected[0], name);
   }
@@ -103,14 +103,14 @@ void user_check_array_dim<1>(Rcpp::RObject x, const char *name,
 
 template <size_t N>
 void user_set_array_dim(Rcpp::RObject x, const char *name,
-                          std::array<size_t, N>& dim) {
+                          std::array<int, N>& dim) {
   Rcpp::IntegerVector dim_given = x.attr("dim");
   std::copy(dim_given.begin(), dim_given.end(), dim.begin());
 }
 
 template <>
 void user_set_array_dim<1>(Rcpp::RObject x, const char *name,
-                           std::array<size_t, 1>& dim) {
+                           std::array<int, 1>& dim) {
   dim[0] = object_length(x);
 }
 
@@ -143,7 +143,7 @@ T user_get_scalar(Rcpp::List user, const char *name,
 template <typename T, size_t N>
 std::vector<T> user_get_array_fixed(Rcpp::List user, const char *name,
                                     std::vector<T> previous,
-                                    const std::array<size_t, N>& dim,
+                                    const std::array<int, N>& dim,
                                     T min, T max) {
   if (!user.containsElementNamed(name)) {
     if (previous.size() == 0) {
@@ -166,7 +166,7 @@ std::vector<T> user_get_array_fixed(Rcpp::List user, const char *name,
 template <typename T, size_t N>
 std::vector<T> user_get_array_variable(Rcpp::List user, const char *name,
                                        std::vector<T> previous,
-                                       std::array<size_t, N>& dim,
+                                       std::array<int, N>& dim,
                                        T min, T max) {
   if (!user.containsElementNamed(name)) {
     if (previous.size() == 0) {

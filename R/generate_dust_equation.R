@@ -66,7 +66,7 @@ generate_dust_equation_user <- function(eq, data_info, dat, rewrite) {
   if (eq$user$dim) {
     len <- data_info$dimnames$length
     ret <- c(
-      sprintf("std::array <size_t, %d> %s;", rank, len),
+      sprintf("std::array <int, %d> %s;", rank, len),
       sprintf(
         '%s = user_get_array_variable<%s, %s>(user, "%s", %s, %s, %s, %s);',
         lhs, storage_type, rank, eq$lhs, previous, len, min, max),
