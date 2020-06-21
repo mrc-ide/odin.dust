@@ -90,8 +90,6 @@ generate_dust_core_initial <- function(dat, rewrite) {
       lhs <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
       sprintf("  %s = %s.%s;", lhs, dat$meta$internal, el$initial)
     } else {
-      ## See odin.js:::generate_js_core_initial_conditions; some work
-      ## required here to get this right, but it's not too hard.
       src <- rewrite(el$initial)
       sprintf(
         "std::copy(%s.begin(), %s.end(), %s.begin() + %s);",
@@ -100,8 +98,6 @@ generate_dust_core_initial <- function(dat, rewrite) {
   }
 
   if (length(dat$components$initial$equations)) {
-    message("generate_dust_core_initial (2)")
-    browser()
     subs <- lapply(dat$data$variable$contents, function(x) rewrite(x$initial))
     eqs_initial <- dat$equations[dat$components$initial$equations]
     eqs_initial <- lapply(odin:::ir_substitute(eqs_initial, subs),
