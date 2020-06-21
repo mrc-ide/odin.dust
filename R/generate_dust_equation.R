@@ -64,27 +64,18 @@ generate_dust_equation_user <- function(eq, data_info, dat, rewrite) {
   previous <- lhs
 
   if (eq$user$dim) {
-    message("generate_dust_equation_user (1)")
-    browser()
-    free <- sprintf("Free(%s);", lhs)
     len <- data_info$dimnames$length
-    if (rank == 1L) {
-      ret <-
-        sprintf(
-          '%s = (%s*) user_get_array_dim(%s, %s, %s, "%s", %d, %s, %s, &%s);',
-          lhs, storage_type, user, is_integer, previous, eq$lhs, rank, min, max,
-          rewrite(len))
-    } else {
-      ret <- c(
-        sprintf("int %s[%d];", len, rank + 1),
-        sprintf(
-          '%s = (%s*) user_get_array_dim(%s, %s, %s, "%s", %d, %s, %s, %s);',
-          lhs, storage_type, user, is_integer, previous, eq$lhs, rank,
-          min, max, len),
-        sprintf("%s = %s[%d];", rewrite(len), len, 0),
-        sprintf("%s = %s[%d];",
-                vcapply(data_info$dimnames$dim, rewrite), len,
-                seq_len(rank)))
+    ret <- c(
+      sprintf("std::array <size_t, %d> %s;", rank, len),
+      sprintf(
+        '%s = user_get_array_variable<%s, %s>(user, "%s", %s, %s, %s, %s);',
+        lhs, storage_type, rank, eq$lhs, previous, len, min, max),
+      sprintf("%s = %s.size();", rewrite(len), lhs))
+    if (rank > 1L) {
+      ret <- c(ret,
+               sprintf("%s = %s[%d];",
+                       vcapply(data_info$dimnames$dim, rewrite), len,
+                       seq_len(rank) - 1))
     }
   } else {
     if (rank == 0L) {
@@ -92,17 +83,14 @@ generate_dust_equation_user <- function(eq, data_info, dat, rewrite) {
         '%s = user_get_scalar<%s>(%s, "%s", %s, %s, %s);',
         lhs, data_info$storage_type, user, eq$lhs, lhs, min, max)
     } else {
-      message("generate_dust_equation_user (2)")
-      browser()
       if (rank == 1L) {
         dim <- rewrite(data_info$dimnames$length)
       } else {
         dim <- paste(vcapply(data_info$dimnames$dim, rewrite), collapse = ", ")
       }
       ret <- sprintf(
-        '%s = (%s*) user_get_array(%s, %s, %s, "%s", %s, %s, %d, %s);',
-        lhs, storage_type, user, is_integer, previous, eq$lhs,
-        min, max, rank, dim)
+        '%s = user_get_array_fixed<%s, %s>(%s, "%s", %s, {%s}, %s, %s);',
+        lhs, storage_type, rank, user, eq$lhs, lhs, dim, min, max)
     }
   }
   ret

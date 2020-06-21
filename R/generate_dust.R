@@ -104,8 +104,8 @@ generate_dust_core_initial <- function(dat, rewrite) {
     browser()
     subs <- lapply(dat$data$variable$contents, function(x) rewrite(x$initial))
     eqs_initial <- dat$equations[dat$components$initial$equations]
-    eqs_initial <- lapply(ir_substitute(eqs_initial, subs),
-                          generate_c_equation, dat, rewrite)
+    eqs_initial <- lapply(odin:::ir_substitute(eqs_initial, subs),
+                          generate_dust_equation, dat, rewrite)
   } else {
     eqs_initial <- NULL
   }
@@ -151,9 +151,9 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 
   if (dat$features$has_user) {
     user_names <- vcapply(dat$user, "[[", "name")
-    user <- vcapply(user_names, generate_dust_compiled_create_user, dat,
-                    rewrite, USE.NAMES = FALSE)
-    body$add(user)
+    user <- lapply(user_names, generate_dust_compiled_create_user, dat,
+                   rewrite)
+    body$add(dust_flatten_eqs(user))
   }
 
   body$add(dust_flatten_eqs(eqs[dat$components$user$equations]))
@@ -168,11 +168,13 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 
 generate_dust_compiled_create_user <- function(name, dat, rewrite) {
   data_info <- dat$data$elements[[name]]
+  if (data_info$rank > 0L) {
+    return(NULL)
+  }
+
   eq_info <- dat$equations[[name]]
   if (!is.null(eq_info$user$default)) {
     rhs <- rewrite(eq_info$user$default)
-  } else if (data_info$rank > 0L) {
-    rhs <- character(0)
   } else if (data_info$storage_type == "double") {
     rhs <- "NA_REAL"
   } else if (data_info$storage_type == "int") {

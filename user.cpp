@@ -1,6 +1,9 @@
 #include <array>
 #include <Rcpp.h>
 
+// Control over user parameters; this will end up in support.hpp, and
+// get pulled into some code for direct testing.
+
 // These would be nice to make constexpr but the way that NA values
 // are defined in R's include files do not allow it.
 template <typename T>
@@ -184,4 +187,72 @@ std::vector<T> user_get_array_variable(Rcpp::List user, const char *name,
   user_check_array_value(ret, name, min, max);
 
   return ret;
+}
+
+
+// ----- below here is just use for testing and will be removed
+
+// [[Rcpp::export(rng = false)]]
+double test_user_get_scalar_double(Rcpp::List user, double previous,
+                                   double min, double max) {
+  return user_get_scalar<double>(user, "input", previous, min, max);
+}
+
+// [[Rcpp::export(rng = false)]]
+int test_user_get_scalar_int(Rcpp::List user, int previous,
+                             int min, int max) {
+  return user_get_scalar<int>(user, "input", previous, min, max);
+}
+
+// [[Rcpp::export(rng = false)]]
+std::vector<double> test_user_get_array_double(Rcpp::List user,
+                                               std::vector<double> previous,
+                                               std::vector<int> dim,
+                                               double min, double max) {
+  size_t rank = dim.size();
+  if (rank == 1) {
+    std::array<size_t, 1> dim_arr{(size_t) dim[0]};
+    return user_get_array_fixed<double, 1>(user, "input", previous, dim_arr,
+                                           min, max);
+  } else if (rank == 2) {
+    std::array<size_t, 2> dim_arr{(size_t) dim[0], (size_t) dim[1]};
+    return user_get_array_fixed<double, 2>(user, "input", previous, dim_arr,
+                                           min, max);
+  } else if (rank == 3) {
+    std::array<size_t, 3> dim_arr
+      {(size_t) dim[0], (size_t) dim[1], (size_t) dim[2]};
+    return user_get_array_fixed<double, 3>(user, "input", previous, dim_arr,
+                                           min, max);
+  } else {
+    std::vector<double> ret(0);
+    return ret;
+  }
+}
+
+// [[Rcpp::export(rng = false)]]
+Rcpp::List test_user_get_array_variable_double(Rcpp::List user,
+                                               std::vector<double> previous,
+                                               std::vector<int> dim,
+                                               double min, double max) {
+  std::vector<double> value;
+  size_t rank = dim.size();
+  if (rank == 1) {
+    std::array<size_t, 1> dim_arr{(size_t) dim[0]};
+    value = user_get_array_variable<double, 1>(user, "input", previous,
+                                               dim_arr, min, max);
+    std::copy(dim_arr.begin(), dim_arr.end(), dim.begin());
+  } else if (rank == 2) {
+    std::array<size_t, 2> dim_arr{(size_t) dim[0], (size_t) dim[1]};
+    value = user_get_array_variable<double, 2>(user, "input", previous,
+                                               dim_arr, min, max);
+    std::copy(dim_arr.begin(), dim_arr.end(), dim.begin());
+  } else if (rank == 3) {
+    std::array<size_t, 3>
+      dim_arr{(size_t) dim[0], (size_t) dim[1], (size_t) dim[2]};
+    value = user_get_array_variable<double, 3>(user, "input", previous,
+                                               dim_arr, min, max);
+    std::copy(dim_arr.begin(), dim_arr.end(), dim.begin());
+  }
+
+  return Rcpp::List::create(value, dim);
 }
