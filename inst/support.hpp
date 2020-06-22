@@ -96,7 +96,7 @@ void user_check_array_dim(Rcpp::RObject x, const char *name,
 template <>
 void user_check_array_dim<1>(Rcpp::RObject x, const char *name,
                              const std::array<int, 1>& dim_expected) {
-  if (object_length(x) != dim_expected[0]) {
+  if ((int)object_length(x) != dim_expected[0]) {
     Rcpp::stop("Expected length %d value for '%s'", dim_expected[0], name);
   }
 }
