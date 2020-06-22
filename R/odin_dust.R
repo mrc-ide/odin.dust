@@ -1,4 +1,4 @@
-odin_dust <- function(x) {
+odin_dust <- function(x, verbose = NULL) {
   xx <- substitute(x)
   if (is.symbol(xx)) {
     xx <- force(x)
@@ -7,12 +7,12 @@ odin_dust <- function(x) {
     ## See #88
     xx <- force(x)
   }
-  odin_dust_(xx)
+  odin_dust_(xx, verbose)
 }
 
 
-odin_dust_ <- function(x) {
-  options <- odin::odin_options(target = "dust")
+odin_dust_ <- function(x, verbose = NULL) {
+  options <- odin::odin_options(target = "dust", verbose = verbose)
   ir <- odin::odin_parse_(x, options)
   odin_dust_wrapper(ir, options)
 }
