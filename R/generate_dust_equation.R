@@ -58,7 +58,6 @@ generate_dust_equation_user <- function(eq, data_info, dat, rewrite) {
   lhs <- rewrite(eq$lhs)
   storage_type <- data_info$storage_type
   is_integer <- if (storage_type == "int") "true" else "false"
-  ## TODO: add things like NA_REAL to reserved words
   min <- rewrite(eq$user$min %||% "NA_REAL")
   max <- rewrite(eq$user$max %||% "NA_REAL")
   previous <- lhs
