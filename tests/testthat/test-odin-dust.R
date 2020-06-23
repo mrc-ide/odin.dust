@@ -66,12 +66,12 @@ test_that("user-vector handling test", {
 })
 
 
-test_that("can pass in a vector", {
+test_that("can pass in a fixed sized vector", {
   gen <- odin_dust({
     initial(x) <- 1
     update(x) <- tot
     y[] <- user()
-    dim(y) <- user()
+    dim(y) <- 10
     tot <- sum(y)
   }, verbose = FALSE)
 
