@@ -1,4 +1,9 @@
-##' Compile an odin model to work with dust
+##' Compile an odin model to work with dust.
+##'
+##' Note that this does not (yet) support the full odin output object,
+##' instead creating the more limited dust interface. However, for
+##' many uses this should be considerably faster than the interface
+##' that odin normally uses (built on dde).
 ##'
 ##' @title Create a dust odin model
 ##'

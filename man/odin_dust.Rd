@@ -19,5 +19,11 @@ be verbose.  Defaults to the value of the option
 \code{odin.verbose} or \code{FALSE} otherwise.}
 }
 \description{
-Compile an odin model to work with dust
+Compile an odin model to work with dust.
+}
+\details{
+Note that this does not (yet) support the full odin output object,
+instead creating the more limited dust interface. However, for
+many uses this should be considerably faster than the interface
+that odin normally uses (built on dde).
 }
