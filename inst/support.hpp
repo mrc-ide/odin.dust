@@ -185,3 +185,12 @@ std::vector<T> user_get_array_variable(Rcpp::List user, const char *name,
 
   return ret;
 }
+
+template <typename T>
+T odin_sum1(const std::vector<T>& x, size_t from, size_t to) {
+  T tot = 0.0;
+  for (size_t i = from; i < to; ++i) {
+    tot += x[i];
+  }
+  return tot;
+}

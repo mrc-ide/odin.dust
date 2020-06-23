@@ -66,6 +66,21 @@ test_that("user-vector handling test", {
 })
 
 
+test_that("can pass in a vector", {
+  gen <- odin_dust({
+    initial(x) <- 1
+    update(x) <- tot
+    y[] <- user()
+    dim(y) <- user()
+    tot <- sum(y)
+  })
+
+  y <- runif(10)
+  mod <- gen$new(list(y = y), 0, 1)
+  expect_equal(mod$run(1), matrix(sum(y)))
+})
+
+
 test_that("odin.dust required discrete model", {
   expect_error(
     odin_dust({
