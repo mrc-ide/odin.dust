@@ -1,6 +1,7 @@
 context("odin.dust")
 
 test_that("sir model smoke test", {
+  skip_if_not_installed("dde")
   gen <- odin_dust_("examples/sir.R", verbose = FALSE)
   gen_odin <- odin::odin_("examples/sir.R", verbose = FALSE)
 
