@@ -21,3 +21,4 @@ Suggests:
     Rcpp,
     dde,
     testthat
+RoxygenNote: 7.1.0

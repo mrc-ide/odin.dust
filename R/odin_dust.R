@@ -1,3 +1,13 @@
+##' Compile an odin model to work with dust
+##'
+##' @title Create a dust odin model
+##'
+##' @param x Either the name of a file to read, a text string (if
+##'   length is greater than 1 elements will be joined with newlines)
+##'   or an expression.
+##'
+##' @export
+##' @importFrom odin odin
 odin_dust <- function(x, verbose = NULL) {
   xx <- substitute(x)
   if (is.symbol(xx)) {
@@ -11,6 +21,8 @@ odin_dust <- function(x, verbose = NULL) {
 }
 
 
+##' @export
+##' @rdname odin_dust
 odin_dust_ <- function(x, verbose = NULL) {
   options <- odin::odin_options(target = "dust", verbose = verbose)
   ir <- odin::odin_parse_(x, options)
