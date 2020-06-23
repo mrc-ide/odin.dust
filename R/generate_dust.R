@@ -117,7 +117,7 @@ generate_dust_core_initial <- function(dat, rewrite) {
   body <- c(sprintf("std::vector<double> %s(%s);",
                     dat$meta$state, rewrite(dat$data$variable$length)),
             initial,
-            eqs_initial,
+            dust_flatten_eqs(eqs_initial),
             sprintf("return %s;", dat$meta$state))
   cpp_function("std::vector<double>", "initial", args, body)
 }

@@ -73,11 +73,26 @@ test_that("can pass in a vector", {
     y[] <- user()
     dim(y) <- user()
     tot <- sum(y)
-  })
+  }, verbose = FALSE)
 
   y <- runif(10)
   mod <- gen$new(list(y = y), 0, 1)
   expect_equal(mod$run(1), matrix(sum(y)))
+})
+
+
+test_that("multiline array expression", {
+  gen <- odin_dust({
+    x0[1] <- 1
+    x0[2] <- 1
+    x0[3:length(x)] <- x0[i - 1] + x0[i - 2]
+    initial(x[]) <- x0[i]
+    update(x[]) <- x[i]
+    dim(x0) <- 10
+    dim(x) <- length(x0)
+  }, verbose = FALSE)
+  mod <- gen$new(list(), 0, 1)
+  expect_equal(mod$state(), matrix(c(1, 1, 2, 3, 5, 8, 13, 21, 34, 55)))
 })
 
 

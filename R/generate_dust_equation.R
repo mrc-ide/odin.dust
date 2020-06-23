@@ -37,8 +37,8 @@ generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite) {
 
 generate_dust_equation_array <- function(eq, data_info, dat, rewrite) {
   lhs <- generate_dust_equation_array_lhs(eq, data_info, dat, rewrite)
-  lapply(eq$rhs, function(x)
-    generate_dust_equation_array_rhs(x$value, x$index, lhs, rewrite))
+  dust_flatten_eqs(lapply(eq$rhs, function(x)
+    generate_dust_equation_array_rhs(x$value, x$index, lhs, rewrite)))
 }
 
 
