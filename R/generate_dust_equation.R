@@ -96,11 +96,7 @@ generate_dust_equation_user <- function(eq, data_info, dat, rewrite) {
 
 
 generate_dust_equation_array_lhs <- function(eq, data_info, dat, rewrite) {
-  if (eq$type == "expression_array") {
-    index <- vcapply(eq$rhs[[1]]$index, "[[", "index")
-  } else {
-    index <- lapply(eq$rhs$index, "[[", "index")
-  }
+  index <- vcapply(eq$rhs[[1]]$index, "[[", "index")
   location <- data_info$location
 
   f <- function(i) {
