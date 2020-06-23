@@ -18,4 +18,5 @@ Imports:
     dust,
     odin
 Suggests:
+    Rcpp,
     testthat
