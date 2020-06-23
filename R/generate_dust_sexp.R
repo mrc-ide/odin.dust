@@ -95,6 +95,6 @@ generate_dust_sexp_sum <- function(args, data, meta) {
                           data, meta)
     arg_str <- paste(values, collapse = ", ")
 
-    sprintf_safe("odin_sum%d(%s)", length(i), arg_str)
+    sprintf("odin_sum%d(%s)", length(i), arg_str)
   }
 }

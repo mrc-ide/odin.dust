@@ -22,6 +22,11 @@ dust_flatten_eqs <- function(...) {
 }
 
 
+dust_fold_call <- function(...) {
+  odin:::c_fold_call(...)
+}
+
+
 names_if <- function(...) {
   odin:::names_if(...)
 }
