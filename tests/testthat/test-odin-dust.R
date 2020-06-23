@@ -1,8 +1,8 @@
 context("odin.dust")
 
 test_that("sir model smoke test", {
-  gen <- odin_dust_("sir.R", verbose = FALSE)
-  gen_odin <- odin::odin_("sir.R", verbose = FALSE)
+  gen <- odin_dust_("examples/sir.R", verbose = FALSE)
+  gen_odin <- odin::odin_("examples/sir.R", verbose = FALSE)
 
   n <- 10000
   y0 <- c(1000, 10, 0)
