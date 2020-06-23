@@ -45,3 +45,21 @@ test_that("vector handling test", {
   rr <- array(r, c(ns, nt, np))
   expect_equal(apply(rr, c(1, 3), sum), y2)
 })
+
+
+## This model is deterministic, but tests basic array behaviour,
+## including argument handling.
+test_that("user-vector handling test", {
+  gen <- odin_dust_("examples/array.R", verbose = FALSE)
+
+  r <- matrix(runif(10), 2, 5)
+  x0 <- matrix(runif(10), 2, 5)
+
+  mod <- gen$new(list(x0 = x0, r = r), 0, 1)
+
+  expect_equal(mod$state(), matrix(c(x0)))
+  expect_equal(mod$step(), 0)
+
+  mod$run(1)
+  expect_equal(mod$state(), matrix(c(x0 + r)))
+})
