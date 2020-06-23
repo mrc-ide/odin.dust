@@ -20,5 +20,6 @@ Imports:
 Suggests:
     Rcpp,
     dde,
+    mockery,
     testthat
 RoxygenNote: 7.1.0

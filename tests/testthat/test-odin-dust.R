@@ -129,3 +129,30 @@ test_that("odin.dust disallows output", {
     "Using unsupported features: 'has_delay'",
     fixed = TRUE)
 })
+
+
+test_that("NSE interface can accept a symbol and resolve to value", {
+  skip_if_not_installed("mockery")
+  path <- tempfile()
+  mock_target <- mockery::mock()
+  with_mock(
+    "odin.dust:::odin_dust_" = mock_target,
+    odin_dust(path))
+  mockery::expect_called(mock_target, 1)
+  expect_equal(
+    mockery::mock_args(mock_target)[[1]],
+    list(path, NULL))
+})
+
+
+test_that("NSE interface can accept a character vector", {
+  skip_if_not_installed("mockery")
+  mock_target <- mockery::mock()
+  with_mock(
+    "odin.dust:::odin_dust_" = mock_target,
+    odin_dust(c("a", "b", "c")))
+  mockery::expect_called(mock_target, 1)
+  expect_equal(
+    mockery::mock_args(mock_target)[[1]],
+    list(c("a", "b", "c"), NULL))
+})
