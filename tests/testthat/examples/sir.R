@@ -1,3 +1,4 @@
+# nolint start (can't cope with uppercase names here)
 update(S) <- S - n_SI
 update(I) <- I + n_SI - n_IR
 update(R) <- R + n_IR
@@ -13,3 +14,4 @@ S_ini <- user(1000)
 I_ini <- user()
 beta <- user(0.2)
 gamma <- user(0.1)
+# nolint end

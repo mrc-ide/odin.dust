@@ -1,4 +1,4 @@
-FUNCTIONS_RENAME <- c(
+FUNCTIONS_RENAME <- c( # nolint
   "%%" = "fmodr",
   "%/%" = "fintdiv",
   "^" = "std::pow",
@@ -9,7 +9,7 @@ FUNCTIONS_RENAME <- c(
   lgamma = "lgammafn",
   ceiling = "ceil")
 
-FUNCTIONS_MATH <- c(
+FUNCTIONS_MATH <- c( # nolint
   "sqrt",
   "exp", "expm1", "log", "log2", "log10", "log1p",
   "cos", "sin", "tan",
