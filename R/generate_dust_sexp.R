@@ -53,8 +53,8 @@ generate_dust_sexp <- function(x, data, meta) {
         ## useful most of the time).
         values[[1L]] <- sprintf("round(%s)", values[[1L]])
       }
-      ## TODO: take rng here from the metadata?
-      ret <- sprintf("rng.%s(%s)", fn, paste(values, collapse = ", "))
+      ret <- sprintf("%s.%s(%s)",
+                     meta$dust$rng, fn, paste(values, collapse = ", "))
     } else {
       if (any(names(odin:::FUNCTIONS_RENAME) == fn)) {
         fn <- odin:::FUNCTIONS_RENAME[[fn]]

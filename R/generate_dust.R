@@ -14,7 +14,7 @@ generate_dust <- function(ir, options) {
          paste(squote(unsupported), collapse = ", "))
   }
 
-  ## dat$meta$dust <- generate_dust_meta(dat$config$base, dat$meta$internal)
+  dat$meta$dust <- generate_dust_meta()
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta)
@@ -25,6 +25,11 @@ generate_dust <- function(ir, options) {
   create <- generate_dust_core_create(eqs, dat, rewrite)
 
   list(class = class, create = create)
+}
+
+
+generate_dust_meta <- function() {
+  list(rng = "rng")
 }
 
 
@@ -129,7 +134,7 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
   body <- dust_flatten_eqs(c(unpack, eqs[equations]))
   args <- c("size_t" = dat$meta$time,
             "const std::vector<double>&" = dat$meta$state,
-            "dust::RNG&" = "rng", # TODO: into metadata
+            "dust::RNG&" = dat$meta$dust$rng,
             "std::vector<double>&" = dat$meta$result)
 
   cpp_function("void", "update", args, body)
