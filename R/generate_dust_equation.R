@@ -9,7 +9,6 @@ generate_dust_equation <- function(eq, dat, rewrite) {
     expression_scalar = generate_dust_equation_scalar,
     expression_array = generate_dust_equation_array,
     alloc = generate_dust_equation_alloc,
-    copy = generate_dust_equation_copy,
     user = generate_dust_equation_user,
     stop("Unknown type"))
 
