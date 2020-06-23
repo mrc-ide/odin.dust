@@ -13,6 +13,10 @@ odin_dust_(x, verbose = NULL)
 \item{x}{Either the name of a file to read, a text string (if
 length is greater than 1 elements will be joined with newlines)
 or an expression.}
+
+\item{verbose}{Logical scalar indicating if the compilation should
+be verbose.  Defaults to the value of the option
+\code{odin.verbose} or \code{FALSE} otherwise.}
 }
 \description{
 Compile an odin model to work with dust

@@ -6,6 +6,10 @@
 ##'   length is greater than 1 elements will be joined with newlines)
 ##'   or an expression.
 ##'
+##' @param verbose Logical scalar indicating if the compilation should
+##'   be verbose.  Defaults to the value of the option
+##'   \code{odin.verbose} or \code{FALSE} otherwise.
+##'
 ##' @export
 ##' @importFrom odin odin
 odin_dust <- function(x, verbose = NULL) {
