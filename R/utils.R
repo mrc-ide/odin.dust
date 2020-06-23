@@ -27,11 +27,6 @@ dust_fold_call <- function(...) {
 }
 
 
-names_if <- function(...) {
-  odin:::names_if(...)
-}
-
-
 squote <- function(...) {
   odin:::squote(...)
 }
