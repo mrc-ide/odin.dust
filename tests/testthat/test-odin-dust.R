@@ -24,3 +24,24 @@ test_that("sir model smoke test", {
 
   expect_equal(colMeans(res[2, , ]), rowMeans(cmp[, 3, ]), tolerance = 0.01)
 })
+
+
+test_that("vector handling test", {
+  gen <- odin_dust_("examples/walk.R", verbose = FALSE)
+
+  ns <- 3
+  np <- 100
+  nt <- 5
+
+  mod <- gen$new(list(), 0L, np)
+  expect_equal(mod$state(), matrix(0, ns, np))
+  expect_equal(mod$step(), 0)
+
+  y1 <- mod$run(nt)
+  y2 <- mod$state()
+  expect_equal(y1, y2[1, , drop = FALSE])
+
+  r <- dust:::test_rng_norm(ns * nt * np, 1, 1)
+  rr <- array(r, c(ns, nt, np))
+  expect_equal(apply(rr, c(1, 3), sum), y2)
+})
