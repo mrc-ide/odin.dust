@@ -2,7 +2,7 @@ generate_dust <- function(ir, options) {
   dat <- odin::odin_ir_deserialise(ir)
 
   if (!dat$features$discrete) {
-    stop("Using 'dust' requires a discrete model")
+    stop("Using 'odin.dust' requires a discrete model")
   }
 
   features <- vlapply(dat$features, identity)

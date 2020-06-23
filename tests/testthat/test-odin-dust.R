@@ -64,3 +64,38 @@ test_that("user-vector handling test", {
   mod$run(1)
   expect_equal(mod$state(), matrix(c(x0 + r)))
 })
+
+
+test_that("odin.dust required discrete model", {
+  expect_error(
+    odin_dust({
+      deriv(x) <- 1
+      initial(x) <- 1
+    }),
+    "Using 'odin.dust' requires a discrete model",
+    fixed = TRUE)
+})
+
+
+test_that("odin.dust disallows output", {
+  expect_error(
+    odin_dust({
+      initial(x) <- 1
+      update(x) <- 1
+      output(y) <- 1
+    }),
+    "Using unsupported features: 'has_output'",
+    fixed = TRUE)
+})
+
+
+test_that("odin.dust disallows output", {
+  expect_error(
+    odin_dust({
+      initial(x) <- 1
+      update(x) <- dy
+      dy <- delay(x, 2)
+    }),
+    "Using unsupported features: 'has_delay'",
+    fixed = TRUE)
+})
