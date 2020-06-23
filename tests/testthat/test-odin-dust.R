@@ -96,6 +96,21 @@ test_that("multiline array expression", {
 })
 
 
+test_that("Do startup calculation", {
+  gen <- odin_dust({
+    initial(x) <- a
+    initial(y) <- 2
+    update(x) <- x
+    update(y) <- y
+    a <- step + 1
+  }, verbose = FALSE)
+  expect_equal(gen$new(list(), 0, 1)$state(),
+               matrix(c(1, 2)))
+  expect_equal(gen$new(list(), 10, 1)$state(),
+               matrix(c(11, 2)))
+})
+
+
 test_that("odin.dust required discrete model", {
   expect_error(
     odin_dust({

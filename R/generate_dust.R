@@ -93,7 +93,7 @@ generate_dust_core_initial <- function(dat, rewrite) {
     data_info <- dat$data$elements[[el$name]]
     if (data_info$rank == 0L) {
       lhs <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
-      sprintf("  %s = %s.%s;", lhs, dat$meta$internal, el$initial)
+      sprintf("%s = %s.%s;", lhs, dat$meta$internal, el$initial)
     } else {
       src <- rewrite(el$initial)
       sprintf(
@@ -116,8 +116,8 @@ generate_dust_core_initial <- function(dat, rewrite) {
   args <- c("size_t" = dat$meta$time)
   body <- c(sprintf("std::vector<double> %s(%s);",
                     dat$meta$state, rewrite(dat$data$variable$length)),
-            initial,
             dust_flatten_eqs(eqs_initial),
+            initial,
             sprintf("return %s;", dat$meta$state))
   cpp_function("std::vector<double>", "initial", args, body)
 }
