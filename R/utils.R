@@ -70,3 +70,11 @@ cpp_function <- function(return_type, name, args, body) {
 odin_dust_file <- function(path) {
   system.file(path, package = "odin.dust", mustWork = TRUE)
 }
+
+
+is_call <- function(expr, symbol) {
+  if (is.character(symbol)) {
+    symbol <- as.name(symbol)
+  }
+  is.recursive(expr) && identical(expr[[1L]], symbol)
+}

@@ -21,9 +21,7 @@ odin_dust <- function(x, verbose = NULL) {
   xx <- substitute(x)
   if (is.symbol(xx)) {
     xx <- force(x)
-  } else if (odin:::is_call(xx, quote(c)) &&
-             all(odin:::vlapply(xx[-1], is.character))) {
-    ## See #88
+  } else if (is_call(xx, quote(c)) && all(vlapply(xx[-1], is.character))) {
     xx <- force(x)
   }
   odin_dust_(xx, verbose)
