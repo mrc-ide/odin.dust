@@ -128,3 +128,16 @@ test_that("Generate sum code", {
     paste("odin_sum2(internal.m, 0, internal.dim_m_1,",
           "1, internal.dim_m_2, internal.dim_m_1)"))
 })
+
+
+test_that("renames", {
+  expect_equal(
+    generate_dust_sexp(list("gamma", "x"), NULL, NULL),
+    "std::tgamma(x)")
+  expect_equal(
+    generate_dust_sexp(list("lgamma", "x"), NULL, NULL),
+    "std::lgamma(x)")
+  expect_equal(
+    generate_dust_sexp(list("ceiling", "x"), NULL, NULL),
+    "std::ceil(x)")
+})
