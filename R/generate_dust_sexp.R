@@ -46,7 +46,7 @@ generate_dust_sexp <- function(x, data, meta) {
         ## This is a little extreme but is useful in at least some
         ## cases (and I don't imagine that returning NaN will be
         ## useful most of the time).
-        values[[1L]] <- sprintf("round(%s)", values[[1L]])
+        values[[1L]] <- sprintf("std::round(%s)", values[[1L]])
       }
       ret <- sprintf("%s.%s(%s)",
                      meta$dust$rng, fn, paste(values, collapse = ", "))

@@ -74,3 +74,20 @@ test_that("fold min", {
     generate_dust_sexp(list("min", "a", "b", "c"), NULL, NULL),
     "std::min(a, std::min(b, c))")
 })
+
+
+test_that("generate random number", {
+  meta <- list(dust = list(rng = "rng"))
+  expect_equal(
+    generate_dust_sexp(list("rbinom", "n", "p"), NULL, meta),
+    "rng.rbinom(std::round(n), p)")
+  expect_equal(
+    generate_dust_sexp(list("rpois", "lambda"), NULL, meta),
+    "rng.rbinom(lambda)")
+  expect_equal(
+    generate_dust_sexp(list("runif", "a", "b"), NULL, meta),
+    "rng.runif(a, b)")
+  expect_equal(
+    generate_dust_sexp(list("rnorm", "mu", "sd"), NULL, meta),
+    "rng.runif(mu, sd)")
+})
