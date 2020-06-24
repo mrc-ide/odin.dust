@@ -116,7 +116,7 @@ void user_set_array_dim<1>(Rcpp::RObject x, const char *name,
 
 template <typename T>
 T user_get_scalar(Rcpp::List user, const char *name,
-                  T previous, T min, T max) {
+                  const T previous, T min, T max) {
   T ret = previous;
   if (user.containsElementNamed(name)) {
     Rcpp::RObject x = user[name];
@@ -142,7 +142,7 @@ T user_get_scalar(Rcpp::List user, const char *name,
 
 template <typename T, size_t N>
 std::vector<T> user_get_array_fixed(Rcpp::List user, const char *name,
-                                    std::vector<T> previous,
+                                    const std::vector<T> previous,
                                     const std::array<int, N>& dim,
                                     T min, T max) {
   if (!user.containsElementNamed(name)) {
