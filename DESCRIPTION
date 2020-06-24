@@ -14,8 +14,14 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Language: en-GB
+URL: https://github.com/mrc-ide/odin.dust
+BugReports: https://github.com/mrc-ide/odin.dust/issues
 Imports:
     dust,
     odin
 Suggests:
+    Rcpp,
+    dde,
+    mockery,
     testthat
+RoxygenNote: 7.1.0

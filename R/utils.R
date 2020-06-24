@@ -1,3 +1,95 @@
 `%||%` <- function(a, b) { # nolint
   if (is.null(a)) b else a
 }
+
+
+vlapply <- function(x, fun, ...) {
+  vapply(x, fun, logical(1), ...)
+}
+
+viapply <- function(x, fun, ...) {
+  vapply(x, fun, integer(1), ...)
+}
+
+vcapply <- function(x, fun, ...) {
+  vapply(x, fun, character(1), ...)
+}
+
+
+collector <- function(...) {
+  odin:::collector(...)
+}
+
+
+dust_flatten_eqs <- function(...) {
+  odin:::c_flatten_eqs(...)
+}
+
+
+dust_fold_call <- function(...) {
+  odin:::c_fold_call(...)
+}
+
+
+squote <- function(...) {
+  odin:::squote(...)
+}
+
+
+dust_array_access <- function(target, index, data, meta) {
+  mult <- data$elements[[target]]$dimnames$mult
+
+  f <- function(i) {
+    index_i <- dust_minus_1(index[[i]], i > 1, data, meta)
+    if (i == 1) {
+      index_i
+    } else {
+      mult_i <- generate_dust_sexp(mult[[i]], data, meta)
+      sprintf("%s * %s", mult_i, index_i)
+    }
+  }
+
+  paste(vcapply(rev(seq_along(index)), f), collapse = " + ")
+}
+
+
+dust_minus_1 <- function(x, protect, data, meta) {
+  if (is.numeric(x)) {
+    generate_dust_sexp(x - 1L, data, meta)
+  } else {
+    x_expr <- generate_dust_sexp(x, data, meta)
+    sprintf(if (protect) "(%s - 1)" else "%s - 1", x_expr)
+  }
+}
+
+
+cpp_function <- function(return_type, name, args, body) {
+  args_str <- paste(sprintf("%s %s", names(args), unname(args)),
+                    collapse = ", ")
+  str <- sprintf("%s %s(%s)", return_type, name, args_str)
+  c(paste0(str, " {"), paste0("  ", body), "}")
+}
+
+
+odin_dust_file <- function(path) {
+  system.file(path, package = "odin.dust", mustWork = TRUE)
+}
+
+
+is_call <- function(expr, symbol) {
+  is.recursive(expr) && identical(expr[[1L]], as.name(symbol))
+}
+
+
+generate_dust_support_sum <- function(rank) {
+  if (rank == 1) {
+    list(name = "odin_sum1",
+         declaration = c(
+           "template <typename T>",
+           "T odin_sum1(const std::vector<T>& x, size_t from, size_t to);"),
+         definition = NULL)
+  } else {
+    lapply(odin:::generate_c_support_sum(rank), function(x)
+      sub("double*", "const std::vector<double>&", x, fixed = TRUE))
+  }
+}
