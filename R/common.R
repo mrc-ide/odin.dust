@@ -5,7 +5,7 @@ FUNCTIONS_RENAME <- c( # nolint
 
 ## Basically odin's FUNCTIONS_MATH:
 FUNCTIONS_STDLIB <- c( # nolint
-  "abs", "round", "floor", "trunc",
+  "abs", "round", "floor", "trunc", "beta",
   "sqrt",
   "exp", "expm1", "log", "log2", "log10", "log1p",
   "cos", "sin", "tan",
