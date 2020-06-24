@@ -90,6 +90,6 @@ generate_dust_support_sum <- function(rank) {
          definition = NULL)
   } else {
     lapply(odin:::generate_c_support_sum(rank), function(x)
-      sub("double*", "std::vector<double>", x, fixed = TRUE))
+      sub("double*", "const std::vector<double>&", x, fixed = TRUE))
   }
 }
