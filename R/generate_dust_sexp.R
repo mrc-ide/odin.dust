@@ -37,10 +37,6 @@ generate_dust_sexp <- function(x, data, meta) {
     } else if (fn == "log" && length(values) == 2L) {
       ret <- sprintf("(std::log(%s) / std::log(%s))",
                      values[[1L]], values[[2L]])
-    } else if (fn == "round") {
-      ## ensures same rounding behaviour of 0.5 as R:
-      digits <- if (length(values) == 2L) values[[2L]] else 0
-      ret <- sprintf("fround(%s, %s)", values[[1L]], digits)
     } else if (fn == "min" || fn == "max") {
       ret <- dust_fold_call(paste0("f", fn), values)
     } else if (fn == "sum" || fn == "odin_sum") {
@@ -56,8 +52,11 @@ generate_dust_sexp <- function(x, data, meta) {
       ret <- sprintf("%s.%s(%s)",
                      meta$dust$rng, fn, paste(values, collapse = ", "))
     } else {
-      if (any(names(odin:::FUNCTIONS_RENAME) == fn)) {
-        fn <- odin:::FUNCTIONS_RENAME[[fn]]
+      if (any(names(FUNCTIONS_RENAME) == fn)) {
+        if (fn == "round" && length(values) == 2) {
+          stop("odin.dust does not support 2-arg round")
+        }
+        fn <- FUNCTIONS_RENAME[[fn]]
       } else if (any(FUNCTIONS_MATH == fn)) {
         fn <- sprintf("std::%s", fn)
       } else {

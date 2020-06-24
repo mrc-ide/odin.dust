@@ -7,6 +7,8 @@ FUNCTIONS_RENAME <- c( # nolint
   min = "std::fmin",
   gamma = "gammafn",
   lgamma = "lgammafn",
+  # NOTE: no 2-arg around, possibly slightly different behaviour to R's round
+  round = "std::round",
   ceiling = "ceil")
 
 FUNCTIONS_MATH <- c( # nolint
