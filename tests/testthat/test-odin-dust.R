@@ -99,6 +99,29 @@ test_that("multiline array expression", {
 })
 
 
+test_that("Accept integers", {
+  gen <- odin_dust({
+    initial(x) <- 0
+    update(x) <- rbinom(n, p)
+    n <- user(integer = TRUE, min = 0)
+    p <- user(min = 0, max = 1)
+  }, verbose = FALSE)
+
+  mod <- gen$new(list(n = 10, p = 0.5), 0, 100)
+  expect_equal(mod$state(), matrix(0, 1, 100))
+  y <- mod$run(1)
+  cmp <- dust:::test_rng_binom(rep(10, 100), rep(0.5, 100), 1, 1)
+  expect_equal(y, matrix(cmp, 1, 100))
+
+  expect_error(
+    gen$new(list(p = 0.5), 0, 100),
+    "Expected a value for 'n'")
+  expect_error(
+    gen$new(list(n = NA_integer_, p = 0.5), 0, 100),
+    "Expected a value for 'n'")
+})
+
+
 test_that("Do startup calculation", {
   gen <- odin_dust({
     initial(x) <- a
