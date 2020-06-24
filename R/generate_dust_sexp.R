@@ -41,8 +41,7 @@ generate_dust_sexp <- function(x, data, meta) {
       ret <- dust_fold_call(paste0("f", fn), values)
     } else if (fn == "sum" || fn == "odin_sum") {
       ret <- generate_dust_sexp_sum(args, data, meta)
-    } else if (any(names(odin:::FUNCTIONS_STOCHASTIC) == fn)) {
-      stopifnot(fn %in% c("rbinom", "rnorm", "rpois", "runif"))
+    } else if (any(FUNCTIONS_STOCHASTIC == fn)) {
       if (fn == "rbinom") {
         ## This is a little extreme but is useful in at least some
         ## cases (and I don't imagine that returning NaN will be
