@@ -95,3 +95,36 @@ test_that("generate random number code", {
     generate_dust_sexp(list("rchisq", "df"), NULL, meta),
     "unsupported function 'rchisq'")
 })
+
+
+test_that("Generate sum code", {
+  internal <- list(internal = "internal")
+  scalar_int <- function(name) {
+    list(name = "dim_m",
+         location = "internal",
+         storage_type = "int",
+         rank = 0)
+  }
+  data <- list(elements = list(m = list(name = "m",
+                                        location = "internal",
+                                        storage_type = "double",
+                                        rank = 2,
+                                        dimnames = list(
+                                          length = "dim_m",
+                                          dim = c("dim_m_1", "dim_m_2"),
+                                          mult = c("", "dim_m_1"))),
+                               dim_m = scalar_int("dim_m"),
+                               dim_m_1 = scalar_int("dim_m_1"),
+                               dim_m_2 = scalar_int("dim_m_2")))
+  expect_equal(
+    generate_dust_sexp(list("sum", "m"), data, internal),
+    "odin_sum1(internal.m, 0, internal.dim_m)")
+
+  expr <- list("sum", "m",
+               1L, list("dim", "m", 1),
+               2L, list("dim", "m", 2))
+  expect_equal(
+    generate_dust_sexp(expr, data, internal),
+    paste("odin_sum2(internal.m, 0, internal.dim_m_1,",
+          "1, internal.dim_m_2, internal.dim_m_1)"))
+})
