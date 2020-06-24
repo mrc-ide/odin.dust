@@ -88,11 +88,14 @@ test_that("multiline array expression", {
     x0[3:length(x)] <- x0[i - 1] + x0[i - 2]
     initial(x[]) <- x0[i]
     update(x[]) <- x[i]
+    # Verify literal array access and array bounds
+    initial(y) <- x0[10]
+    update(y) <- x0[10]
     dim(x0) <- 10
     dim(x) <- length(x0)
   }, verbose = FALSE)
   mod <- gen$new(list(), 0, 1)
-  expect_equal(mod$state(), matrix(c(1, 1, 2, 3, 5, 8, 13, 21, 34, 55)))
+  expect_equal(mod$state(), matrix(c(55, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55)))
 })
 
 
