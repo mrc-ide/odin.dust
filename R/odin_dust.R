@@ -39,8 +39,13 @@ odin_dust_ <- function(x, verbose = NULL) {
 
 odin_dust_wrapper <- function(ir, options) {
   res <- generate_dust(ir, options)
-  support <- readLines(odin_dust_file("support.hpp"))
-  code <- c(res$class, support, res$create)
+
+  code <- c(
+    dust_flatten_eqs(lapply(res$support, "[[", "declaration")),
+    res$class,
+    dust_flatten_eqs(lapply(res$support, "[[", "definition")),
+    readLines(odin_dust_file("support.hpp")),
+    res$create)
 
   workdir <- options$workdir
   if (workdir == tempdir()) {

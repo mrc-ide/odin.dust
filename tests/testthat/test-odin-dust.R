@@ -137,6 +137,26 @@ test_that("Do startup calculation", {
 })
 
 
+test_that("Implement sum", {
+  gen <- odin_dust_("examples/sum.R", verbose = FALSE)
+  nr <- 5
+  nc <- 7
+  m <- matrix(runif(nr * nc), nr, nc)
+  mod <- gen$new(list(m = m), 0, 1)
+  mod$run(1)
+  y <- mod$state()
+  ## TODO: See #2
+  cmp <- odin::odin_("examples/sum.R", target = "r", verbose = FALSE)
+  yy <- cmp(m)$transform_variables(drop(y))
+  expect_equal(yy$tot1, sum(m))
+  expect_equal(yy$tot2, sum(m))
+  expect_equal(yy$v1, rowSums(m))
+  expect_equal(yy$v2, colSums(m))
+  expect_equal(yy$v3, rowSums(m[, 2:4]))
+  expect_equal(yy$v4, colSums(m[2:4, ]))
+})
+
+
 test_that("odin.dust required discrete model", {
   expect_error(
     odin_dust({

@@ -7,6 +7,10 @@ vlapply <- function(x, fun, ...) {
   vapply(x, fun, logical(1), ...)
 }
 
+viapply <- function(x, fun, ...) {
+  vapply(x, fun, integer(1), ...)
+}
+
 vcapply <- function(x, fun, ...) {
   vapply(x, fun, character(1), ...)
 }
@@ -74,4 +78,18 @@ odin_dust_file <- function(path) {
 
 is_call <- function(expr, symbol) {
   is.recursive(expr) && identical(expr[[1L]], as.name(symbol))
+}
+
+
+generate_dust_support_sum <- function(rank) {
+  if (rank == 1) {
+    list(name = "odin_sum1",
+         declaration = c(
+           "template <typename T>",
+           "T odin_sum1(const std::vector<T>& x, size_t from, size_t to);"),
+         definition = NULL)
+  } else {
+    lapply(odin:::generate_c_support_sum(rank), function(x)
+      sub("double*", "std::vector<double>", x, fixed = TRUE))
+  }
 }

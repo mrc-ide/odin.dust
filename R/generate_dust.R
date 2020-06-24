@@ -24,7 +24,18 @@ generate_dust <- function(ir, options) {
   class <- generate_dust_core_class(eqs, dat, rewrite)
   create <- generate_dust_core_create(eqs, dat, rewrite)
 
-  list(class = class, create = create)
+  used <- unique(unlist(lapply(dat$equations, function(x)
+    x$depends$functions), FALSE, FALSE))
+  support <- NULL
+  if ("odin_sum" %in% used) {
+    ranks <- sort(unique(viapply(dat$data$elements, "[[", "rank")))
+    ranks <- ranks[ranks > 0]
+    if (length(ranks) > 0L) {
+      support <- c(support, lapply(ranks, generate_dust_support_sum))
+    }
+  }
+
+  list(class = class, create = create, support = support)
 }
 
 
