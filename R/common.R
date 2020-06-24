@@ -1,6 +1,4 @@
 FUNCTIONS_RENAME <- c( # nolint
-  "%%" = "fmodr",
-  "%/%" = "fintdiv",
   gamma = "std::tgamma",
   lgamma = "std::lgamma",
   ceiling = "std::ceil")
