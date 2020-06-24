@@ -76,18 +76,22 @@ test_that("fold min", {
 })
 
 
-test_that("generate random number", {
+test_that("generate random number code", {
   meta <- list(dust = list(rng = "rng"))
   expect_equal(
     generate_dust_sexp(list("rbinom", "n", "p"), NULL, meta),
     "rng.rbinom(std::round(n), p)")
   expect_equal(
     generate_dust_sexp(list("rpois", "lambda"), NULL, meta),
-    "rng.rbinom(lambda)")
+    "rng.rpois(lambda)")
   expect_equal(
     generate_dust_sexp(list("runif", "a", "b"), NULL, meta),
     "rng.runif(a, b)")
   expect_equal(
     generate_dust_sexp(list("rnorm", "mu", "sd"), NULL, meta),
-    "rng.runif(mu, sd)")
+    "rng.rnorm(mu, sd)")
+
+  expect_error(
+    generate_dust_sexp(list("rchisq", "df"), NULL, meta),
+    "unsupported function 'rchisq'")
 })

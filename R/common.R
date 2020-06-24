@@ -1,25 +1,19 @@
 FUNCTIONS_RENAME <- c( # nolint
   "%%" = "fmodr",
   "%/%" = "fintdiv",
-  "^" = "std::pow",
-  abs = "std::fabs",
-  max = "std::fmax",
-  min = "std::fmin",
   gamma = "std::tgamma",
   lgamma = "std::lgamma",
-  ## NOTE: no 2-arg around, possibly slightly different behaviour to
-  ## R's round
-  round = "std::round",
-  ceiling = "ceil")
+  ceiling = "std::ceil")
 
-FUNCTIONS_MATH <- c( # nolint
+## Basically odin's FUNCTIONS_MATH:
+FUNCTIONS_STDLIB <- c( # nolint
+  "abs", "round", "floor", "trunc",
   "sqrt",
   "exp", "expm1", "log", "log2", "log10", "log1p",
   "cos", "sin", "tan",
   "acos", "asin", "atan", "atan2",
   "cosh", "sinh", "tanh",
-  "acosh", "asinh", "atanh",
-  "abs", "floor", "trunc")
+  "acosh", "asinh", "atanh")
 
 FUNCTIONS_STOCHASTIC <- c( # nolint
   "runif", "rnorm",

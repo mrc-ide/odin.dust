@@ -56,10 +56,10 @@ generate_dust_sexp <- function(x, data, meta) {
           stop("odin.dust does not support 2-arg round")
         }
         fn <- FUNCTIONS_RENAME[[fn]]
-      } else if (any(FUNCTIONS_MATH == fn)) {
+      } else if (any(FUNCTIONS_STDLIB == fn)) {
         fn <- sprintf("std::%s", fn)
       } else {
-        stop(sprintf("unsupported function '%s' [odin bug]", fn)) # nocov
+        stop(sprintf("unsupported function '%s'", fn))
       }
       ret <- sprintf("%s(%s)", fn, paste(values, collapse = ", "))
     }
