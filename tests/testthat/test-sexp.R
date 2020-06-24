@@ -25,7 +25,7 @@ test_that("^ becomes std::pow", {
 })
 
 
-test_that("if/else becomes ternery", {
+test_that("if/else becomes ternary", {
   expr <- list("if", "cond", "a", "b")
   expect_equal(
     generate_dust_sexp(expr, NULL, NULL),
