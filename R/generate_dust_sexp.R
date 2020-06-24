@@ -52,11 +52,11 @@ generate_dust_sexp <- function(x, data, meta) {
                      meta$dust$rng, fn, paste(values, collapse = ", "))
     } else {
       if (any(names(FUNCTIONS_RENAME) == fn)) {
+        fn <- FUNCTIONS_RENAME[[fn]]
+      } else if (any(FUNCTIONS_STDLIB == fn)) {
         if (fn == "round" && length(values) == 2) {
           stop("odin.dust does not support 2-arg round")
         }
-        fn <- FUNCTIONS_RENAME[[fn]]
-      } else if (any(FUNCTIONS_STDLIB == fn)) {
         fn <- sprintf("std::%s", fn)
       } else {
         stop(sprintf("unsupported function '%s'", fn))
