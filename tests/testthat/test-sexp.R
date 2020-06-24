@@ -61,3 +61,16 @@ test_that("2-arg round is not supported", {
     "odin.dust does not support 2-arg round",
     fixed = TRUE)
 })
+
+
+test_that("fold min", {
+  expect_equal(
+    generate_dust_sexp(list("min", "a"), NULL, NULL),
+    "a")
+  expect_equal(
+    generate_dust_sexp(list("min", "a", "b"), NULL, NULL),
+    "std::min(a, b)")
+  expect_equal(
+    generate_dust_sexp(list("min", "a", "b", "c"), NULL, NULL),
+    "std::min(a, std::min(b, c))")
+})

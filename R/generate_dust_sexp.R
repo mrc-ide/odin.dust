@@ -38,7 +38,7 @@ generate_dust_sexp <- function(x, data, meta) {
       ret <- sprintf("(std::log(%s) / std::log(%s))",
                      values[[1L]], values[[2L]])
     } else if (fn == "min" || fn == "max") {
-      ret <- dust_fold_call(paste0("f", fn), values)
+      ret <- dust_fold_call(paste0("std::", fn), values)
     } else if (fn == "sum" || fn == "odin_sum") {
       ret <- generate_dust_sexp_sum(args, data, meta)
     } else if (any(FUNCTIONS_STOCHASTIC == fn)) {
