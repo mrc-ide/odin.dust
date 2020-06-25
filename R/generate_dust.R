@@ -160,7 +160,15 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 
   body <- collector()
   body$add("typedef typename %s::real_t real_t;", dat$config$base)
-  body$add("typedef typename %s::int_t int_t;", dat$config$base)
+
+  ## Only add the integer typedef if we might need it, in order to
+  ## avoid a compiler warning about an unused typedef.  This is
+  ## slightly too generous (it might create the typedef when not
+  ## needed) but that's better than the reverse.
+  has_int <- any(vcapply(dat$data$elements, "[[", "storage_type") == "int")
+  if (has_int) {
+    body$add("typedef typename %s::int_t int_t;", dat$config$base)
+  }
   body$add("%s %s;", type, dat$meta$internal)
   body$add(dust_flatten_eqs(eqs[dat$components$create$equations]))
 
