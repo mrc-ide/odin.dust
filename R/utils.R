@@ -93,3 +93,11 @@ generate_dust_support_sum <- function(rank) {
       sub("double*", "const std::vector<double>&", x, fixed = TRUE))
   }
 }
+
+
+dust_type <- function(type) {
+  switch(type,
+         double = "float_t",
+         int = "int_t",
+         stop(sprintf("Unknown type '%s'", type)))
+}

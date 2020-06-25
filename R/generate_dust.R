@@ -40,7 +40,9 @@ generate_dust <- function(ir, options) {
 
 
 generate_dust_meta <- function() {
-  list(rng = "rng")
+  list(rng = "rng",
+       int_t = "int_t",
+       float_t = "float_t")
 }
 
 
@@ -69,7 +71,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
 
 generate_dust_core_struct <- function(dat) {
   struct_element <- function(x) {
-    type <- x$storage_type
+    type <- dust_type(x$storage_type)
     is_ptr <- x$rank > 0L || type == "void"
     if (is_ptr) {
       sprintf("std::vector<%s> %s;", type, x$name)
@@ -127,12 +129,13 @@ generate_dust_core_initial <- function(dat, rewrite) {
   initial <- dust_flatten_eqs(lapply(dat$data$variable$contents, set_initial))
 
   args <- c("size_t" = dat$meta$time)
-  body <- c(sprintf("std::vector<double> %s(%s);",
+  body <- c(sprintf("std::vector<float_t> %s(%s);",
                     dat$meta$state, rewrite(dat$data$variable$length)),
             dust_flatten_eqs(eqs_initial),
             initial,
             sprintf("return %s;", dat$meta$state))
-  cpp_function("std::vector<double>", "initial", args, body)
+  cpp_function(sprintf("std::vector<%s>", dat$meta$dust$float_t),
+               "initial", args, body)
 }
 
 
@@ -145,10 +148,11 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
   unpack <- lapply(variables, dust_unpack_variable,
                    dat, dat$meta$state, rewrite)
   body <- dust_flatten_eqs(c(unpack, eqs[equations]))
+
   args <- c("size_t" = dat$meta$time,
-            "const std::vector<double>&" = dat$meta$state,
-            "dust::RNG<double, int>&" = dat$meta$dust$rng,
-            "std::vector<double>&" = dat$meta$result)
+            "const std::vector<float_t>&" = dat$meta$state,
+            "dust::RNG<float_t, int_t>&" = dat$meta$dust$rng,
+            "std::vector<float_t>&" = dat$meta$result)
 
   cpp_function("void", "update", args, body)
 }
@@ -158,6 +162,8 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   type <- sprintf("%s::init_t", dat$config$base)
 
   body <- collector()
+  body$add("typedef typename %s::float_t float_t;", dat$config$base)
+  body$add("typedef typename %s::int_t int_t;", dat$config$base)
   body$add("%s %s;", type, dat$meta$internal)
   body$add(dust_flatten_eqs(eqs[dat$components$create$equations]))
 
@@ -207,7 +213,7 @@ dust_unpack_variable <- function(name, dat, state, rewrite) {
   } else {
     fmt <- "const %s * %s = %s;"
   }
-  sprintf(fmt, data_info$storage_type, x$name, rhs)
+  sprintf(fmt, dust_type(data_info$storage_type), x$name, rhs)
 }
 
 
