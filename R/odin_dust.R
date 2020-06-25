@@ -63,14 +63,3 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t) {
 
   dust::dust(path, quiet = !options$verbose)
 }
-
-
-odin_dust_generate_standalone <- function(ir, options) {
-  res <- generate_dust(ir, options)
-
-  c(dust_flatten_eqs(lapply(res$support, "[[", "declaration")),
-    res$class,
-    dust_flatten_eqs(lapply(res$support, "[[", "definition")),
-    readLines(odin_dust_file("support.hpp")),
-    res$create)
-}
