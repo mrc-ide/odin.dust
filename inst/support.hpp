@@ -56,7 +56,6 @@ void user_check_array_value(const std::vector<T>& value, const char *name,
   }
 }
 
-
 size_t user_get_array_rank(Rcpp::RObject x) {
   if (x.hasAttribute("dim")) {
     Rcpp::IntegerVector dim = x.attr("dim");
@@ -140,6 +139,19 @@ T user_get_scalar(Rcpp::List user, const char *name,
   return ret;
 }
 
+// This is not actually really enough to work generally as there's an
+// issue with what to do with checking previous, min and max against
+// NA_REAL -- which is not going to be the correct value for float
+// rather than double.  Further, this is not extendable to the vector
+// cases because we hit issues around partial template specification.
+//
+// We can make the latter go away by replacing std::array<T, N> with
+// std::vector<T> - the cost is not great.  But the NA issues remain
+// and will require further thought. However, this template
+// specialisation and the tests that use it ensure that the core code
+// generation is at least compatible with floats.
+//
+// See #6
 template <>
 float user_get_scalar<float>(Rcpp::List user, const char *name,
                              const float previous, float min, float max) {
