@@ -80,7 +80,9 @@ generate_dust_core_struct <- function(dat) {
   i <- vcapply(dat$data$elements, "[[", "location") == "internal"
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
 
-  c("struct init_t {",
+  c("typedef int int_t;",
+    "typedef double float_t;",
+    "struct init_t {",
     paste0("  ", els),
     "};")
 }
@@ -145,7 +147,7 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
   body <- dust_flatten_eqs(c(unpack, eqs[equations]))
   args <- c("size_t" = dat$meta$time,
             "const std::vector<double>&" = dat$meta$state,
-            "dust::RNG&" = dat$meta$dust$rng,
+            "dust::RNG<double, int>&" = dat$meta$dust$rng,
             "std::vector<double>&" = dat$meta$result)
 
   cpp_function("void", "update", args, body)
