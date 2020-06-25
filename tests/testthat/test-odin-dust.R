@@ -217,3 +217,23 @@ test_that("NSE interface can accept a character vector", {
     mockery::mock_args(mock_target)[[1]],
     list(c("a", "b", "c"), NULL))
 })
+
+
+test_that("don't encode specific types in generated code", {
+  options <- odin::odin_options(target = "dust")
+  ir <- odin::odin_parse_("examples/sir.R", options)
+  res <- generate_dust(ir, options)
+
+  expect_equal(sum(grepl("double", res$class)), 1)
+  expect_match(grep("double", res$class, value = TRUE),
+               "typedef double real_t;")
+  expect_equal(sum(grepl("double", res$create)), 0)
+
+  ## A bit harder; this regex reads as "the string 'int' on a word
+  ## boundary followed by a character that is not an underscore"
+  re_int <- "int\\b[^_]"
+  expect_equal(sum(grepl(re_int, res$class)), 1)
+  expect_match(grep(re_int, res$class, value = TRUE),
+               "typedef int int_t;")
+  expect_equal(sum(grepl(re_int, res$create)), 0)
+})
