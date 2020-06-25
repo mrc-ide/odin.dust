@@ -237,3 +237,17 @@ test_that("don't encode specific types in generated code", {
                "typedef int int_t;")
   expect_equal(sum(grepl(re_int, res$create)), 0)
 })
+
+
+test_that("Generate code with different types", {
+  options <- odin::odin_options(target = "dust")
+  ir <- odin::odin_parse_("examples/sir.R", options)
+  res <- generate_dust(ir, options, "DOUBLE", "INT")
+
+  expect_true(any(grepl("typedef INT int_t;", res$class)))
+  expect_true(any(grepl("typedef DOUBLE real_t;", res$class)))
+
+  cmp <- generate_dust(ir, options)
+  expect_equal(replace(res$class, c(DOUBLE = "double", INT = "int")),
+               cmp$class)
+})

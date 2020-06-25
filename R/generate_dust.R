@@ -1,4 +1,4 @@
-generate_dust <- function(ir, options) {
+generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
   dat <- odin::odin_ir_deserialise(ir)
 
   if (!dat$features$discrete) {
@@ -14,7 +14,7 @@ generate_dust <- function(ir, options) {
          paste(squote(unsupported), collapse = ", "))
   }
 
-  dat$meta$dust <- generate_dust_meta()
+  dat$meta$dust <- generate_dust_meta(real_t, int_t)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta)
@@ -39,8 +39,10 @@ generate_dust <- function(ir, options) {
 }
 
 
-generate_dust_meta <- function() {
-  list(rng = "rng")
+generate_dust_meta <- function(real_t, int_t) {
+  list(rng = "rng",
+       real_t = real_t %||% "double",
+       int_t = int_t %||% "int")
 }
 
 
@@ -80,8 +82,8 @@ generate_dust_core_struct <- function(dat) {
   i <- vcapply(dat$data$elements, "[[", "location") == "internal"
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
 
-  c("typedef int int_t;",
-    "typedef double real_t;",
+  c(sprintf("typedef %s int_t;", dat$meta$dust$int_t),
+    sprintf("typedef %s real_t;", dat$meta$dust$real_t),
     "struct init_t {",
     paste0("  ", els),
     "};")
