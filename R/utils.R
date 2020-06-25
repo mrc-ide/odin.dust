@@ -97,7 +97,7 @@ generate_dust_support_sum <- function(rank) {
 
 dust_type <- function(type) {
   switch(type,
-         double = "float_t",
+         double = "real_t",
          int = "int_t",
          stop(sprintf("Unknown type '%s'", type)))
 }

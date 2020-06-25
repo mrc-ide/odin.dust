@@ -40,9 +40,7 @@ generate_dust <- function(ir, options) {
 
 
 generate_dust_meta <- function() {
-  list(rng = "rng",
-       int_t = "int_t",
-       float_t = "float_t")
+  list(rng = "rng")
 }
 
 
@@ -83,7 +81,7 @@ generate_dust_core_struct <- function(dat) {
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
 
   c("typedef int int_t;",
-    "typedef double float_t;",
+    "typedef double real_t;",
     "struct init_t {",
     paste0("  ", els),
     "};")
@@ -129,13 +127,12 @@ generate_dust_core_initial <- function(dat, rewrite) {
   initial <- dust_flatten_eqs(lapply(dat$data$variable$contents, set_initial))
 
   args <- c("size_t" = dat$meta$time)
-  body <- c(sprintf("std::vector<float_t> %s(%s);",
+  body <- c(sprintf("std::vector<real_t> %s(%s);",
                     dat$meta$state, rewrite(dat$data$variable$length)),
             dust_flatten_eqs(eqs_initial),
             initial,
             sprintf("return %s;", dat$meta$state))
-  cpp_function(sprintf("std::vector<%s>", dat$meta$dust$float_t),
-               "initial", args, body)
+  cpp_function("std::vector<real_t>", "initial", args, body)
 }
 
 
@@ -150,9 +147,9 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
   body <- dust_flatten_eqs(c(unpack, eqs[equations]))
 
   args <- c("size_t" = dat$meta$time,
-            "const std::vector<float_t>&" = dat$meta$state,
-            "dust::RNG<float_t, int_t>&" = dat$meta$dust$rng,
-            "std::vector<float_t>&" = dat$meta$result)
+            "const std::vector<real_t>&" = dat$meta$state,
+            "dust::RNG<real_t, int_t>&" = dat$meta$dust$rng,
+            "std::vector<real_t>&" = dat$meta$result)
 
   cpp_function("void", "update", args, body)
 }
@@ -162,7 +159,7 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   type <- sprintf("%s::init_t", dat$config$base)
 
   body <- collector()
-  body$add("typedef typename %s::float_t float_t;", dat$config$base)
+  body$add("typedef typename %s::real_t real_t;", dat$config$base)
   body$add("typedef typename %s::int_t int_t;", dat$config$base)
   body$add("%s %s;", type, dat$meta$internal)
   body$add(dust_flatten_eqs(eqs[dat$components$create$equations]))
