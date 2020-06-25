@@ -61,8 +61,6 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t) {
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
-  writeLines(code, "code.cpp")
-
   dust::dust(path, quiet = !options$verbose)
 }
 
