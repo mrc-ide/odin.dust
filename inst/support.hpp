@@ -140,6 +140,13 @@ T user_get_scalar(Rcpp::List user, const char *name,
   return ret;
 }
 
+template <>
+float user_get_scalar<float>(Rcpp::List user, const char *name,
+                             const float previous, float min, float max) {
+  double value = user_get_scalar<double>(user, name, previous, min, max);
+  return static_cast<float>(value);
+}
+
 template <typename T, size_t N>
 std::vector<T> user_get_array_fixed(Rcpp::List user, const char *name,
                                     const std::vector<T> previous,

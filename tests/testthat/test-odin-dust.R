@@ -251,3 +251,27 @@ test_that("Generate code with different types", {
   expect_equal(replace(res$class, c(DOUBLE = "double", INT = "int")),
                cmp$class)
 })
+
+
+test_that("sir model float test", {
+  gen_f <- odin_dust_("examples/sir.R", real_t = "float")
+  gen_d <- odin_dust_("examples/sir.R", real_t = "double")
+
+  n <- 10000
+  y0 <- c(1000, 10, 0)
+  p <- list(I_ini = 10)
+
+  mod_f <- gen_f$new(p, 0L, n)
+  mod_f$run(200)
+  y_f <- mod_f$state()
+
+  mod_d <- gen_d$new(p, 0L, n)
+  mod_d$run(200)
+  y_d <- mod_d$state()
+
+  ## Not the same
+  expect_false(isTRUE(all.equal(y_f, y_d)))
+
+  ## But the same distribution
+  expect_equal(rowMeans(y_f), rowMeans(y_d), tolerance = 0.01)
+})
