@@ -62,5 +62,15 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t) {
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
-  dust::dust(path, quiet = !options$verbose)
+  generator <- dust::dust(path, quiet = !options$verbose)
+
+  self <- NULL # avoid a NOTE; the real self will come from the class
+  generator$set("public", "index", function() dust_index(self$info()))
+  generator
+}
+
+
+dust_index <- function(info) {
+  n <- vnapply(info, prod)
+  Map(seq.int, to = cumsum(n), by = 1L, length.out = n)
 }
