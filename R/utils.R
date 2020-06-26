@@ -31,6 +31,11 @@ dust_fold_call <- function(...) {
 }
 
 
+dquote <- function(...) {
+  odin:::dquote(...)
+}
+
+
 squote <- function(...) {
   odin:::squote(...)
 }
