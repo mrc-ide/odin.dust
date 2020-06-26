@@ -89,7 +89,33 @@ generate_dust_support_sum <- function(rank) {
            "T odin_sum1(const std::vector<T>& x, size_t from, size_t to);"),
          definition = NULL)
   } else {
-    lapply(odin:::generate_c_support_sum(rank), function(x)
-      sub("double*", "const std::vector<double>&", x, fixed = TRUE))
+    ## There are a series of substitutions that need to be made here,
+    ## all of which are literal
+    tr <- c("double*" = "const std::vector<real_t>&",
+            "double" = "real_t",
+            "int" = "int_t")
+    ## Then set up as templates over real_t, int_t
+    head <- "template <typename real_t, typename int_t>"
+    ret <- lapply(odin:::generate_c_support_sum(rank), replace, tr)
+    ret$declaration <- c(head, ret$declaration)
+    ret$definition <- c(head, ret$definition)
+    ret
   }
+}
+
+
+dust_type <- function(type) {
+  switch(type,
+         double = "real_t",
+         int = "int_t",
+         stop(sprintf("Unknown type '%s'", type)))
+}
+
+
+replace <- function(x, tr) {
+  from <- names(tr)
+  for (i in seq_along(tr)) {
+    x <- gsub(from[[i]], tr[[i]], x, fixed = TRUE)
+  }
+  x
 }

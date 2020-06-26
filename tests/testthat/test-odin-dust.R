@@ -202,7 +202,7 @@ test_that("NSE interface can accept a symbol and resolve to value", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(path, NULL))
+    list(path, NULL, NULL, NULL))
 })
 
 
@@ -215,5 +215,63 @@ test_that("NSE interface can accept a character vector", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(c("a", "b", "c"), NULL))
+    list(c("a", "b", "c"), NULL, NULL, NULL))
+})
+
+
+test_that("don't encode specific types in generated code", {
+  options <- odin::odin_options(target = "dust")
+  ir <- odin::odin_parse_("examples/sir.R", options)
+  res <- generate_dust(ir, options)
+
+  expect_equal(sum(grepl("double", res$class)), 1)
+  expect_match(grep("double", res$class, value = TRUE),
+               "typedef double real_t;")
+  expect_equal(sum(grepl("double", res$create)), 0)
+
+  ## A bit harder; this regex reads as "the string 'int' on a word
+  ## boundary followed by a character that is not an underscore"
+  re_int <- "int\\b[^_]"
+  expect_equal(sum(grepl(re_int, res$class)), 1)
+  expect_match(grep(re_int, res$class, value = TRUE),
+               "typedef int int_t;")
+  expect_equal(sum(grepl(re_int, res$create)), 0)
+})
+
+
+test_that("Generate code with different types", {
+  options <- odin::odin_options(target = "dust")
+  ir <- odin::odin_parse_("examples/sir.R", options)
+  res <- generate_dust(ir, options, "DOUBLE", "INT")
+
+  expect_true(any(grepl("typedef INT int_t;", res$class)))
+  expect_true(any(grepl("typedef DOUBLE real_t;", res$class)))
+
+  cmp <- generate_dust(ir, options)
+  expect_equal(replace(res$class, c(DOUBLE = "double", INT = "int")),
+               cmp$class)
+})
+
+
+test_that("sir model float test", {
+  gen_f <- odin_dust_("examples/sir.R", real_t = "float")
+  gen_d <- odin_dust_("examples/sir.R", real_t = "double")
+
+  n <- 10000
+  y0 <- c(1000, 10, 0)
+  p <- list(I_ini = 10)
+
+  mod_f <- gen_f$new(p, 0L, n)
+  mod_f$run(200)
+  y_f <- mod_f$state()
+
+  mod_d <- gen_d$new(p, 0L, n)
+  mod_d$run(200)
+  y_d <- mod_d$state()
+
+  ## Not the same
+  expect_false(isTRUE(all.equal(y_f, y_d)))
+
+  ## But the same distribution
+  expect_equal(rowMeans(y_f), rowMeans(y_d), tolerance = 0.01)
 })

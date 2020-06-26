@@ -5,9 +5,9 @@
 \alias{odin_dust_}
 \title{Create a dust odin model}
 \usage{
-odin_dust(x, verbose = NULL)
+odin_dust(x, verbose = NULL, real_t = NULL, int_t = NULL)
 
-odin_dust_(x, verbose = NULL)
+odin_dust_(x, verbose = NULL, real_t = NULL, int_t = NULL)
 }
 \arguments{
 \item{x}{Either the name of a file to read, a text string (if
@@ -17,6 +17,12 @@ or an expression.}
 \item{verbose}{Logical scalar indicating if the compilation should
 be verbose.  Defaults to the value of the option
 \code{odin.verbose} or \code{FALSE} otherwise.}
+
+\item{real_t}{C++ type to use for real (floating point)
+numbers. Defaults to \code{double}.}
+
+\item{int_t}{C++ type to use to use for integers. Defaults to
+\code{int}.}
 }
 \description{
 Compile an odin model to work with dust.

@@ -6,3 +6,10 @@ test_that("null-or-value works", {
   expect_equal(NULL %||% NULL, NULL)
   expect_equal(NULL %||% 2, 2)
 })
+
+
+test_that("dust_type errors on unknown types", {
+  expect_equal(dust_type("int"), "int_t")
+  expect_equal(dust_type("double"), "real_t")
+  expect_error(dust_type("void"), "Unknown type 'void'")
+})

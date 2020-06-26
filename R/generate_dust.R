@@ -1,4 +1,4 @@
-generate_dust <- function(ir, options) {
+generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
   dat <- odin::odin_ir_deserialise(ir)
 
   if (!dat$features$discrete) {
@@ -14,7 +14,7 @@ generate_dust <- function(ir, options) {
          paste(squote(unsupported), collapse = ", "))
   }
 
-  dat$meta$dust <- generate_dust_meta()
+  dat$meta$dust <- generate_dust_meta(real_t, int_t)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta)
@@ -39,8 +39,10 @@ generate_dust <- function(ir, options) {
 }
 
 
-generate_dust_meta <- function() {
-  list(rng = "rng")
+generate_dust_meta <- function(real_t, int_t) {
+  list(rng = "rng",
+       real_t = real_t %||% "double",
+       int_t = int_t %||% "int")
 }
 
 
@@ -69,7 +71,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
 
 generate_dust_core_struct <- function(dat) {
   struct_element <- function(x) {
-    type <- x$storage_type
+    type <- dust_type(x$storage_type)
     is_ptr <- x$rank > 0L || type == "void"
     if (is_ptr) {
       sprintf("std::vector<%s> %s;", type, x$name)
@@ -80,7 +82,9 @@ generate_dust_core_struct <- function(dat) {
   i <- vcapply(dat$data$elements, "[[", "location") == "internal"
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
 
-  c("struct init_t {",
+  c(sprintf("typedef %s int_t;", dat$meta$dust$int_t),
+    sprintf("typedef %s real_t;", dat$meta$dust$real_t),
+    "struct init_t {",
     paste0("  ", els),
     "};")
 }
@@ -125,12 +129,12 @@ generate_dust_core_initial <- function(dat, rewrite) {
   initial <- dust_flatten_eqs(lapply(dat$data$variable$contents, set_initial))
 
   args <- c("size_t" = dat$meta$time)
-  body <- c(sprintf("std::vector<double> %s(%s);",
+  body <- c(sprintf("std::vector<real_t> %s(%s);",
                     dat$meta$state, rewrite(dat$data$variable$length)),
             dust_flatten_eqs(eqs_initial),
             initial,
             sprintf("return %s;", dat$meta$state))
-  cpp_function("std::vector<double>", "initial", args, body)
+  cpp_function("std::vector<real_t>", "initial", args, body)
 }
 
 
@@ -143,10 +147,11 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
   unpack <- lapply(variables, dust_unpack_variable,
                    dat, dat$meta$state, rewrite)
   body <- dust_flatten_eqs(c(unpack, eqs[equations]))
+
   args <- c("size_t" = dat$meta$time,
-            "const std::vector<double>&" = dat$meta$state,
-            "dust::RNG&" = dat$meta$dust$rng,
-            "std::vector<double>&" = dat$meta$result)
+            "const std::vector<real_t>&" = dat$meta$state,
+            "dust::RNG<real_t, int_t>&" = dat$meta$dust$rng,
+            "std::vector<real_t>&" = dat$meta$result)
 
   cpp_function("void", "update", args, body)
 }
@@ -156,6 +161,16 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   type <- sprintf("%s::init_t", dat$config$base)
 
   body <- collector()
+  body$add("typedef typename %s::real_t real_t;", dat$config$base)
+
+  ## Only add the integer typedef if we might need it, in order to
+  ## avoid a compiler warning about an unused typedef.  This is
+  ## slightly too generous (it might create the typedef when not
+  ## needed) but that's better than the reverse.
+  has_int <- any(vcapply(dat$data$elements, "[[", "storage_type") == "int")
+  if (has_int) {
+    body$add("typedef typename %s::int_t int_t;", dat$config$base)
+  }
   body$add("%s %s;", type, dat$meta$internal)
   body$add(dust_flatten_eqs(eqs[dat$components$create$equations]))
 
@@ -205,7 +220,7 @@ dust_unpack_variable <- function(name, dat, state, rewrite) {
   } else {
     fmt <- "const %s * %s = %s;"
   }
-  sprintf(fmt, data_info$storage_type, x$name, rhs)
+  sprintf(fmt, dust_type(data_info$storage_type), x$name, rhs)
 }
 
 

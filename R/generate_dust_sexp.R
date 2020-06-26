@@ -15,7 +15,7 @@ generate_dust_sexp <- function(x, data, meta) {
       ret <- sprintf("std::pow(%s, %s)", values[[1]], values[[2]])
     } else if (n == 2L && fn %in% odin:::FUNCTIONS_INFIX) {
       fmt <- switch(fn,
-                    "/" = "%s %s (double) %s",
+                    "/" = "%s %s (real_t) %s",
                     "%s %s %s")
       ret <- sprintf(fmt, values[[1]], fn, values[[2]])
     } else if (n == 1L && fn == "-") {
