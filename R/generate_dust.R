@@ -207,22 +207,18 @@ generate_dust_core_info <- function(dat, rewrite) {
     }
     sprintf("{%s}", dims)
   }
-  dims <- paste(vcapply(dat$data$elements[nms], f, USE.NAMES = FALSE),
-                collapse = ", ")
 
   args <- dat$meta$internal
   names(args) <- sprintf("const %s::init_t&", dat$config$base)
 
+  dims <- vcapply(dat$data$elements[nms], f, USE.NAMES = FALSE)
   body <- collector()
-  body$add("std::vector<std::string> nms = {%s};",
+  body$add("Rcpp::List ret(%d);", length(dims))
+  body$add("ret[%d] = Rcpp::IntegerVector(%s);", seq_along(dims) - 1L, dims)
+  body$add("Rcpp::CharacterVector nms = {%s};",
            paste(dquote(nms), collapse = ", "))
-  ## NOTE: always using int, not T::int_t, here because this must be
-  ## int convertable and needs to work for Rcpp
-  body$add("std::vector<std::vector<int>> dims = {%s};", dims)
-  ## Then the conversion to Rcpp types
-  ## body$add("Rcpp::List ret = Rcpp::wrap(dims);")
-  ## body$add("ret.names = Rcpp::CharacterVector(nms);")
-  body$add("return Rcpp::wrap(nms);")
+  body$add("ret.names() = nms;")
+  body$add("return ret;")
 
   name <- sprintf("dust_info<%s>", dat$config$base)
   c("template <>",
