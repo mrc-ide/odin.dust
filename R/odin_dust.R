@@ -64,6 +64,7 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t) {
 
   generator <- dust::dust(path, quiet = !options$verbose)
 
+  self <- NULL # this will be resolved by R6
   R6::R6Class(
     inherit = generator,
     public = list(
