@@ -10,6 +10,8 @@ test_that("sir model smoke test", {
   mod <- gen$new(list(I_ini = 10), 0L, n)
   expect_equal(mod$state(), matrix(y0, 3, n))
   expect_equal(mod$step(), 0)
+  expect_identical(mod$info(), list(S = 1L, I = 1L, R = 1L))
+  expect_equal(mod$index(), list(S = 1L, I = 2L, R = 3L))
 
   nstep <- 200
   res <- array(NA_real_, c(3, n, nstep + 1))
@@ -37,6 +39,7 @@ test_that("vector handling test", {
   mod <- gen$new(list(), 0L, np)
   expect_equal(mod$state(), matrix(0, ns, np))
   expect_equal(mod$step(), 0)
+  expect_identical(mod$info(), list(x = 3L))
 
   y1 <- mod$run(nt)
   y2 <- mod$state()
@@ -57,6 +60,7 @@ test_that("user-vector handling test", {
   x0 <- matrix(runif(10), 2, 5)
 
   mod <- gen$new(list(x0 = x0, r = r), 0, 1)
+  expect_identical(mod$info(), list(x = c(2L, 5L)))
 
   expect_equal(mod$state(), matrix(c(x0)))
   expect_equal(mod$step(), 0)
@@ -95,6 +99,7 @@ test_that("multiline array expression", {
     dim(x) <- length(x0)
   }, verbose = FALSE)
   mod <- gen$new(list(), 0, 1)
+  expect_equal(mod$info(), list(y = 1L, x = 10L))
   expect_equal(mod$state(), matrix(c(55, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55)))
 })
 
@@ -143,11 +148,22 @@ test_that("Implement sum", {
   nc <- 7
   m <- matrix(runif(nr * nc), nr, nc)
   mod <- gen$new(list(m = m), 0, 1)
+
   mod$run(1)
   y <- mod$state()
   ## TODO: See #2
   cmp <- odin::odin_("examples/sum.R", target = "r", verbose = FALSE)
   yy <- cmp(m)$transform_variables(drop(y))
+
+  expect_mapequal(
+    mod$info(),
+    list(tot1 = 1L, tot2 = 1L, v1 = 5L, v2 = 7L, v3 = 5L, v4 = 7L))
+  expect_equal(names(yy)[-1], names(mod$info()))
+
+  expect_equal(
+    mod$index(),
+    cmp(m)$transform_variables(seq_len(26))[-1])
+
   expect_equal(yy$tot1, sum(m))
   expect_equal(yy$tot2, sum(m))
   expect_equal(yy$v1, rowSums(m))

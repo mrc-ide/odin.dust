@@ -23,6 +23,7 @@ generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
 
   class <- generate_dust_core_class(eqs, dat, rewrite)
   create <- generate_dust_core_create(eqs, dat, rewrite)
+  info <- generate_dust_core_info(dat, rewrite)
 
   used <- unique(unlist(lapply(dat$equations, function(x)
     x$depends$functions), FALSE, FALSE))
@@ -35,7 +36,7 @@ generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
     }
   }
 
-  list(class = class, create = create, support = support)
+  list(class = class, create = create, info = info, support = support)
 }
 
 
@@ -190,6 +191,38 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   args <- c("Rcpp::List" = dat$meta$user)
   c("template<>",
     cpp_function(type, name, args, body$get()))
+}
+
+
+generate_dust_core_info <- function(dat, rewrite) {
+  vars <- dat$data$variable$contents
+  nms <- names(vars)
+  f <- function(x) {
+    if (x$rank == 0) {
+      dims <- rewrite(1)
+    } else if (x$rank == 1) {
+      dims <- rewrite(x$dimnames$length)
+    } else {
+      dims <- paste(vcapply(x$dimnames$dim, rewrite), collapse = ", ")
+    }
+    sprintf("{%s}", dims)
+  }
+
+  args <- dat$meta$internal
+  names(args) <- sprintf("const %s::init_t&", dat$config$base)
+
+  dims <- vcapply(dat$data$elements[nms], f, USE.NAMES = FALSE)
+  body <- collector()
+  body$add("Rcpp::List ret(%d);", length(dims))
+  body$add("ret[%d] = Rcpp::IntegerVector(%s);", seq_along(dims) - 1L, dims)
+  body$add("Rcpp::CharacterVector nms = {%s};",
+           paste(dquote(nms), collapse = ", "))
+  body$add("ret.names() = nms;")
+  body$add("return ret;")
+
+  name <- sprintf("dust_info<%s>", dat$config$base)
+  c("template <>",
+    cpp_function("Rcpp::RObject", name, args, body$get()))
 }
 
 

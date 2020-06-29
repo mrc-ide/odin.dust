@@ -51,7 +51,8 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t) {
     res$class,
     dust_flatten_eqs(lapply(res$support, "[[", "definition")),
     readLines(odin_dust_file("support.hpp")),
-    res$create)
+    res$create,
+    res$info)
 
   workdir <- options$workdir
   if (workdir == tempdir()) {
@@ -61,5 +62,20 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t) {
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
-  dust::dust(path, quiet = !options$verbose)
+  generator <- dust::dust(path, quiet = !options$verbose)
+
+  self <- NULL # this will be resolved by R6
+  R6::R6Class(
+    inherit = generator,
+    public = list(
+      index = function() {
+        odin_dust_index(self$info())
+      }
+    ))
+}
+
+
+odin_dust_index <- function(info) {
+  n <- vnapply(info, prod)
+  Map(seq.int, to = cumsum(n), by = 1L, length.out = n)
 }
