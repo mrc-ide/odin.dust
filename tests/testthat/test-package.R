@@ -16,7 +16,7 @@ test_that("validate package", {
   file.copy("examples/sir.R", file.path(path, "inst/odin"))
 
   odin_dust_package(path)
-  pkg <- pkgload::load_all(path)
+  pkg <- pkgload::load_all(path, quiet = TRUE)
 
   r <- matrix(runif(10), 2, 5)
   x0 <- matrix(runif(10), 2, 5)
