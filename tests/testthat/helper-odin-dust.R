@@ -14,3 +14,8 @@ user_wrapper <- function() {
   }
   test_cache$user_wrapper
 }
+
+
+sub_package_name <- function(text, name) {
+  gsub("{{name}}", name, text, fixed = TRUE)
+}

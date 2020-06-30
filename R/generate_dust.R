@@ -36,7 +36,8 @@ generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
     }
   }
 
-  list(class = class, create = create, info = info, support = support)
+  list(class = class, create = create, info = info, support = support,
+       name = dat$config$base)
 }
 
 

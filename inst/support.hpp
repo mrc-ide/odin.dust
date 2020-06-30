@@ -29,7 +29,7 @@ inline bool is_na(double x) {
   return Rcpp::traits::is_na<REALSXP>(x);
 }
 
-size_t object_length(Rcpp::RObject x) {
+inline size_t object_length(Rcpp::RObject x) {
   // This is not lovely but Rcpp make it really hard to know what a
   // better way is as there seems to be no usable documentation still.
   return ::Rf_xlength(x);
@@ -56,7 +56,7 @@ void user_check_array_value(const std::vector<T>& value, const char *name,
   }
 }
 
-size_t user_get_array_rank(Rcpp::RObject x) {
+inline size_t user_get_array_rank(Rcpp::RObject x) {
   if (x.hasAttribute("dim")) {
     Rcpp::IntegerVector dim = x.attr("dim");
     return dim.size();
@@ -93,8 +93,8 @@ void user_check_array_dim(Rcpp::RObject x, const char *name,
 }
 
 template <>
-void user_check_array_dim<1>(Rcpp::RObject x, const char *name,
-                             const std::array<int, 1>& dim_expected) {
+inline void user_check_array_dim<1>(Rcpp::RObject x, const char *name,
+                                    const std::array<int, 1>& dim_expected) {
   if ((int)object_length(x) != dim_expected[0]) {
     Rcpp::stop("Expected length %d value for '%s'", dim_expected[0], name);
   }
@@ -102,14 +102,14 @@ void user_check_array_dim<1>(Rcpp::RObject x, const char *name,
 
 template <size_t N>
 void user_set_array_dim(Rcpp::RObject x, const char *name,
-                          std::array<int, N>& dim) {
+                        std::array<int, N>& dim) {
   Rcpp::IntegerVector dim_given = x.attr("dim");
   std::copy(dim_given.begin(), dim_given.end(), dim.begin());
 }
 
 template <>
-void user_set_array_dim<1>(Rcpp::RObject x, const char *name,
-                           std::array<int, 1>& dim) {
+inline void user_set_array_dim<1>(Rcpp::RObject x, const char *name,
+                                  std::array<int, 1>& dim) {
   dim[0] = object_length(x);
 }
 
@@ -153,8 +153,8 @@ T user_get_scalar(Rcpp::List user, const char *name,
 //
 // See #6
 template <>
-float user_get_scalar<float>(Rcpp::List user, const char *name,
-                             const float previous, float min, float max) {
+inline float user_get_scalar<float>(Rcpp::List user, const char *name,
+                                    const float previous, float min, float max) {
   double value = user_get_scalar<double>(user, name, previous, min, max);
   return static_cast<float>(value);
 }

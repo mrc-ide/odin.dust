@@ -270,8 +270,8 @@ test_that("Generate code with different types", {
 
 
 test_that("sir model float test", {
-  gen_f <- odin_dust_("examples/sir.R", real_t = "float")
-  gen_d <- odin_dust_("examples/sir.R", real_t = "double")
+  gen_f <- odin_dust_("examples/sir.R", real_t = "float", verbose = FALSE)
+  gen_d <- odin_dust_("examples/sir.R", real_t = "double", verbose = FALSE)
 
   n <- 10000
   y0 <- c(1000, 10, 0)
