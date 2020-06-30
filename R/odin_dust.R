@@ -44,15 +44,8 @@ odin_dust_ <- function(x, verbose = NULL, real_t = NULL, int_t = NULL) {
 
 
 odin_dust_wrapper <- function(ir, options, real_t, int_t) {
-  res <- generate_dust(ir, options, real_t, int_t)
-
-  code <- c(
-    dust_flatten_eqs(lapply(res$support, "[[", "declaration")),
-    res$class,
-    dust_flatten_eqs(lapply(res$support, "[[", "definition")),
-    readLines(odin_dust_file("support.hpp")),
-    res$create,
-    res$info)
+  dat <- generate_dust(ir, options, real_t, int_t)
+  code <- odin_dust_code(dat, real_t, int_t)
 
   workdir <- options$workdir
   if (workdir == tempdir()) {
@@ -65,6 +58,16 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t) {
   generator <- dust::dust(path, quiet = !options$verbose)
   generator$set("public", "index", odin_dust_index)
   generator
+}
+
+
+odin_dust_code <- function(dat, real_t, int_t) {
+  c(dust_flatten_eqs(lapply(dat$support, "[[", "declaration")),
+    dat$class,
+    dust_flatten_eqs(lapply(dat$support, "[[", "definition")),
+    readLines(odin_dust_file("support.hpp")),
+    dat$create,
+    dat$info)
 }
 
 
