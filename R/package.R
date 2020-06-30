@@ -38,7 +38,7 @@ odin_dust_package <- function(path, verbose = NULL, real_t = NULL,
     dest <- file.path(path, "inst", "dust", sub(re_r, ".cpp", basename(f)))
     if (file.exists(dest)) {
       txt <- readLines(dest, 1)
-      if (txt != header) {
+      if (!identical(txt, header)) {
         stop("Refusing to overwrite edited file")
       }
     }
