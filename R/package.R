@@ -1,3 +1,19 @@
+##' Update generated code in a package that uses odin and dust to
+##' provide a model. This will generate new dust code in `inst/dust`
+##' and from that generate a full model in `src`, and an R interface
+##' in `R/dust.R`, along with the Rcpp attributes that are needed to
+##' use the model.
+##'
+##' @title Update package code
+##'
+##' @param path Path to the package root (the directory that
+##'   contains \code{DESCRIPTION})
+##'
+##' @inheritParams odin_dust
+##'
+##' @export
+##'
+##' @return The path to the package
 odin_dust_package <- function(path, verbose = NULL, real_t = NULL,
                               int_t = NULL) {
   re_r <- "\\.R$"
