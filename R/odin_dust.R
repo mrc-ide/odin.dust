@@ -63,19 +63,13 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t) {
   writeLines(code, path)
 
   generator <- dust::dust(path, quiet = !options$verbose)
-
-  self <- NULL # this will be resolved by R6
-  R6::R6Class(
-    inherit = generator,
-    public = list(
-      index = function() {
-        odin_dust_index(self$info())
-      }
-    ))
+  generator$set("public", "index", odin_dust_index)
+  generator
 }
 
 
-odin_dust_index <- function(info) {
-  n <- vnapply(info, prod)
+self <- NULL # this will be resolved by R6
+odin_dust_index <- function() {
+  n <- vapply(self$info(), prod, numeric(1))
   Map(seq.int, to = cumsum(n), by = 1L, length.out = n)
 }
