@@ -45,7 +45,7 @@ test_that("vector handling test", {
   y2 <- mod$state()
   expect_equal(y1, y2[1, , drop = FALSE])
 
-  r <- dust:::test_rng_norm(ns * nt * np, 1, 1)
+  r <- dust::dust_rng$new(1, 1)$rnorm(ns * nt * np, 0, 1)
   rr <- array(r, c(ns, nt, np))
   expect_equal(apply(rr, c(1, 3), sum), y2)
 })
@@ -115,7 +115,7 @@ test_that("Accept integers", {
   mod <- gen$new(list(n = 10, p = 0.5), 0, 100)
   expect_equal(mod$state(), matrix(0, 1, 100))
   y <- mod$run(1)
-  cmp <- dust:::test_rng_binom(rep(10, 100), rep(0.5, 100), 1, 1)
+  cmp <- dust::dust_rng$new(1, 1)$rbinom(100, 10, 0.5)
   expect_equal(y, matrix(cmp, 1, 100))
 
   expect_error(
