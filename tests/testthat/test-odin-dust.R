@@ -116,7 +116,7 @@ test_that("Accept integers", {
   mod <- gen$new(list(n = 10, p = 0.5), 0, 100)
   expect_equal(mod$state(), matrix(0, 1, 100))
   y <- mod$run(1)
-  cmp <- dust::dust_rng$new(1, 1)$rbinom(100, 10, 0.5)
+  cmp <- dust::dust_rng$new(1, 1)$rbinom(100, 10L, 0.5)
   expect_equal(y, matrix(cmp, 1, 100))
 
   expect_error(

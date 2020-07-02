@@ -214,8 +214,8 @@ generate_dust_core_info <- function(dat, rewrite) {
 
   dims <- vcapply(dat$data$elements[nms], f, USE.NAMES = FALSE)
   body <- collector()
-  body$add("cpp11::list ret(%d);", length(dims))
-  body$add("ret[%d] = cpp11::writable::integers({%s});",
+  body$add("cpp11::writable::list ret(%d);", length(dims))
+  body$add("ret[%d] = cpp11::writable::integers(%s);",
            seq_along(dims) - 1L, dims)
   body$add("cpp11::writable::strings nms({%s});",
            paste(dquote(nms), collapse = ", "))
