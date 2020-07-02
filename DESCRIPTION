@@ -21,9 +21,13 @@ Imports:
     dust (>= 0.2.0),
     odin
 Suggests:
+    brio,
     cpp11,
+    decor,
     dde,
     mockery,
     pkgload,
-    testthat
+    testthat,
+    tibble,
+    vctrs
 RoxygenNote: 7.1.0
