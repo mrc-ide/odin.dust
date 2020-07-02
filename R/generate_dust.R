@@ -189,7 +189,7 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   body$add("return %s;", dat$meta$internal)
 
   name <- sprintf("dust_data<%s>", dat$config$base)
-  args <- c("Rcpp::List" = dat$meta$user)
+  args <- c("cpp11::list" = dat$meta$user)
   c("template<>",
     cpp_function(type, name, args, body$get()))
 }
@@ -214,16 +214,17 @@ generate_dust_core_info <- function(dat, rewrite) {
 
   dims <- vcapply(dat$data$elements[nms], f, USE.NAMES = FALSE)
   body <- collector()
-  body$add("Rcpp::List ret(%d);", length(dims))
-  body$add("ret[%d] = Rcpp::IntegerVector(%s);", seq_along(dims) - 1L, dims)
-  body$add("Rcpp::CharacterVector nms = {%s};",
+  body$add("cpp11::list ret(%d);", length(dims))
+  body$add("ret[%d] = cpp11::writable::integers({%s});",
+           seq_along(dims) - 1L, dims)
+  body$add("cpp11::writable::strings nms({%s});",
            paste(dquote(nms), collapse = ", "))
   body$add("ret.names() = nms;")
   body$add("return ret;")
 
   name <- sprintf("dust_info<%s>", dat$config$base)
   c("template <>",
-    cpp_function("Rcpp::RObject", name, args, body$get()))
+    cpp_function("cpp11::sexp", name, args, body$get()))
 }
 
 

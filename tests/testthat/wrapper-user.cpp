@@ -1,17 +1,17 @@
-// [[Rcpp::export(rng = false)]]
-double get_scalar_double(Rcpp::List user, double previous,
+[[cpp11::register]]
+double get_scalar_double(cpp11::list user, double previous,
                          double min, double max) {
   return user_get_scalar<double>(user, "input", previous, min, max);
 }
 
-// [[Rcpp::export(rng = false)]]
-int get_scalar_int(Rcpp::List user, int previous,
+[[cpp11::register]]
+int get_scalar_int(cpp11::list user, int previous,
                    int min, int max) {
   return user_get_scalar<int>(user, "input", previous, min, max);
 }
 
-// [[Rcpp::export(rng = false)]]
-std::vector<double> get_array_double(Rcpp::List user,
+[[cpp11::register]]
+std::vector<double> get_array_double(cpp11::list user,
                                      std::vector<double> previous,
                                      std::vector<int> dim,
                                      double min, double max) {
@@ -34,11 +34,11 @@ std::vector<double> get_array_double(Rcpp::List user,
   }
 }
 
-// [[Rcpp::export(rng = false)]]
-Rcpp::List get_array_variable_double(Rcpp::List user,
-                                     std::vector<double> previous,
-                                     std::vector<int> dim,
-                                     double min, double max) {
+[[cpp11::register]]
+cpp11::list get_array_variable_double(cpp11::list user,
+                                      std::vector<double> previous,
+                                      std::vector<int> dim,
+                                      double min, double max) {
   std::vector<double> value;
   size_t rank = dim.size();
   if (rank == 1) {
@@ -59,5 +59,5 @@ Rcpp::List get_array_variable_double(Rcpp::List user,
     std::copy(dim_arr.begin(), dim_arr.end(), dim.begin());
   }
 
-  return Rcpp::List::create(value, dim);
+  return cpp11::writable::list({cpp11::as_sexp(value), cpp11::as_sexp(dim)});
 }
