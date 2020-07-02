@@ -40,6 +40,7 @@ test_that("vector handling test", {
   expect_equal(mod$state(), matrix(0, ns, np))
   expect_equal(mod$step(), 0)
   expect_identical(mod$info(), list(x = 3L))
+  mod$set_index(1L)
 
   y1 <- mod$run(nt)
   y2 <- mod$state()
