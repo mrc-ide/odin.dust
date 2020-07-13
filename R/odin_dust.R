@@ -56,7 +56,9 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t) {
   writeLines(code, path)
 
   generator <- dust::dust(path, quiet = !options$verbose)
-  generator$set("public", "index", odin_dust_index)
+  if (!("index" %in% names(generator$public_methods))) {
+    generator$set("public", "index", odin_dust_index)
+  }
   generator
 }
 
