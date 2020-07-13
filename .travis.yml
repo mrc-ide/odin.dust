@@ -8,8 +8,6 @@ addons:
 r_packages:
   - covr
 r_github_packages:
-  - r-lib/cpp11
-  - r-lib/pkgbuild@cpp11
   - mrc-ide/dust@i22-no-rcpp
 after_success:
   - Rscript -e 'covr::codecov(quiet = FALSE)'
