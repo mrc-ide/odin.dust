@@ -27,6 +27,6 @@ The path to the package
 Update generated code in a package that uses odin and dust to
 provide a model. This will generate new dust code in `inst/dust`
 and from that generate a full model in `src`, and an R interface
-in `R/dust.R`, along with the Rcpp attributes that are needed to
+in `R/dust.R`, along with the cpp11 attributes that are needed to
 use the model.
 }
