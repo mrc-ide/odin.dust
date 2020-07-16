@@ -209,7 +209,7 @@ std::vector<T> user_get_array_variable(cpp11::list user, const char *name,
 // This is sum with inclusive "from", exclusive "to", following the
 // same function in odin
 template <typename T>
-T odin_sum1(const std::vector<T>& x, size_t from, size_t to) {
+T odin_sum1(const T * x, size_t from, size_t to) {
   T tot = 0.0;
   for (size_t i = from; i < to; ++i) {
     tot += x[i];
