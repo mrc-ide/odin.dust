@@ -132,10 +132,6 @@ test_that("Generate sum code", {
   expect_equal(
     generate_dust_sexp(list("sum", "m"), data, internal),
     "odin_sum1(m, 0, internal.dim_m)")
-
-  expr <- list("sum", "m",
-               1L, list("dim", "m", 1),
-               2L, list("dim", "m", 2))
   expect_equal(
     generate_dust_sexp(expr, data, internal),
     paste("odin_sum2(m, 0, internal.dim_m_1,",
