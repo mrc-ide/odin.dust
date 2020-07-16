@@ -276,7 +276,7 @@ test_that("NSE interface can accept a symbol and resolve to value", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(path, NULL, NULL, NULL))
+    list(path, NULL, NULL, NULL, NULL))
 })
 
 
@@ -289,7 +289,7 @@ test_that("NSE interface can accept a character vector", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(c("a", "b", "c"), NULL, NULL, NULL))
+    list(c("a", "b", "c"), NULL, NULL, NULL, NULL))
 })
 
 
@@ -348,4 +348,16 @@ test_that("sir model float test", {
 
   ## But the same distribution
   expect_equal(rowMeans(y_f), rowMeans(y_d), tolerance = 0.01)
+})
+
+
+test_that("specify workdir", {
+  path <- tempfile()
+  gen <- odin_dust({
+    initial(x) <- 0
+    update(x) <- runif(x, 1)
+  }, verbose = FALSE, workdir = path)
+  expect_true(file.exists(path))
+  expect_true(file.exists(file.path(path, "DESCRIPTION")))
+  expect_true(file.exists(file.path(path, "src", "dust.cpp")))
 })
