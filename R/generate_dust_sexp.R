@@ -80,6 +80,11 @@ generate_dust_sexp <- function(x, data, meta) {
 generate_dust_sexp_sum <- function(args, data, meta) {
   target <- generate_dust_sexp(args[[1]], data, meta)
   data_info <- data$elements[[args[[1]]]]
+
+  if (data_info$location == "internal") {
+    target <- sprintf("%s.data()", target)
+  }
+
   if (length(args) == 1L) {
     len <- generate_dust_sexp(data_info$dimnames$length, data, meta)
     sprintf("odin_sum1(%s, 0, %s)", target, len)
@@ -91,6 +96,7 @@ generate_dust_sexp_sum <- function(args, data, meta) {
     values[i] <- vcapply(all_args[i], dust_minus_1, FALSE, data, meta)
     values[-i] <- vcapply(all_args[-i], generate_dust_sexp,
                           data, meta)
+    values[[1]] <- target
     arg_str <- paste(values, collapse = ", ")
 
     sprintf("odin_sum%d(%s)", length(i), arg_str)

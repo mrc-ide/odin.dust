@@ -91,12 +91,12 @@ generate_dust_support_sum <- function(rank) {
     list(name = "odin_sum1",
          declaration = c(
            "template <typename T>",
-           "T odin_sum1(const std::vector<T>& x, size_t from, size_t to);"),
+           "T odin_sum1(const T * x, size_t from, size_t to);"),
          definition = NULL)
   } else {
     ## There are a series of substitutions that need to be made here,
     ## all of which are literal
-    tr <- c("double*" = "const std::vector<real_t>&",
+    tr <- c("double*" = "const real_t *",
             "double" = "real_t",
             "int" = "int_t")
     ## Then set up as templates over real_t, int_t

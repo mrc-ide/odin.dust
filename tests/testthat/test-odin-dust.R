@@ -174,6 +174,63 @@ test_that("Implement sum", {
 })
 
 
+test_that("sum over variables", {
+  gen <- odin_dust_("examples/sum2.R", verbose = FALSE)
+
+  nr <- 5
+  nc <- 7
+  nz <- 9
+  a <- array(runif(nr * nc * nz), c(nr, nc, nz))
+  mod <- gen$new(list(y0 = a), 0, 1)
+  cmp <- odin::odin_("examples/sum2.R", verbose = FALSE)(y0 = a)
+
+  y0 <- cmp$transform_variables(drop(mod$state()))
+  y1 <- cmp$transform_variables(drop(mod$run(1)))
+
+  expect_equal(y0$y, a)
+
+  expect_equal(y0$m12, apply(a, 1:2, sum))
+  expect_equal(y0$m13, apply(a, c(1, 3), sum))
+  expect_equal(y0$m23, apply(a, 2:3, sum))
+
+  expect_equal(y0$v1, apply(a, 1, sum))
+  expect_equal(y0$v2, apply(a, 2, sum))
+  expect_equal(y0$v3, apply(a, 3, sum))
+
+  expect_equal(y0$mm12, apply(a[, , 2:4], 1:2, sum))
+  expect_equal(y0$mm13, apply(a[, 2:4, ], c(1, 3), sum))
+  expect_equal(y0$mm23, apply(a[2:4, , ], 2:3, sum))
+
+  expect_equal(y0$vv1, apply(a[, 2:4, 2:4], 1, sum))
+  expect_equal(y0$vv2, apply(a[2:4, , 2:4], 2, sum))
+  expect_equal(y0$vv3, apply(a[2:4, 2:4, ], 3, sum))
+
+  expect_equal(y0$tot1, sum(a))
+  expect_equal(y0$tot2, sum(a))
+
+  expect_equal(y1$y, a)
+
+  expect_equal(y1$m12, apply(a, 1:2, sum))
+  expect_equal(y1$m13, apply(a, c(1, 3), sum))
+  expect_equal(y1$m23, apply(a, 2:3, sum))
+
+  expect_equal(y1$v1, apply(a, 1, sum))
+  expect_equal(y1$v2, apply(a, 2, sum))
+  expect_equal(y1$v3, apply(a, 3, sum))
+
+  expect_equal(y1$mm12, apply(a[, , 2:4], 1:2, sum))
+  expect_equal(y1$mm13, apply(a[, 2:4, ], c(1, 3), sum))
+  expect_equal(y1$mm23, apply(a[2:4, , ], 2:3, sum))
+
+  expect_equal(y1$vv1, apply(a[, 2:4, 2:4], 1, sum))
+  expect_equal(y1$vv2, apply(a[2:4, , 2:4], 2, sum))
+  expect_equal(y1$vv3, apply(a[2:4, 2:4, ], 3, sum))
+
+  expect_equal(y1$tot1, sum(a))
+  expect_equal(y1$tot2, sum(a))
+})
+
+
 test_that("odin.dust required discrete model", {
   expect_error(
     odin_dust({
