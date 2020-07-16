@@ -197,13 +197,13 @@ test_that("sum over variables", {
   expect_equal(y0$v2, apply(a, 2, sum))
   expect_equal(y0$v3, apply(a, 3, sum))
 
-  expect_equal(y0$mm12, apply(a[,,2:4], 1:2, sum))
-  expect_equal(y0$mm13, apply(a[,2:4,], c(1, 3), sum))
-  expect_equal(y0$mm23, apply(a[2:4,,], 2:3, sum))
+  expect_equal(y0$mm12, apply(a[, , 2:4], 1:2, sum))
+  expect_equal(y0$mm13, apply(a[, 2:4, ], c(1, 3), sum))
+  expect_equal(y0$mm23, apply(a[2:4, , ], 2:3, sum))
 
-  expect_equal(y0$vv1, apply(a[,2:4,2:4], 1, sum))
-  expect_equal(y0$vv2, apply(a[2:4,,2:4], 2, sum))
-  expect_equal(y0$vv3, apply(a[2:4,2:4,], 3, sum))
+  expect_equal(y0$vv1, apply(a[, 2:4, 2:4], 1, sum))
+  expect_equal(y0$vv2, apply(a[2:4, , 2:4], 2, sum))
+  expect_equal(y0$vv3, apply(a[2:4, 2:4, ], 3, sum))
 
   expect_equal(y0$tot1, sum(a))
   expect_equal(y0$tot2, sum(a))
@@ -218,13 +218,13 @@ test_that("sum over variables", {
   expect_equal(y1$v2, apply(a, 2, sum))
   expect_equal(y1$v3, apply(a, 3, sum))
 
-  expect_equal(y1$mm12, apply(a[,,2:4], 1:2, sum))
-  expect_equal(y1$mm13, apply(a[,2:4,], c(1, 3), sum))
-  expect_equal(y1$mm23, apply(a[2:4,,], 2:3, sum))
+  expect_equal(y1$mm12, apply(a[, , 2:4], 1:2, sum))
+  expect_equal(y1$mm13, apply(a[, 2:4, ], c(1, 3), sum))
+  expect_equal(y1$mm23, apply(a[2:4, , ], 2:3, sum))
 
-  expect_equal(y1$vv1, apply(a[,2:4,2:4], 1, sum))
-  expect_equal(y1$vv2, apply(a[2:4,,2:4], 2, sum))
-  expect_equal(y1$vv3, apply(a[2:4,2:4,], 3, sum))
+  expect_equal(y1$vv1, apply(a[, 2:4, 2:4], 1, sum))
+  expect_equal(y1$vv2, apply(a[2:4, , 2:4], 2, sum))
+  expect_equal(y1$vv3, apply(a[2:4, 2:4, ], 3, sum))
 
   expect_equal(y1$tot1, sum(a))
   expect_equal(y1$tot2, sum(a))
