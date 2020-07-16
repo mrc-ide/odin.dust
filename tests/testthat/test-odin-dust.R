@@ -349,3 +349,15 @@ test_that("sir model float test", {
   ## But the same distribution
   expect_equal(rowMeans(y_f), rowMeans(y_d), tolerance = 0.01)
 })
+
+
+test_that("specify workdir", {
+  path <- tempfile()
+  gen <- odin_dust({
+    initial(x) <- 0
+    update(x) <- runif(x, 1)
+  }, verbose = FALSE, workdir = path)
+  expect_true(file.exists(path))
+  expect_true(file.exists(file.path(path, "DESCRIPTION")))
+  expect_true(file.exists(file.path(path, "src", "dust.cpp")))
+})

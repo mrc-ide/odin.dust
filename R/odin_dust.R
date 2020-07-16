@@ -21,23 +21,31 @@
 ##' @param int_t C++ type to use to use for integers. Defaults to
 ##'   \code{int}.
 ##'
+##' @param workdir Working directory to use for the compilation. By
+##'   default we use a new path within the temporary directory. Passed
+##'   to \code{\link{dust}}; a mini package will be created at this
+##'   path.
+##'
 ##' @export
 ##' @importFrom odin odin
-odin_dust <- function(x, verbose = NULL, real_t = NULL, int_t = NULL) {
+odin_dust <- function(x, verbose = NULL, real_t = NULL, int_t = NULL,
+                      workdir = NULL) {
   xx <- substitute(x)
   if (is.symbol(xx)) {
     xx <- force(x)
   } else if (is_call(xx, quote(c)) && all(vlapply(xx[-1], is.character))) {
     xx <- force(x)
   }
-  odin_dust_(xx, verbose, real_t, int_t)
+  odin_dust_(xx, verbose, real_t, int_t, workdir)
 }
 
 
 ##' @export
 ##' @rdname odin_dust
-odin_dust_ <- function(x, verbose = NULL, real_t = NULL, int_t = NULL) {
-  options <- odin::odin_options(target = "dust", verbose = verbose)
+odin_dust_ <- function(x, verbose = NULL, real_t = NULL, int_t = NULL,
+                       workdir = NULL) {
+  options <- odin::odin_options(target = "dust", verbose = verbose,
+                                workdir = workdir)
   ir <- odin::odin_parse_(x, options)
   odin_dust_wrapper(ir, options, real_t, int_t)
 }
@@ -55,7 +63,7 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t) {
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
-  generator <- dust::dust(path, quiet = !options$verbose)
+  generator <- dust::dust(path, quiet = !options$verbose, workdir = workdir)
   if (!("index" %in% names(generator$public_methods))) {
     generator$set("public", "index", odin_dust_index)
   }
