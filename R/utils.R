@@ -135,8 +135,3 @@ deparse_fun <- function(x) {
   }
   paste(str, collapse = "\n")
 }
-
-
-trim_right <- function(x) {
-  sub("\\s+", "", x)
-}
