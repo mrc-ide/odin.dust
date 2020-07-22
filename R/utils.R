@@ -124,3 +124,19 @@ replace <- function(x, tr) {
   }
   x
 }
+
+
+deparse_fun <- function(x) {
+  stopifnot(is.function(x))
+  str <- deparse(x)
+  if (str[[1]] == "function () ") {
+    str[[2]] <- paste("function()", str[[2]])
+    str <- str[-1]
+  }
+  paste(str, collapse = "\n")
+}
+
+
+trim_right <- function(x) {
+  sub("\\s+", "", x)
+}
