@@ -51,8 +51,7 @@ odin_dust_package <- function(path, verbose = NULL, real_t = NULL,
   path_dust_r <- file.path(path, "R", "dust.R")
   code_r <- readLines(path_dust_r)
   code_r_index <- sprintf('%s$set("public", "index", %s)',
-                          nms, paste(deparse(odin_dust_index),
-                                     collapse = "\n"))
+                          nms, deparse_fun(odin_dust_index))
   writeLines(c(code_r, header_r, code_r_index), path_dust_r)
 
   path
