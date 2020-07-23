@@ -42,7 +42,7 @@ generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
 
 
 generate_dust_meta <- function(real_t, int_t) {
-  list(rng = "rng",
+  list(rng_state = "rng_state",
        real_t = real_t %||% "double",
        int_t = int_t %||% "int")
 }
@@ -152,7 +152,7 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
 
   args <- c("size_t" = dat$meta$time,
             "const std::vector<real_t>&" = dat$meta$state,
-            "dust::RNG<real_t, int_t>&" = dat$meta$dust$rng,
+            "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state,
             "std::vector<real_t>&" = dat$meta$result)
 
   cpp_function("void", "update", args, body)

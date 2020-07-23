@@ -48,8 +48,8 @@ generate_dust_sexp <- function(x, data, meta) {
         ## useful most of the time).
         values[[1L]] <- sprintf("std::round(%s)", values[[1L]])
       }
-      ret <- sprintf("%s.%s(%s)",
-                     meta$dust$rng, fn, paste(values, collapse = ", "))
+      ret <- sprintf("dust::distr::%s(%s, %s)",
+                     fn, meta$dust$rng_state, paste(values, collapse = ", "))
     } else {
       if (any(names(FUNCTIONS_RENAME) == fn)) {
         fn <- FUNCTIONS_RENAME[[fn]]
