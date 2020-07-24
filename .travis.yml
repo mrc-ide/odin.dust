@@ -8,6 +8,6 @@ addons:
 r_packages:
   - covr
 r_github_packages:
-  - mrc-ide/dust
+  - mrc-ide/dust@i71-pointers
 after_success:
   - Rscript -e 'covr::codecov(quiet = FALSE)'
