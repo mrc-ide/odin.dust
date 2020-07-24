@@ -150,12 +150,25 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
                    dat, dat$meta$state, rewrite)
   body <- dust_flatten_eqs(c(unpack, eqs[equations]))
 
-  args <- c("size_t" = dat$meta$time,
-            "const std::vector<real_t>&" = dat$meta$state,
-            "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state,
-            "std::vector<real_t>&" = dat$meta$result)
+  args_cpu <- c("size_t" = dat$meta$time,
+                "const std::vector<real_t>&" = dat$meta$state,
+                "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state,
+                "std::vector<real_t>&" = dat$meta$result)
+  args_gpu <- c("size_t" = dat$meta$time,
+                "const real_t *" = dat$meta$state,
+                "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state,
+                "real_t *" = dat$meta$result)
+  return_type <- "void"
+  name <- "update"
 
-  cpp_function("void", "update", args, body)
+  c("#ifdef __NVCC__",
+    "__device__",
+    cpp_args(return_type, name, args_gpu),
+    "#else",
+    cpp_args(return_type, name, args_cpu),
+    "#endif",
+    paste0("  ", body),
+    "}")
 }
 
 
