@@ -53,7 +53,7 @@ odin_dust_ <- function(x, verbose = NULL, real_t = NULL, int_t = NULL,
 }
 
 
-odin_dust_wrapper <- function(ir, options, real_t, int_t) {
+odin_dust_wrapper <- function(ir, options, real_t, int_t, gpu) {
   dat <- generate_dust(ir, options, real_t, int_t)
   code <- odin_dust_code(dat, real_t, int_t)
 
