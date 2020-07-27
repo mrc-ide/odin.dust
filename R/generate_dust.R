@@ -154,8 +154,6 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
             "const real_t *" = dat$meta$state,
             "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state,
             "real_t *" = dat$meta$result)
-  return_type <- "void"
-  name <- "update"
   c("#ifdef __NVCC__",
     "__device__",
     "#endif",
