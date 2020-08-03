@@ -13,8 +13,6 @@ test_that("sir model smoke test", {
   expect_identical(mod$info(),
                    list(dim = list(S = 1L, I = 1L, R = 1L),
                         index = list(S = 1L, I = 2L, R = 3L)))
-  expect_equal(mod$index(), list(S = 1L, I = 2L, R = 3L))
-
   nstep <- 200
   res <- array(NA_real_, c(3, n, nstep + 1))
   res[, , 1] <- y0
@@ -173,10 +171,7 @@ test_that("Implement sum", {
   expect_equal(names(yy)[-1], names(mod$info()$dim))
 
   expect_equal(
-    mod$index(),
-    cmp(m)$transform_variables(seq_len(26))[-1])
-  expect_equal(
-    mod$index(),
+    mod$info()$index,
     mod$transform_variables(seq_len(26)))
 
   expect_equal(yy$tot1, sum(m))

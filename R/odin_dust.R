@@ -67,9 +67,6 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t, gpu) {
 
   generator <- dust::dust(path, quiet = !options$verbose, workdir = workdir,
                           gpu = gpu)
-  if (!("index" %in% names(generator$public_methods))) {
-    generator$set("public", "index", odin_dust_index)
-  }
   if (!("transform_variables" %in% names(generator$public_methods))) {
     generator$set("public", "transform_variables",
                   odin_dust_transform_variables)
@@ -89,11 +86,6 @@ odin_dust_code <- function(dat, real_t, int_t) {
 
 
 self <- NULL # this will be resolved by R6
-odin_dust_index <- function() {
-  self$info()$index
-}
-
-
 odin_dust_transform_variables <- function(y) {
   info <- self$info()
 
