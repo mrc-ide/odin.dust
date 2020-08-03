@@ -30,6 +30,9 @@ test_that("validate package", {
   x0 <- matrix(runif(10), 2, 5)
 
   mod <- pkg$env$array$new(list(x0 = x0, r = r), 0, 1)
+  expect_equal(
+    mod$transform_variables(mod$state()),
+    list(x = array(x0, c(2, 5, 1))))
   expect_identical(mod$info(), list(dim = list(x = c(2L, 5L)),
                                     index = list(x = seq_len(10))))
 })

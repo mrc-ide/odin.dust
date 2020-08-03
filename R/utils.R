@@ -141,10 +141,10 @@ replace <- function(x, tr) {
 
 deparse_fun <- function(x) {
   stopifnot(is.function(x))
-  str <- deparse(x)
-  if (str[[1]] == "function () ") {
-    str[[2]] <- paste("function()", str[[2]])
-    str <- str[-1]
-  }
-  paste(str, collapse = "\n")
+  str <- paste(sub("\\s+$", "", deparse(x)), collapse = "\n")
+  ## Apply a few fixes:
+  str <- gsub("function (", "function(", str, fixed = TRUE)
+  str <- gsub("\\)\n\\{", ") {", str)
+  str <- gsub("\\}\n\\s*else", "} else", str)
+  str
 }
