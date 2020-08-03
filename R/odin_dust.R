@@ -104,16 +104,15 @@ odin_dust_transform_variables <- function(y) {
     x
   }
 
-  ## TODO: dims might be better as 'dim'
   if (is.matrix(y)) {
     n <- ncol(y)
     Map(function(i, d) set_dim(y[i, , drop = FALSE], c(d, n)),
-        info$index, info$dims)
+        info$index, info$dim)
   } else if (is.array(y)) {
     n <- dim(y)[2:3]
     Map(function(i, d) set_dim(y[i, , , drop = FALSE], c(d, n)),
-        info$index, info$dims)
+        info$index, info$dim)
   } else {
-    Map(function(i, d) set_dim(y[i], d), info$index, info$dims)
+    Map(function(i, d) set_dim(y[i], d), info$index, info$dim)
   }
 }

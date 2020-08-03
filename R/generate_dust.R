@@ -207,12 +207,12 @@ generate_dust_core_info <- function(dat, rewrite) {
   body$add("cpp11::writable::strings nms({%s});",
            paste(dquote(nms), collapse = ", "))
 
-  body$add(generate_dust_core_info_dims(nms, dat, rewrite))
+  body$add(generate_dust_core_info_dim(nms, dat, rewrite))
   body$add(generate_dust_core_info_index(nms, dat, rewrite))
 
   body$add("using namespace cpp11::literals;")
   body$add("return cpp11::writable::list({")
-  body$add('         "dims"_nm = dims,')
+  body$add('         "dim"_nm = dim,')
   body$add('         "index"_nm = index});')
 
   name <- sprintf("dust_info<%s>", dat$config$base)
@@ -221,7 +221,7 @@ generate_dust_core_info <- function(dat, rewrite) {
 }
 
 
-generate_dust_core_info_dims <- function(nms, dat, rewrite) {
+generate_dust_core_info_dim <- function(nms, dat, rewrite) {
   dim1 <- function(x) {
     if (x$rank == 0) {
       dims <- rewrite(1)
@@ -234,10 +234,10 @@ generate_dust_core_info_dims <- function(nms, dat, rewrite) {
   }
 
   dims <- vcapply(dat$data$elements[nms], dim1, USE.NAMES = FALSE)
-  c(sprintf("cpp11::writable::list dims(%d);", length(dims)),
-    sprintf("dims[%d] = cpp11::writable::integers(%s);",
+  c(sprintf("cpp11::writable::list dim(%d);", length(dims)),
+    sprintf("dim[%d] = cpp11::writable::integers(%s);",
             seq_along(dims) - 1L, dims),
-    sprintf("dims.names() = nms;"))
+    sprintf("dim.names() = nms;"))
 }
 
 
