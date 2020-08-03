@@ -155,12 +155,10 @@ test_that("Implement sum", {
 
   mod$run(1)
   y <- mod$state()
-  yy <- mod$transform_variables(y)
+  yy <- mod$transform_variables(drop(y))
 
   cmp <- odin::odin_("examples/sum.R", target = "r", verbose = FALSE)
-  expect_equal(
-    mod$transform_variables(y),
-    cmp(m)$transform_variables(drop(y))[-1])
+  expect_equal(yy, cmp(m)$transform_variables(drop(y))[-1])
 
   expect_identical(
     mod$info(),
@@ -168,7 +166,7 @@ test_that("Implement sum", {
       dim = list(tot1 = 1L, tot2 = 1L, v1 = 5L, v2 = 7L, v3 = 5L, v4 = 7L),
       index = list(tot1 = 1L, tot2 = 2L, v1 = 3:7, v2 = 8:14, v3 = 15:19,
                    v4 = 20:26)))
-  expect_equal(names(yy)[-1], names(mod$info()$dim))
+  expect_equal(names(yy), names(mod$info()$dim))
 
   expect_equal(
     mod$info()$index,
@@ -193,10 +191,10 @@ test_that("sum over variables", {
   mod <- gen$new(list(y0 = a), 0, 1)
   cmp <- odin::odin_("examples/sum2.R", verbose = FALSE)(y0 = a)
 
-  y0 <- mod$transform_variables(mod$state())
+  y0 <- mod$transform_variables(drop(mod$state()))
   expect_equal(y0, cmp$transform_variables(drop(mod$state()))[-1])
 
-  y1 <- mod$transform_variables(mod$run(1))
+  y1 <- mod$transform_variables(drop(mod$run(1)))
   expect_equal(y1, cmp$transform_variables(drop(mod$state()))[-1])
 
   expect_equal(y0$y, a)
