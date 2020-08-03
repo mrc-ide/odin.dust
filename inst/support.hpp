@@ -219,3 +219,13 @@ T odin_sum1(const T * x, size_t from, size_t to) {
   }
   return tot;
 }
+
+
+inline cpp11::writable::integers integer_sequence(size_t from, size_t len) {
+  cpp11::writable::integers ret(len);
+  int* data = INTEGER(ret);
+  for (size_t i = 0, j = from; i < len; ++i, ++j) {
+    data[i] = j;
+  }
+  return ret;
+}

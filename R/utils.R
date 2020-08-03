@@ -68,6 +68,15 @@ dust_minus_1 <- function(x, protect, data, meta) {
 }
 
 
+dust_plus_1 <- function(x, rewrite) {
+  if (is.numeric(x)) {
+    rewrite(x + 1)
+  } else {
+    sprintf("%s + 1", rewrite(x))
+  }
+}
+
+
 cpp_function <- function(return_type, name, args, body) {
   c(cpp_args(return_type, name, args), paste0("  ", body), "}")
 }

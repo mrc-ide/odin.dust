@@ -10,7 +10,9 @@ test_that("sir model smoke test", {
   mod <- gen$new(list(I_ini = 10), 0L, n)
   expect_equal(mod$state(), matrix(y0, 3, n))
   expect_equal(mod$step(), 0)
-  expect_identical(mod$info(), list(S = 1L, I = 1L, R = 1L))
+  expect_identical(mod$info(),
+                   list(dims = list(S = 1L, I = 1L, R = 1L),
+                        index = list(S = 1L, I = 2L, R = 3L)))
   expect_equal(mod$index(), list(S = 1L, I = 2L, R = 3L))
 
   nstep <- 200
@@ -39,7 +41,8 @@ test_that("vector handling test", {
   mod <- gen$new(list(), 0L, np)
   expect_equal(mod$state(), matrix(0, ns, np))
   expect_equal(mod$step(), 0)
-  expect_identical(mod$info(), list(x = 3L))
+  expect_identical(mod$info(), list(dims = list(x = 3L),
+                                    index = list(x = seq_len(3))))
   mod$set_index(1L)
 
   y1 <- mod$run(nt)
@@ -61,7 +64,8 @@ test_that("user-vector handling test", {
   x0 <- matrix(runif(10), 2, 5)
 
   mod <- gen$new(list(x0 = x0, r = r), 0, 1)
-  expect_identical(mod$info(), list(x = c(2L, 5L)))
+  expect_identical(mod$info(), list(dims = list(x = c(2L, 5L)),
+                                    index = list(x = seq_len(10))))
 
   expect_equal(mod$state(), matrix(c(x0)))
   expect_equal(mod$step(), 0)
@@ -100,7 +104,8 @@ test_that("multiline array expression", {
     dim(x) <- length(x0)
   }, verbose = FALSE)
   mod <- gen$new(list(), 0, 1)
-  expect_equal(mod$info(), list(y = 1L, x = 10L))
+  expect_equal(mod$info(), list(dims = list(y = 1L, x = 10L),
+                                index = list(y = 1L, x = 2:11)))
   expect_equal(mod$state(), matrix(c(55, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55)))
 })
 
@@ -156,10 +161,13 @@ test_that("Implement sum", {
   cmp <- odin::odin_("examples/sum.R", target = "r", verbose = FALSE)
   yy <- cmp(m)$transform_variables(drop(y))
 
-  expect_mapequal(
+  expect_identical(
     mod$info(),
-    list(tot1 = 1L, tot2 = 1L, v1 = 5L, v2 = 7L, v3 = 5L, v4 = 7L))
-  expect_equal(names(yy)[-1], names(mod$info()))
+    list(
+      dims = list(tot1 = 1L, tot2 = 1L, v1 = 5L, v2 = 7L, v3 = 5L, v4 = 7L),
+      index = list(tot1 = 1L, tot2 = 2L, v1 = 3:7, v2 = 8:14, v3 = 15:19,
+                   v4 = 20:26)))
+  expect_equal(names(yy)[-1], names(mod$info()$dims))
 
   expect_equal(
     mod$index(),

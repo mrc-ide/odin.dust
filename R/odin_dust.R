@@ -86,6 +86,5 @@ odin_dust_code <- function(dat, real_t, int_t) {
 
 self <- NULL # this will be resolved by R6
 odin_dust_index <- function() {
-  n <- vapply(self$info(), prod, numeric(1))
-  Map(seq.int, to = cumsum(n), by = 1L, length.out = n)
+  self$info()$index
 }
