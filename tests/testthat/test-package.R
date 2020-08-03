@@ -34,6 +34,7 @@ test_that("validate package", {
     mod$transform_variables(mod$state()),
     list(x = array(x0, c(2, 5, 1))))
   expect_identical(mod$info(), list(dim = list(x = c(2L, 5L)),
+                                    len = 10L,
                                     index = list(x = seq_len(10))))
 })
 

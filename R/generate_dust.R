@@ -209,10 +209,13 @@ generate_dust_core_info <- function(dat, rewrite) {
 
   body$add(generate_dust_core_info_dim(nms, dat, rewrite))
   body$add(generate_dust_core_info_index(nms, dat, rewrite))
+  body$add(generate_dust_core_info_len(nms, dat, rewrite))
+
 
   body$add("using namespace cpp11::literals;")
   body$add("return cpp11::writable::list({")
   body$add('         "dim"_nm = dim,')
+  body$add('         "len"_nm = len,')
   body$add('         "index"_nm = index});')
 
   name <- sprintf("dust_info<%s>", dat$config$base)
@@ -256,6 +259,19 @@ generate_dust_core_info_index <- function(nms, dat, rewrite) {
   c(sprintf("cpp11::writable::list index(%d);", length(index)),
     sprintf("index[%d] = %s;", seq_along(index) - 1L, index),
     sprintf("index.names() = nms;"))
+}
+
+
+generate_dust_core_info_len <- function(nms, dat, rewrite) {
+  last <- nms[[length(nms)]]
+  last_offset <- dat$data$variable$contents[[last]]$offset
+  if (dat$data$elements[[last]]$rank == 0) {
+    len <- dust_plus_1(last_offset, rewrite)
+  } else {
+    last_length <- dat$data$elements[[last]]$dimnames$length
+    len <- sprintf("%s + %s", rewrite(last_offset), rewrite(last_length))
+  }
+  sprintf("size_t len = %s;", len)
 }
 
 

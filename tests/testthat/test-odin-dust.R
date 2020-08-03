@@ -12,6 +12,7 @@ test_that("sir model smoke test", {
   expect_equal(mod$step(), 0)
   expect_identical(mod$info(),
                    list(dim = list(S = 1L, I = 1L, R = 1L),
+                        len = 3L,
                         index = list(S = 1L, I = 2L, R = 3L)))
   nstep <- 200
   res <- array(NA_real_, c(3, n, nstep + 1))
@@ -40,6 +41,7 @@ test_that("vector handling test", {
   expect_equal(mod$state(), matrix(0, ns, np))
   expect_equal(mod$step(), 0)
   expect_identical(mod$info(), list(dim = list(x = 3L),
+                                    len = 3L,
                                     index = list(x = seq_len(3))))
   mod$set_index(1L)
 
@@ -63,6 +65,7 @@ test_that("user-vector handling test", {
 
   mod <- gen$new(list(x0 = x0, r = r), 0, 1)
   expect_identical(mod$info(), list(dim = list(x = c(2L, 5L)),
+                                    len = 10L,
                                     index = list(x = seq_len(10))))
 
   expect_equal(mod$state(), matrix(c(x0)))
@@ -103,6 +106,7 @@ test_that("multiline array expression", {
   }, verbose = FALSE)
   mod <- gen$new(list(), 0, 1)
   expect_equal(mod$info(), list(dim = list(y = 1L, x = 10L),
+                                len = 11L,
                                 index = list(y = 1L, x = 2:11)))
   expect_equal(mod$state(), matrix(c(55, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55)))
 })
@@ -164,6 +168,7 @@ test_that("Implement sum", {
     mod$info(),
     list(
       dim = list(tot1 = 1L, tot2 = 1L, v1 = 5L, v2 = 7L, v3 = 5L, v4 = 7L),
+      len = 26L,
       index = list(tot1 = 1L, tot2 = 2L, v1 = 3:7, v2 = 8:14, v3 = 15:19,
                    v4 = 20:26)))
   expect_equal(names(yy), names(mod$info()$dim))
