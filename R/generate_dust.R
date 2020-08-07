@@ -42,7 +42,7 @@ generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
 
 
 generate_dust_meta <- function(real_t, int_t) {
-  list(rng = "rng",
+  list(rng_state = "rng_state",
        real_t = real_t %||% "double",
        int_t = int_t %||% "int")
 }
@@ -151,11 +151,13 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
   body <- dust_flatten_eqs(c(unpack, eqs[equations]))
 
   args <- c("size_t" = dat$meta$time,
-            "const std::vector<real_t>&" = dat$meta$state,
-            "dust::RNG<real_t, int_t>&" = dat$meta$dust$rng,
-            "std::vector<real_t>&" = dat$meta$result)
-
-  cpp_function("void", "update", args, body)
+            "const real_t *" = dat$meta$state,
+            "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state,
+            "real_t *" = dat$meta$result)
+  c("#ifdef __NVCC__",
+    "__device__",
+    "#endif",
+    cpp_function("void", "update", args, body))
 }
 
 
@@ -267,6 +269,6 @@ dust_extract_variable <- function(x, data_elements, state, rewrite) {
     ## Using a wrapper here would be more C++'ish but is it needed?
     offset <- rewrite(x$offset)
     len <- rewrite(d$dimnames$length)
-    sprintf("%s.data() + %s", state, offset)
+    sprintf("%s + %s", state, offset)
   }
 }

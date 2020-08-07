@@ -276,7 +276,7 @@ test_that("NSE interface can accept a symbol and resolve to value", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(path, NULL, NULL, NULL, NULL))
+    list(path, NULL, NULL, NULL, NULL, FALSE))
 })
 
 
@@ -289,7 +289,7 @@ test_that("NSE interface can accept a character vector", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(c("a", "b", "c"), NULL, NULL, NULL, NULL))
+    list(c("a", "b", "c"), NULL, NULL, NULL, NULL, FALSE))
 })
 
 
@@ -360,4 +360,16 @@ test_that("specify workdir", {
   expect_true(file.exists(path))
   expect_true(file.exists(file.path(path, "DESCRIPTION")))
   expect_true(file.exists(file.path(path, "src", "dust.cpp")))
+})
+
+
+test_that("generated code includes gpu decorator", {
+  ir <- odin::odin_parse({
+    initial(x) <- 0
+    update(x) <- runif(x, 1)
+  })
+  options <- odin::odin_options(target = "dust", verbose = FALSE,
+                                workdir = NULL)
+  dat <- generate_dust(ir, options, NULL, NULL)
+  expect_match(dat$class, "__device__", fixed = TRUE, all = FALSE)
 })

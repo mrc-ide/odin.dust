@@ -69,10 +69,14 @@ dust_minus_1 <- function(x, protect, data, meta) {
 
 
 cpp_function <- function(return_type, name, args, body) {
+  c(cpp_args(return_type, name, args), paste0("  ", body), "}")
+}
+
+
+cpp_args <- function(return_type, name, args) {
   args_str <- paste(sprintf("%s %s", names(args), unname(args)),
                     collapse = ", ")
-  str <- sprintf("%s %s(%s)", return_type, name, args_str)
-  c(paste0(str, " {"), paste0("  ", body), "}")
+  sprintf("%s %s(%s) {", return_type, name, args_str)
 }
 
 
