@@ -67,8 +67,9 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t, gpu) {
 
   generator <- dust::dust(path, quiet = !options$verbose, workdir = workdir,
                           gpu = gpu)
-  if (!("index" %in% names(generator$public_methods))) {
-    generator$set("public", "index", odin_dust_index)
+  if (!("transform_variables" %in% names(generator$public_methods))) {
+    generator$set("public", "transform_variables",
+                  odin_dust_transform_variables)
   }
   generator
 }
@@ -85,7 +86,25 @@ odin_dust_code <- function(dat, real_t, int_t) {
 
 
 self <- NULL # this will be resolved by R6
-odin_dust_index <- function() {
-  n <- vapply(self$info(), prod, numeric(1))
-  Map(seq.int, to = cumsum(n), by = 1L, length.out = n)
+odin_dust_transform_variables <- function(y) {
+  info <- self$info()
+
+  set_dim <- function(x, dimx) {
+    if (length(dimx) > 1L) {
+      dim(x) <- dimx
+    }
+    x
+  }
+
+  if (is.matrix(y)) {
+    n <- ncol(y)
+    Map(function(i, d) set_dim(y[i, , drop = FALSE], c(d, n)),
+        info$index, info$dim)
+  } else if (is.array(y)) {
+    n <- dim(y)[2:3]
+    Map(function(i, d) set_dim(y[i, , , drop = FALSE], c(d, n)),
+        info$index, info$dim)
+  } else {
+    Map(function(i, d) set_dim(y[i], d), info$index, info$dim)
+  }
 }

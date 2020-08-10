@@ -68,6 +68,15 @@ dust_minus_1 <- function(x, protect, data, meta) {
 }
 
 
+dust_plus_1 <- function(x, rewrite) {
+  if (is.numeric(x)) {
+    rewrite(x + 1)
+  } else {
+    sprintf("%s + 1", rewrite(x))
+  }
+}
+
+
 cpp_function <- function(return_type, name, args, body) {
   c(cpp_args(return_type, name, args), paste0("  ", body), "}")
 }
@@ -132,10 +141,10 @@ replace <- function(x, tr) {
 
 deparse_fun <- function(x) {
   stopifnot(is.function(x))
-  str <- deparse(x)
-  if (str[[1]] == "function () ") {
-    str[[2]] <- paste("function()", str[[2]])
-    str <- str[-1]
-  }
-  paste(str, collapse = "\n")
+  str <- paste(sub("\\s+$", "", deparse(x)), collapse = "\n")
+  ## Apply a few fixes:
+  str <- gsub("function (", "function(", str, fixed = TRUE)
+  str <- gsub("\\)\n\\{", ") {", str)
+  str <- gsub("\\}\n\\s*else", "} else", str)
+  str
 }

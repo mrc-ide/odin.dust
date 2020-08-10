@@ -198,9 +198,34 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 
 
 generate_dust_core_info <- function(dat, rewrite) {
-  vars <- dat$data$variable$contents
-  nms <- names(vars)
-  f <- function(x) {
+  nms <- names(dat$data$variable$contents)
+  args <- dat$meta$internal
+  names(args) <- sprintf("const %s::init_t&", dat$config$base)
+
+  body <- collector()
+
+  body$add("cpp11::writable::strings nms({%s});",
+           paste(dquote(nms), collapse = ", "))
+
+  body$add(generate_dust_core_info_dim(nms, dat, rewrite))
+  body$add(generate_dust_core_info_index(nms, dat, rewrite))
+  body$add(generate_dust_core_info_len(nms, dat, rewrite))
+
+
+  body$add("using namespace cpp11::literals;")
+  body$add("return cpp11::writable::list({")
+  body$add('         "dim"_nm = dim,')
+  body$add('         "len"_nm = len,')
+  body$add('         "index"_nm = index});')
+
+  name <- sprintf("dust_info<%s>", dat$config$base)
+  c("template <>",
+    cpp_function("cpp11::sexp", name, args, body$get()))
+}
+
+
+generate_dust_core_info_dim <- function(nms, dat, rewrite) {
+  dim1 <- function(x) {
     if (x$rank == 0) {
       dims <- rewrite(1)
     } else if (x$rank == 1) {
@@ -211,22 +236,42 @@ generate_dust_core_info <- function(dat, rewrite) {
     sprintf("{%s}", dims)
   }
 
-  args <- dat$meta$internal
-  names(args) <- sprintf("const %s::init_t&", dat$config$base)
+  dims <- vcapply(dat$data$elements[nms], dim1, USE.NAMES = FALSE)
+  c(sprintf("cpp11::writable::list dim(%d);", length(dims)),
+    sprintf("dim[%d] = cpp11::writable::integers(%s);",
+            seq_along(dims) - 1L, dims),
+    sprintf("dim.names() = nms;"))
+}
 
-  dims <- vcapply(dat$data$elements[nms], f, USE.NAMES = FALSE)
-  body <- collector()
-  body$add("cpp11::writable::list ret(%d);", length(dims))
-  body$add("ret[%d] = cpp11::writable::integers(%s);",
-           seq_along(dims) - 1L, dims)
-  body$add("cpp11::writable::strings nms({%s});",
-           paste(dquote(nms), collapse = ", "))
-  body$add("ret.names() = nms;")
-  body$add("return ret;")
 
-  name <- sprintf("dust_info<%s>", dat$config$base)
-  c("template <>",
-    cpp_function("cpp11::sexp", name, args, body$get()))
+generate_dust_core_info_index <- function(nms, dat, rewrite) {
+  index1 <- function(nm) {
+    start <- dust_plus_1(dat$data$variable$contents[[nm]]$offset, rewrite)
+    el <- dat$data$elements[[nm]]
+    if (el$rank == 0) {
+      sprintf("cpp11::writable::integers({%s})", start)
+    } else {
+      sprintf("integer_sequence(%s, %s)", start, rewrite(el$dimnames$length))
+    }
+  }
+
+  index <- vcapply(nms, index1, USE.NAMES = FALSE)
+  c(sprintf("cpp11::writable::list index(%d);", length(index)),
+    sprintf("index[%d] = %s;", seq_along(index) - 1L, index),
+    sprintf("index.names() = nms;"))
+}
+
+
+generate_dust_core_info_len <- function(nms, dat, rewrite) {
+  last <- nms[[length(nms)]]
+  last_offset <- dat$data$variable$contents[[last]]$offset
+  if (dat$data$elements[[last]]$rank == 0) {
+    len <- dust_plus_1(last_offset, rewrite)
+  } else {
+    last_length <- dat$data$elements[[last]]$dimnames$length
+    len <- sprintf("%s + %s", rewrite(last_offset), rewrite(last_length))
+  }
+  sprintf("size_t len = %s;", len)
 }
 
 

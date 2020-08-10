@@ -10,9 +10,10 @@ test_that("sir model smoke test", {
   mod <- gen$new(list(I_ini = 10), 0L, n)
   expect_equal(mod$state(), matrix(y0, 3, n))
   expect_equal(mod$step(), 0)
-  expect_identical(mod$info(), list(S = 1L, I = 1L, R = 1L))
-  expect_equal(mod$index(), list(S = 1L, I = 2L, R = 3L))
-
+  expect_identical(mod$info(),
+                   list(dim = list(S = 1L, I = 1L, R = 1L),
+                        len = 3L,
+                        index = list(S = 1L, I = 2L, R = 3L)))
   nstep <- 200
   res <- array(NA_real_, c(3, n, nstep + 1))
   res[, , 1] <- y0
@@ -39,7 +40,9 @@ test_that("vector handling test", {
   mod <- gen$new(list(), 0L, np)
   expect_equal(mod$state(), matrix(0, ns, np))
   expect_equal(mod$step(), 0)
-  expect_identical(mod$info(), list(x = 3L))
+  expect_identical(mod$info(), list(dim = list(x = 3L),
+                                    len = 3L,
+                                    index = list(x = seq_len(3))))
   mod$set_index(1L)
 
   y1 <- mod$run(nt)
@@ -61,7 +64,9 @@ test_that("user-vector handling test", {
   x0 <- matrix(runif(10), 2, 5)
 
   mod <- gen$new(list(x0 = x0, r = r), 0, 1)
-  expect_identical(mod$info(), list(x = c(2L, 5L)))
+  expect_identical(mod$info(), list(dim = list(x = c(2L, 5L)),
+                                    len = 10L,
+                                    index = list(x = seq_len(10))))
 
   expect_equal(mod$state(), matrix(c(x0)))
   expect_equal(mod$step(), 0)
@@ -100,7 +105,9 @@ test_that("multiline array expression", {
     dim(x) <- length(x0)
   }, verbose = FALSE)
   mod <- gen$new(list(), 0, 1)
-  expect_equal(mod$info(), list(y = 1L, x = 10L))
+  expect_equal(mod$info(), list(dim = list(y = 1L, x = 10L),
+                                len = 11L,
+                                index = list(y = 1L, x = 2:11)))
   expect_equal(mod$state(), matrix(c(55, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55)))
 })
 
@@ -152,18 +159,23 @@ test_that("Implement sum", {
 
   mod$run(1)
   y <- mod$state()
-  ## TODO: See #2
-  cmp <- odin::odin_("examples/sum.R", target = "r", verbose = FALSE)
-  yy <- cmp(m)$transform_variables(drop(y))
+  yy <- mod$transform_variables(drop(y))
 
-  expect_mapequal(
+  cmp <- odin::odin_("examples/sum.R", target = "r", verbose = FALSE)
+  expect_equal(yy, cmp(m)$transform_variables(drop(y))[-1])
+
+  expect_identical(
     mod$info(),
-    list(tot1 = 1L, tot2 = 1L, v1 = 5L, v2 = 7L, v3 = 5L, v4 = 7L))
-  expect_equal(names(yy)[-1], names(mod$info()))
+    list(
+      dim = list(tot1 = 1L, tot2 = 1L, v1 = 5L, v2 = 7L, v3 = 5L, v4 = 7L),
+      len = 26L,
+      index = list(tot1 = 1L, tot2 = 2L, v1 = 3:7, v2 = 8:14, v3 = 15:19,
+                   v4 = 20:26)))
+  expect_equal(names(yy), names(mod$info()$dim))
 
   expect_equal(
-    mod$index(),
-    cmp(m)$transform_variables(seq_len(26))[-1])
+    mod$info()$index,
+    mod$transform_variables(seq_len(26)))
 
   expect_equal(yy$tot1, sum(m))
   expect_equal(yy$tot2, sum(m))
@@ -184,8 +196,11 @@ test_that("sum over variables", {
   mod <- gen$new(list(y0 = a), 0, 1)
   cmp <- odin::odin_("examples/sum2.R", verbose = FALSE)(y0 = a)
 
-  y0 <- cmp$transform_variables(drop(mod$state()))
-  y1 <- cmp$transform_variables(drop(mod$run(1)))
+  y0 <- mod$transform_variables(drop(mod$state()))
+  expect_equal(y0, cmp$transform_variables(drop(mod$state()))[-1])
+
+  y1 <- mod$transform_variables(drop(mod$run(1)))
+  expect_equal(y1, cmp$transform_variables(drop(mod$state()))[-1])
 
   expect_equal(y0$y, a)
 
@@ -372,4 +387,29 @@ test_that("generated code includes gpu decorator", {
                                 workdir = NULL)
   dat <- generate_dust(ir, options, NULL, NULL)
   expect_match(dat$class, "__device__", fixed = TRUE, all = FALSE)
+})
+
+
+test_that("transform_variables works with all 3 state options", {
+  gen <- odin_dust_("examples/array.R", verbose = FALSE)
+  r <- matrix(runif(10), 2, 5)
+  x0 <- matrix(runif(10), 2, 5)
+
+  ## easy
+  mod <- gen$new(list(x0 = x0, r = r), 0, 1)
+  expect_equal(mod$transform_variables(drop(mod$state())),
+               list(x = x0))
+  expect_equal(mod$transform_variables(mod$state()),
+               list(x = array(x0, c(dim(x0), 1))))
+
+  ## medium
+  mod <- gen$new(list(x0 = x0, r = r), 0, 2)
+  expect_equal(mod$transform_variables(mod$state()),
+               list(x = array(rep(x0, 2), c(dim(x0), 2))))
+
+  ## hard
+  y <- dust::dust_simulate(mod, c(0, 0, 0))
+  yy <- mod$transform_variables(y)
+  expect_equal(yy$x[, , 1, 1], x0)
+  expect_equal(yy$x, array(rep(x0, 6), c(dim(x0), 2, 3)))
 })
