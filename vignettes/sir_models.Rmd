@@ -1,5 +1,5 @@
 ---
-title: "sir_models"
+title: "SIR models"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{sir_models}
@@ -40,16 +40,16 @@ R_{t+1} &= R_t - n_{IR}
 
 where
 $$\begin{align*} 
-n_{SI} &\sim B(S, 1 - e^{-\beta \frac{I}{N} \cdot dt)} \\
-n_{IR} &\sim B(I, 1 - e^{-\gamma \cdot dt)}
+n_{SI} &\sim B(S, 1 - e^{-\beta \frac{I}{N} \cdot dt}) \\
+n_{IR} &\sim B(I, 1 - e^{-\gamma \cdot dt})
 \end{align*}$$
 
 ## Implementing the SIR model using [`odin.dust`](https://mrc-ide.github.io/odin.dust/)
 
 The above equations can straightforwardly be written out using the odin DSL:
 
-```{r pkg_dust_r, echo = FALSE, results = "asis"}
-r_output(readLines(file.path(path, "vignettes/sir.R")))
+```{r odin_sir, echo = FALSE, results = "asis"}
+r_output(readLines(file.path("sir.R")))
 ```
 
 This is converted to a C++ dust model, and compiled into a library in a single step, using [`odin.dust`](https://mrc-ide.github.io/odin.dust/). Save the above code as a file named `sir.R`. File names must not contain special characters.
@@ -86,8 +86,8 @@ p_SI[] <- 1 - exp(-lambda[i] * dt)
 Putting this all together, the age structured SIR model is as follows:
 
 
-```{r pkg_dust_r, echo = FALSE, results = "asis"}
-r_output(readLines(file.path(path, "vignettes/sirage.R")))
+```{r odin_age, echo = FALSE, results = "asis"}
+r_output(readLines(file.path("sirage.R")))
 ```
 
 As before, save the file, and use `odin.dust` to compile the model:
@@ -99,8 +99,7 @@ gen_age <- odin.dust::odin_dust("sirage.R")
 We can generate an age-structured contact matrix based on the [POLYMOD](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074) survey by using the [socialmixr](https://github.com/sbfnk/socialmixr) package:
 
 ```{r}
-library(socialmixr)
-data(polymod)
+data(polymod, package = "socialmixr")
 
 age.limits = seq(0, 70, 10)
 
@@ -122,10 +121,10 @@ This can be given as a parameter to the model by adding the argument `data = lis
 
 ## Saving a model into a package
 
-If you want to distribute your model in an R package, rather than building it locally, you will want to use the `odin_dust_package()` function instead. This will write the transpiled C++ dust code into `src` and its R interface in `R/dust.R`. Package users are not required to regenerate the dust code, and their compiler will build the library when they install the package. You may also wish to add a file `R/zzz.R` to your package `mycoolpackage` with the following lines:
+If you want to distribute your model in an R package, rather than building it locally, you will want to use the `odin_dust_package()` function instead. This will write the transpiled C++ dust code into `src` and its R interface in `R/dust.R`. Package users are not required to regenerate the dust code, and their compiler will build the library when they install the package. You may also wish to add a file `R/zzz.R` to your package `myrpackage` with the following lines:
 
 ```r
-##' @useDynLib mycoolpackage, .registration = TRUE
+##' @useDynLib myrpackage, .registration = TRUE
 NULL
 ```
 
@@ -133,14 +132,18 @@ to help automate the compilation of the model.
 
 # Running the SIR model with [`dust`](https://mrc-ide.github.io/dust/)
 
-Now we can use the `new` method on the generator to make `dust` objects. Typically you will work through the `mcstate` package to run the model, but for illustrative purposes we show here that `dust` can be driven directly from R.
+Now we can use the `new` method on the generator to make `dust` objects. `dust` can be driven directly from R, and also interfaces with the [`mcstate`](https://mrc-ide.github.io/mcstate/) package to allow parameter inference and forecasting.
 
 [`new()`](https://mrc-ide.github.io/dust/reference/dust.html#method-new) takes the data needed to run the model i.e. a list with any parameters defined as `user` in the odin code above, the value of the initial step $t_0$, and the number of particles, each for now can simply be thought of as an independent stochastic realisation of the model, but in the next step will be used when inferring model parameters.
 
 Additional arguments include the number of threads to parallelise the particles over, and the seed for the random number generator. The seed must be an integer, and using the same seed will ensure reproducible results for all particles. To use this to directly create a new dust object with 10 particles, run using 4 threads:
 
 ```{r}
-sir_model <- gen_sir$new(data = list(dt = 1, S_ini = 1000, I_ini = 10, beta = 0.2, gamma = 0.1),
+sir_model <- gen_sir$new(data = list(dt = 1, 
+                                     S_ini = 1000, 
+                                     I_ini = 10, 
+                                     beta = 0.2, 
+                                     gamma = 0.1),
                          step = 1,
                          n_particles = 10L,
                          n_threads = 4L,
@@ -165,11 +168,12 @@ We can change the parameters, say by increasing the infection rate and the popul
 ```{r}
 dt = 0.25
 n_particles <- 10L
-sir_model <- gen_sir$reset(data = list(dt = 0.25, S_ini = 2000, I_ini = 10, beta = 0.4, gamma = 0.1),
-                           step = 1,
-                           n_particles = n_particles,
-                           n_threads = 4L,
-                           seed = 1L)
+sir_model$reset(data = list(dt = 0.25, 
+                            S_ini = 2000, 
+                            I_ini = 10, 
+                            beta = 0.4, 
+                            gamma = 0.1),
+                step = 0)
 sir_model$state()
 ```
 
@@ -192,7 +196,7 @@ matplot(time, t(x[1, , ]), type = "l",
          col = cols[["S"]], lty = 1, ylim = range(x))
 matlines(time, t(x[2, , ]), col = cols[["I"]], lty = 1)
 matlines(time, t(x[3, , ]), col = cols[["R"]], lty = 1)
-legend("left", lwd = 1, col = cols, legend = name(cols), bty = "n")
+legend("left", lwd = 1, col = cols, legend = names(cols), bty = "n")
 ```
 
-Many other methods are available on the dust object to support inference, but typically you will use the `mcstate` package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from `dust`.
+Many other methods are available on the dust object to support inference, but typically you may want to use the [`mcstate`](https://mrc-ide.github.io/mcstate/) package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from [`dust`](https://mrc-ide.github.io/dust/).

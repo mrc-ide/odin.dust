@@ -33,6 +33,6 @@ Suggests:
     socialmixr,
     testthat,
     tibble,
-    vctrs,
+    vctrs
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr
