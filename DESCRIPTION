@@ -1,6 +1,6 @@
 Package: odin.dust
 Title: Compile Odin to Dust
-Version: 0.0.9
+Version: 0.0.10
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("John", "Lees", role = "aut"),
@@ -18,16 +18,20 @@ URL: https://github.com/mrc-ide/odin.dust
 BugReports: https://github.com/mrc-ide/odin.dust/issues
 Imports:
     R6,
-    dust (>= 0.4.1),
-    odin
-Suggests:
     brio,
     cpp11,
     decor,
-    dde,
-    mockery,
-    pkgload,
-    testthat,
+    dust (>= 0.4.13),
+    odin,
     tibble,
     vctrs
+Suggests:
+    dde,
+    knitr,
+    mockery,
+    pkgload,
+    rmarkdown,
+    socialmixr,
+    testthat
 RoxygenNote: 7.1.0
+VignetteBuilder: knitr
