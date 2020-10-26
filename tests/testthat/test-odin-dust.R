@@ -37,7 +37,7 @@ test_that("vector handling test", {
   np <- 100
   nt <- 5
 
-  mod <- gen$new(list(), 0L, np)
+  mod <- gen$new(list(), 0L, np, seed = 1L)
   expect_equal(mod$state(), matrix(0, ns, np))
   expect_equal(mod$step(), 0)
   expect_identical(mod$info(), list(dim = list(x = 3L),
@@ -49,7 +49,7 @@ test_that("vector handling test", {
   y2 <- mod$state()
   expect_equal(y1, y2[1, , drop = FALSE])
 
-  r <- dust::dust_rng$new(1, np)$rnorm(ns * nt * np, 0, 1)
+  r <- dust::dust_rng$new(1L, np)$rnorm(ns * nt * np, 0, 1)
   rr <- array(r, c(np, ns, nt))
   expect_equal(t(apply(rr, c(1:2), sum)), y2)
 })
@@ -120,7 +120,7 @@ test_that("Accept integers", {
     p <- user(min = 0, max = 1)
   }, verbose = FALSE)
 
-  mod <- gen$new(list(n = 10, p = 0.5), 0, 100)
+  mod <- gen$new(list(n = 10, p = 0.5), 0, 100, seed = 1L)
   expect_equal(mod$state(), matrix(0, 1, 100))
   y <- mod$run(1)
   cmp <- dust::dust_rng$new(1, 100)$rbinom(100, 10L, 0.5)
@@ -408,7 +408,7 @@ test_that("transform_variables works with all 3 state options", {
                list(x = array(rep(x0, 2), c(dim(x0), 2))))
 
   ## hard
-  y <- dust::dust_simulate(mod, c(0, 0, 0))
+  y <- dust::dust_iterate(mod, c(0, 0, 0))
   yy <- mod$transform_variables(y)
   expect_equal(yy$x[, , 1, 1], x0)
   expect_equal(yy$x, array(rep(x0, 6), c(dim(x0), 2, 3)))
