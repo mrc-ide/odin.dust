@@ -27,7 +27,10 @@ Imports:
     vctrs
 Suggests:
     dde,
+    knitr,
     mockery,
     pkgload,
+    rmarkdown,
     testthat
 RoxygenNote: 7.1.0
+VignetteBuilder: knitr
