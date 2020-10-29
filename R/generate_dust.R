@@ -152,7 +152,7 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
 
   args <- c("size_t" = dat$meta$time,
             "const real_t *" = dat$meta$state,
-            "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state,
+            "dust::rng_state_t<real_t>" = dat$meta$dust$rng_state,
             "real_t *" = dat$meta$result)
   c("#ifdef __NVCC__",
     "__device__",
