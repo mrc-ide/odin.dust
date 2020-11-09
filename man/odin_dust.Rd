@@ -5,9 +5,9 @@
 \alias{odin_dust_}
 \title{Create a dust odin model}
 \usage{
-odin_dust(x, verbose = NULL, real_t = NULL, int_t = NULL, workdir = NULL)
+odin_dust(x, verbose = NULL, real_t = NULL, workdir = NULL)
 
-odin_dust_(x, verbose = NULL, real_t = NULL, int_t = NULL, workdir = NULL)
+odin_dust_(x, verbose = NULL, real_t = NULL, workdir = NULL)
 }
 \arguments{
 \item{x}{Either the name of a file to read, a text string (if
@@ -20,9 +20,6 @@ be verbose.  Defaults to the value of the option
 
 \item{real_t}{C++ type to use for real (floating point)
 numbers. Defaults to \code{double}.}
-
-\item{int_t}{C++ type to use to use for integers. Defaults to
-\code{int}.}
 
 \item{workdir}{Working directory to use for the compilation. By
 default we use a new path within the temporary directory. Passed
