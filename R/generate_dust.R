@@ -1,4 +1,4 @@
-generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
+generate_dust <- function(ir, options, real_t = NULL) {
   dat <- odin::odin_ir_deserialise(ir)
 
   if (!dat$features$discrete) {
@@ -14,7 +14,7 @@ generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
          paste(squote(unsupported), collapse = ", "))
   }
 
-  dat$meta$dust <- generate_dust_meta(real_t, int_t)
+  dat$meta$dust <- generate_dust_meta(real_t)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta)
@@ -41,10 +41,9 @@ generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
 }
 
 
-generate_dust_meta <- function(real_t, int_t) {
+generate_dust_meta <- function(real_t) {
   list(rng_state = "rng_state",
-       real_t = real_t %||% "double",
-       int_t = int_t %||% "int")
+       real_t = real_t %||% "double")
 }
 
 
@@ -86,8 +85,7 @@ generate_dust_core_struct <- function(dat) {
   i <- vcapply(dat$data$elements, "[[", "location") == "internal"
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
 
-  c(sprintf("typedef %s int_t;", dat$meta$dust$int_t),
-    sprintf("typedef %s real_t;", dat$meta$dust$real_t),
+  c(sprintf("typedef %s real_t;", dat$meta$dust$real_t),
     "struct init_t {",
     paste0("  ", els),
     "};")
@@ -169,14 +167,6 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   body <- collector()
   body$add("typedef typename %s::real_t real_t;", dat$config$base)
 
-  ## Only add the integer typedef if we might need it, in order to
-  ## avoid a compiler warning about an unused typedef.  This is
-  ## slightly too generous (it might create the typedef when not
-  ## needed) but that's better than the reverse.
-  has_int <- any(vcapply(dat$data$elements, "[[", "storage_type") == "int")
-  if (has_int) {
-    body$add("typedef typename %s::int_t int_t;", dat$config$base)
-  }
   body$add("%s %s;", type, dat$meta$internal)
   body$add(dust_flatten_eqs(eqs[dat$components$create$equations]))
 

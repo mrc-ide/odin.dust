@@ -56,7 +56,7 @@ generate_dust_equation_user <- function(eq, data_info, dat, rewrite) {
 
   lhs <- rewrite(eq$lhs)
   storage_type <- dust_type(data_info$storage_type)
-  is_integer <- if (storage_type == "int_t") "true" else "false"
+  is_integer <- if (storage_type == "int") "true" else "false"
   min <- rewrite(eq$user$min %||% "NA_REAL")
   max <- rewrite(eq$user$max %||% "NA_REAL")
   previous <- lhs
@@ -64,7 +64,7 @@ generate_dust_equation_user <- function(eq, data_info, dat, rewrite) {
   if (eq$user$dim) {
     len <- data_info$dimnames$length
     ret <- c(
-      sprintf("std::array <int_t, %d> %s;", rank, len),
+      sprintf("std::array <int, %d> %s;", rank, len),
       sprintf(
         '%s = user_get_array_variable<%s, %s>(user, "%s", %s, %s, %s, %s);',
         lhs, storage_type, rank, eq$lhs, previous, len, min, max),
@@ -127,13 +127,13 @@ generate_dust_equation_array_rhs <- function(value, index, lhs, rewrite) {
   for (idx in rev(index)) {
     if (idx$is_range) {
       seen_range <- TRUE
-      loop <- sprintf("for (int_t %s = %s; %s <= %s; ++%s) {",
+      loop <- sprintf("for (int %s = %s; %s <= %s; ++%s) {",
                       idx$index, rewrite(idx$value[[2]]),
                       idx$index, rewrite(idx$value[[3]]),
                       idx$index)
       ret <- c(loop, paste0("  ", ret), "}")
     } else {
-      ret <- c(sprintf("int_t %s = %s;", idx$index, rewrite(idx$value)),
+      ret <- c(sprintf("int %s = %s;", idx$index, rewrite(idx$value)),
                ret)
     }
   }

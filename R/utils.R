@@ -110,10 +110,8 @@ generate_dust_support_sum <- function(rank) {
     ## There are a series of substitutions that need to be made here,
     ## all of which are literal
     tr <- c("double*" = "const real_t *",
-            "double" = "real_t",
-            "int" = "int_t")
-    ## Then set up as templates over real_t, int_t
-    head <- "template <typename real_t, typename int_t>"
+            "double" = "real_t")
+    head <- "template <typename real_t>"
     ret <- lapply(odin:::generate_c_support_sum(rank), replace, tr)
     ret$declaration <- c(head, ret$declaration)
     ret$definition <- c(head, ret$definition)
@@ -125,7 +123,7 @@ generate_dust_support_sum <- function(rank) {
 dust_type <- function(type) {
   switch(type,
          double = "real_t",
-         int = "int_t",
+         int = "int",
          stop(sprintf("Unknown type '%s'", type)))
 }
 
