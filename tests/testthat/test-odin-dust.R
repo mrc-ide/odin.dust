@@ -27,6 +27,17 @@ test_that("sir model smoke test", {
   cmp <- gen_odin(I_ini = 10)$run(tt, y0, replicate = n)
 
   expect_equal(colMeans(res[2, , ]), rowMeans(cmp[, 3, ]), tolerance = 0.01)
+
+  p <- coef(gen)
+  p_cmp <- coef(gen_odin)
+
+  expect_setequal(names(p), p_cmp$name)
+  expect_setequal(names(p[[1]]), setdiff(names(p_cmp), "name"))
+  i <- match(names(p), p_cmp$name)
+
+  for (v in names(p[[1]])) {
+    expect_equal(unname(lapply(p, "[[", v)), unclass(as.list(p_cmp[[v]][i])))
+  }
 })
 
 

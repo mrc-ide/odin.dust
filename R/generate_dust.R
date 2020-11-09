@@ -54,8 +54,10 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   size <- generate_dust_core_size(dat, rewrite)
   initial <- generate_dust_core_initial(dat, rewrite)
   update <- generate_dust_core_update(eqs, dat, rewrite)
+  attributes <- generate_dust_core_attributes(dat)
 
   ret <- collector()
+  ret$add(attributes)
   ret$add("class %s {", dat$config$base)
   ret$add("public:")
   ret$add(paste0("  ", struct))
@@ -290,6 +292,31 @@ generate_dust_compiled_create_user <- function(name, dat, rewrite) {
     rhs <- "NA_INTEGER"
   }
   sprintf("%s = %s;", rewrite(data_info$name), rhs)
+}
+
+
+generate_dust_core_attributes <- function(dat) {
+  name <- names(dat$user)
+  user <- unname(dat$equations[name])
+  default_value <- unname(lapply(user, function(x) x$user$default))
+  has_default <- !vlapply(default_value, is.null)
+  min <- vcapply(user, function(x) deparse1(x$user$min %||% -Inf))
+  max <- vcapply(user, function(x) deparse1(x$user$max %||% Inf))
+  integer <- vlapply(user, function(x) x$user$integer %||% FALSE)
+  rank <- viapply(dat$data$elements[name], "[[", "rank", USE.NAMES = FALSE)
+  default <- vcapply(default_value, deparse1)
+
+  attr_class <- sprintf("// [[dust::class(%s)]]", dat$config$base)
+
+  ## We need the param attribute in one line only, so some faffery
+  ## required here:
+  attr_param <- paste(
+    sprintf("// [[dust::param(%s,", name),
+    sprintf("has_default = %s, default_value = %s,", has_default, default),
+    sprintf("rank = %d, min = %s, max = %s, integer = %s)]]",
+            rank, min, max, integer))
+
+  c(attr_class, attr_param)
 }
 
 
