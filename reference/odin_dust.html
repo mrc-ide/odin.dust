@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
       </span>
     </div>
 
@@ -106,6 +106,9 @@
       <a href="../articles/sir_models.html">SIR models</a>
     </li>
   </ul>
+</li>
+<li>
+  <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -137,23 +140,9 @@
     <p>Compile an odin model to work with dust.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>odin_dust</span><span class='op'>(</span>
-  <span class='va'>x</span>,
-  verbose <span class='op'>=</span> <span class='cn'>NULL</span>,
-  real_t <span class='op'>=</span> <span class='cn'>NULL</span>,
-  int_t <span class='op'>=</span> <span class='cn'>NULL</span>,
-  workdir <span class='op'>=</span> <span class='cn'>NULL</span>,
-  gpu <span class='op'>=</span> <span class='cn'>FALSE</span>
-<span class='op'>)</span>
+    <pre class="usage"><span class='fu'>odin_dust</span><span class='op'>(</span><span class='va'>x</span>, verbose <span class='op'>=</span> <span class='cn'>NULL</span>, real_t <span class='op'>=</span> <span class='cn'>NULL</span>, workdir <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span>
 
-<span class='fu'>odin_dust_</span><span class='op'>(</span>
-  <span class='va'>x</span>,
-  verbose <span class='op'>=</span> <span class='cn'>NULL</span>,
-  real_t <span class='op'>=</span> <span class='cn'>NULL</span>,
-  int_t <span class='op'>=</span> <span class='cn'>NULL</span>,
-  workdir <span class='op'>=</span> <span class='cn'>NULL</span>,
-  gpu <span class='op'>=</span> <span class='cn'>FALSE</span>
-<span class='op'>)</span></pre>
+<span class='fu'>odin_dust_</span><span class='op'>(</span><span class='va'>x</span>, verbose <span class='op'>=</span> <span class='cn'>NULL</span>, real_t <span class='op'>=</span> <span class='cn'>NULL</span>, workdir <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -176,20 +165,11 @@ be verbose.  Defaults to the value of the option
 numbers. Defaults to <code>double</code>.</p></td>
     </tr>
     <tr>
-      <th>int_t</th>
-      <td><p>C++ type to use to use for integers. Defaults to
-<code>int</code>.</p></td>
-    </tr>
-    <tr>
       <th>workdir</th>
       <td><p>Working directory to use for the compilation. By
 default we use a new path within the temporary directory. Passed
 to <code>dust</code>; a mini package will be created at this
 path.</p></td>
-    </tr>
-    <tr>
-      <th>gpu</th>
-      <td><p>Use the GPU</p></td>
     </tr>
     </table>
 

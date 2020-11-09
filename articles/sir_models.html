@@ -38,7 +38,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
       </span>
     </div>
 
@@ -64,6 +64,9 @@
       <a href="../articles/sir_models.html">SIR models</a>
     </li>
   </ul>
+</li>
+<li>
+  <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
@@ -120,8 +123,8 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <a href="#implementing-the-sir-model-using-odin-dust" class="anchor"></a>Implementing the SIR model using <a href="https://mrc-ide.github.io/odin.dust/"><code>odin.dust</code></a>
 </h2>
 <p>The above equations can straightforwardly be written out using the odin DSL:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit">
-<span class="co">## Definition of the time-step and output as "time"</span>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">## Definition of the time-step and output as "time"</span>
 <span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>
 <span class="fu">initial</span><span class="op">(</span><span class="va">time</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">0</span>
 <span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">step</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="va">dt</span>
@@ -152,7 +155,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="va">S_ini</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span>
 <span class="va">I_ini</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">10</span><span class="op">)</span>
 <span class="va">beta</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
-<span class="va">gamma</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">0.1</span><span class="op">)</span></pre></div>
+<span class="va">gamma</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">0.1</span><span class="op">)</span></code></pre></div>
 <p>This is converted to a C++ dust model, and compiled into a library in a single step, using <a href="https://mrc-ide.github.io/odin.dust/"><code>odin.dust</code></a>. Save the above code as a file named <code>sir.R</code>. File names must not contain special characters.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(odin.dust)</span>
 <span id="cb2-2"><a href="#cb2-2"></a>gen_sir &lt;-<span class="st"> </span>odin.dust<span class="op">::</span><span class="kw">odin_dust</span>(<span class="st">"sir.R"</span>)</span>
@@ -162,9 +165,9 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt; ℹ 12 functions decorated with [[cpp11::register]]</span></span>
 <span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt; ✔ generated file cpp11.R</span></span>
 <span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt; ✔ generated file cpp11.cpp</span></span>
-<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt; Re-compiling siree205553</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt; Re-compiling sire9ab9ac3</span></span>
 <span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt;   </span></span>
-<span id="cb2-11"><a href="#cb2-11"></a>─  installing <span class="op">*</span>source<span class="op">*</span><span class="st"> </span>package ‘siree205553’ ...</span>
+<span id="cb2-11"><a href="#cb2-11"></a>─  installing <span class="op">*</span>source<span class="op">*</span><span class="st"> </span>package ‘sire9ab9ac3’ ...</span>
 <span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt; </span></span>
 <span id="cb2-13"><a href="#cb2-13"></a>  </span>
 <span id="cb2-14"><a href="#cb2-14"></a>   <span class="op">**</span><span class="st"> </span>using staged installation</span>
@@ -179,16 +182,16 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span id="cb2-23"><a href="#cb2-23"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>c dust.cpp <span class="op">-</span>o dust.o</span>
 <span id="cb2-24"><a href="#cb2-24"></a><span class="co">#&gt; </span></span>
 <span id="cb2-25"><a href="#cb2-25"></a>  </span>
-<span id="cb2-26"><a href="#cb2-26"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o siree205553.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
+<span id="cb2-26"><a href="#cb2-26"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o sire9ab9ac3.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
 <span id="cb2-27"><a href="#cb2-27"></a><span class="co">#&gt; </span></span>
 <span id="cb2-28"><a href="#cb2-28"></a>  </span>
-<span id="cb2-29"><a href="#cb2-29"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>RtmpQc2TPq<span class="op">/</span>devtools_install_8c25ab872e7<span class="op">/</span>00LOCK<span class="op">-</span>file8c221eef669<span class="op">/</span>00new<span class="op">/</span>siree205553<span class="op">/</span>libs</span>
+<span id="cb2-29"><a href="#cb2-29"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>Rtmp36nlOL<span class="op">/</span>devtools_install_<span class="fl">7e3829</span>bd5<span class="op">/</span>00LOCK<span class="op">-</span>file7e325b90195<span class="op">/</span>00new<span class="op">/</span>sire9ab9ac3<span class="op">/</span>libs</span>
 <span id="cb2-30"><a href="#cb2-30"></a><span class="co">#&gt; </span></span>
 <span id="cb2-31"><a href="#cb2-31"></a>  </span>
 <span id="cb2-32"><a href="#cb2-32"></a>   <span class="op">**</span><span class="st"> </span>checking absolute paths <span class="cf">in</span> shared objects and dynamic libraries</span>
 <span id="cb2-33"><a href="#cb2-33"></a><span class="co">#&gt; </span></span>
 <span id="cb2-34"><a href="#cb2-34"></a>  </span>
-<span id="cb2-35"><a href="#cb2-35"></a>─  <span class="kw">DONE</span> (siree205553)</span>
+<span id="cb2-35"><a href="#cb2-35"></a>─  <span class="kw">DONE</span> (sire9ab9ac3)</span>
 <span id="cb2-36"><a href="#cb2-36"></a><span class="co">#&gt; </span></span></code></pre></div>
 </div>
 <div id="adding-age-structure-to-the-model" class="section level2">
@@ -203,16 +206,16 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <li>Define the dimensions of all arrays, for example by setting <code>dim(S) &lt;- N_age</code>.</li>
 </ul>
 <p>This would simply give <code>N_age</code> independent processes equivalent to the first model, scaled by the size of the population in each age category. To actually make this useful, you likely want to add some interaction or transitions between the compartments. An example of this would be to add an age-specific contact matrix, demonstrated below, which defines a different force of infection <span class="math inline">\(\lambda\)</span> for each age group. This is calculated by <span class="math display">\[\lambda_i = \frac{\beta}{N} \cdot \sum_{j=1}^{N_{\mathrm{age}}} I_j m_{ij}\]</span> In the odin code:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit">
-<span class="va">m</span><span class="op">[</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span> <span class="co"># age-structured contact matrix</span>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">m</span><span class="op">[</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span> <span class="co"># age-structured contact matrix</span>
 <span class="va">s_ij</span><span class="op">[</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="va">m</span><span class="op">[</span><span class="va">i</span>, <span class="va">j</span><span class="op">]</span> <span class="op">*</span> <span class="va">I</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
-<span class="va">lambda</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">beta</span> <span class="op">/</span> <span class="va">N</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">s_ij</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span><span class="op">)</span></pre></div>
+<span class="va">lambda</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">beta</span> <span class="op">/</span> <span class="va">N</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">s_ij</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span><span class="op">)</span></code></pre></div>
 <p>The probability of infection of a susceptible is then indexed by this force of infection:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit">
-<span class="va">p_SI</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">lambda</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">p_SI</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">lambda</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span></code></pre></div>
 <p>Putting this all together, the age structured SIR model is as follows:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit">
-<span class="co">## Definition of the time-step and output as "time"</span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">## Definition of the time-step and output as "time"</span>
 <span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>
 <span class="fu">initial</span><span class="op">(</span><span class="va">time</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">0</span>
 <span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">step</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="va">dt</span>
@@ -260,7 +263,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">p_SI</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
 <span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">N_age</span>, <span class="va">N_age</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">s_ij</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">N_age</span>, <span class="va">N_age</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">lambda</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">lambda</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span></code></pre></div>
 <p>As before, save the file, and use <code>odin.dust</code> to compile the model:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>gen_age &lt;-<span class="st"> </span>odin.dust<span class="op">::</span><span class="kw">odin_dust</span>(<span class="st">"sirage.R"</span>)</span>
 <span id="cb6-2"><a href="#cb6-2"></a><span class="co">#&gt; ℹ 12 functions decorated with [[cpp11::register]]</span></span>
@@ -269,9 +272,9 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt; ℹ 12 functions decorated with [[cpp11::register]]</span></span>
 <span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt; ✔ generated file cpp11.R</span></span>
 <span id="cb6-7"><a href="#cb6-7"></a><span class="co">#&gt; ✔ generated file cpp11.cpp</span></span>
-<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt; Re-compiling siragebf22a6a2</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt; Re-compiling siragef99233ea</span></span>
 <span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt;   </span></span>
-<span id="cb6-10"><a href="#cb6-10"></a>─  installing <span class="op">*</span>source<span class="op">*</span><span class="st"> </span>package ‘siragebf22a6a2’ ...</span>
+<span id="cb6-10"><a href="#cb6-10"></a>─  installing <span class="op">*</span>source<span class="op">*</span><span class="st"> </span>package ‘siragef99233ea’ ...</span>
 <span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt; </span></span>
 <span id="cb6-12"><a href="#cb6-12"></a>  </span>
 <span id="cb6-13"><a href="#cb6-13"></a>   <span class="op">**</span><span class="st"> </span>using staged installation</span>
@@ -286,20 +289,20 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span id="cb6-22"><a href="#cb6-22"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>c dust.cpp <span class="op">-</span>o dust.o</span>
 <span id="cb6-23"><a href="#cb6-23"></a><span class="co">#&gt; </span></span>
 <span id="cb6-24"><a href="#cb6-24"></a>  </span>
-<span id="cb6-25"><a href="#cb6-25"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o siragebf22a6a2.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
+<span id="cb6-25"><a href="#cb6-25"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o siragef99233ea.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
 <span id="cb6-26"><a href="#cb6-26"></a><span class="co">#&gt; </span></span>
 <span id="cb6-27"><a href="#cb6-27"></a>  </span>
-<span id="cb6-28"><a href="#cb6-28"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>RtmpQc2TPq<span class="op">/</span>devtools_install_8c27d0de5ad<span class="op">/</span>00LOCK<span class="op">-</span>file8c2824aabd<span class="op">/</span>00new<span class="op">/</span>siragebf22a6a2<span class="op">/</span>libs</span>
+<span id="cb6-28"><a href="#cb6-28"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>Rtmp36nlOL<span class="op">/</span>devtools_install_<span class="fl">7e39</span>a6474d<span class="op">/</span>00LOCK<span class="op">-</span>file7e369d2c6b1<span class="op">/</span>00new<span class="op">/</span>siragef99233ea<span class="op">/</span>libs</span>
 <span id="cb6-29"><a href="#cb6-29"></a><span class="co">#&gt; </span></span>
 <span id="cb6-30"><a href="#cb6-30"></a>  </span>
 <span id="cb6-31"><a href="#cb6-31"></a>   <span class="op">**</span><span class="st"> </span>checking absolute paths <span class="cf">in</span> shared objects and dynamic libraries</span>
 <span id="cb6-32"><a href="#cb6-32"></a><span class="co">#&gt; </span></span>
 <span id="cb6-33"><a href="#cb6-33"></a>  </span>
-<span id="cb6-34"><a href="#cb6-34"></a>─  <span class="kw">DONE</span> (siragebf22a6a2)</span>
+<span id="cb6-34"><a href="#cb6-34"></a>─  <span class="kw">DONE</span> (siragef99233ea)</span>
 <span id="cb6-35"><a href="#cb6-35"></a><span class="co">#&gt; </span></span></code></pre></div>
 <p>We can generate an age-structured contact matrix based on the <a href="https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074">POLYMOD</a> survey by using the <a href="https://github.com/sbfnk/socialmixr">socialmixr</a> package:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit">
-<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">polymod</span>, package <span class="op">=</span> <span class="st">"socialmixr"</span><span class="op">)</span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">polymod</span>, package <span class="op">=</span> <span class="st">"socialmixr"</span><span class="op">)</span>
 
 <span class="va">age.limits</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">70</span>, <span class="fl">10</span><span class="op">)</span>
 
@@ -336,16 +339,16 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="co">#&gt;   [5,] 1.757299e-07 1.457821e-07 1.250247e-07</span>
 <span class="co">#&gt;   [6,] 2.473517e-07 1.652266e-07 1.076856e-07</span>
 <span class="co">#&gt;   [7,] 1.652266e-07 2.010654e-07 1.431130e-07</span>
-<span class="co">#&gt;   [8,] 1.076856e-07 1.431130e-07 1.941792e-07</span></pre></div>
+<span class="co">#&gt;   [8,] 1.076856e-07 1.431130e-07 1.941792e-07</span></code></pre></div>
 <p>This can be given as a parameter to the model by adding the argument <code>data = list(m = transmission)</code> when using the <code>new()</code> method on the <code>gen_age</code> generator.</p>
 </div>
 <div id="saving-a-model-into-a-package" class="section level2">
 <h2 class="hasAnchor">
 <a href="#saving-a-model-into-a-package" class="anchor"></a>Saving a model into a package</h2>
 <p>If you want to distribute your model in an R package, rather than building it locally, you will want to use the <code><a href="../reference/odin_dust_package.html">odin_dust_package()</a></code> function instead. This will write the transpiled C++ dust code into <code>src</code> and its R interface in <code>R/dust.R</code>. Package users are not required to regenerate the dust code, and their compiler will build the library when they install the package. You may also wish to add a file <code>R/zzz.R</code> to your package <code>myrpackage</code> with the following lines:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit">
-<span class="co">##' @useDynLib myrpackage, .registration = TRUE</span>
-<span class="cn">NULL</span></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">##' @useDynLib myrpackage, .registration = TRUE</span>
+<span class="cn">NULL</span></code></pre></div>
 <p>to help automate the compilation of the model.</p>
 </div>
 </div>
@@ -356,8 +359,8 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <p>Now we can use the <code>new</code> method on the generator to make <code>dust</code> objects. <code>dust</code> can be driven directly from R, and also interfaces with the <a href="https://mrc-ide.github.io/mcstate/"><code>mcstate</code></a> package to allow parameter inference and forecasting.</p>
 <p><a href="https://mrc-ide.github.io/dust/reference/dust.html#method-new"><code>new()</code></a> takes the data needed to run the model i.e. a list with any parameters defined as <code>user</code> in the odin code above, the value of the initial step <span class="math inline">\(t_0\)</span>, and the number of particles, each for now can simply be thought of as an independent stochastic realisation of the model, but in the next step will be used when inferring model parameters.</p>
 <p>Additional arguments include the number of threads to parallelise the particles over, and the seed for the random number generator. The seed must be an integer, and using the same seed will ensure reproducible results for all particles. To use this to directly create a new dust object with 10 particles, run using 4 threads:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit">
-<span class="va">sir_model</span> <span class="op">&lt;-</span> <span class="va">gen_sir</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="fl">1</span>, 
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">sir_model</span> <span class="op">&lt;-</span> <span class="va">gen_sir</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="fl">1</span>, 
                                      S_ini <span class="op">=</span> <span class="fl">1000</span>, 
                                      I_ini <span class="op">=</span> <span class="fl">10</span>, 
                                      beta <span class="op">=</span> <span class="fl">0.2</span>, 
@@ -365,18 +368,18 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
                          step <span class="op">=</span> <span class="fl">1</span>,
                          n_particles <span class="op">=</span> <span class="fl">10L</span>,
                          n_threads <span class="op">=</span> <span class="fl">4L</span>,
-                         seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></pre></div>
+                         seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></code></pre></div>
 <p>The initial state is ten particles wide, four states deep (<span class="math inline">\(t\)</span>, <span class="math inline">\(S\)</span>, <span class="math inline">\(I\)</span>, <span class="math inline">\(R\)</span>):</p>
-<div class="sourceCode" id="cb10"><pre class="downlit">
-<span class="va">sir_model</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span><span class="op">)</span>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">sir_model</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span><span class="op">)</span>
 <span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span>
 <span class="co">#&gt; [1,]    0    0    0    0    0    0    0    0    0     0</span>
 <span class="co">#&gt; [2,] 1000 1000 1000 1000 1000 1000 1000 1000 1000  1000</span>
 <span class="co">#&gt; [3,]   10   10   10   10   10   10   10   10   10    10</span>
-<span class="co">#&gt; [4,]    0    0    0    0    0    0    0    0    0     0</span></pre></div>
+<span class="co">#&gt; [4,]    0    0    0    0    0    0    0    0    0     0</span></code></pre></div>
 <p>Run the particles (repeats) forward 10 steps of length <span class="math inline">\(dt\)</span>, followed by another 10 steps:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit">
-<span class="va">sir_model</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="fl">10</span><span class="op">)</span>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">sir_model</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="fl">10</span><span class="op">)</span>
 <span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span>
 <span class="co">#&gt; [1,]   10   10   10   10   10   10   10   10   10    10</span>
 <span class="co">#&gt; [2,]  978  966  986  982  980  980  971  974  968   984</span>
@@ -387,10 +390,10 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="co">#&gt; [1,]   20   20   20   20   20   20   20   20   20    20</span>
 <span class="co">#&gt; [2,]  943  889  946  933  906  929  853  909  922   932</span>
 <span class="co">#&gt; [3,]   30   66   44   39   61   42   97   53   41    41</span>
-<span class="co">#&gt; [4,]   37   55   20   38   43   39   60   48   47    37</span></pre></div>
+<span class="co">#&gt; [4,]   37   55   20   38   43   39   60   48   47    37</span></code></pre></div>
 <p>We can change the parameters, say by increasing the infection rate and the population size, by reinitalising the model with <code>reset()</code>. We will also use a smaller time step to calculate multiple transitions per unit time:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit">
-<span class="va">dt</span> <span class="op">=</span> <span class="fl">0.25</span>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">dt</span> <span class="op">=</span> <span class="fl">0.25</span>
 <span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">10L</span>
 <span class="va">sir_model</span><span class="op">$</span><span class="fu">reset</span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="fl">0.25</span>, 
                             S_ini <span class="op">=</span> <span class="fl">2000</span>, 
@@ -403,10 +406,10 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="co">#&gt; [1,]    0    0    0    0    0    0    0    0    0     0</span>
 <span class="co">#&gt; [2,] 2000 2000 2000 2000 2000 2000 2000 2000 2000  2000</span>
 <span class="co">#&gt; [3,]   10   10   10   10   10   10   10   10   10    10</span>
-<span class="co">#&gt; [4,]    0    0    0    0    0    0    0    0    0     0</span></pre></div>
+<span class="co">#&gt; [4,]    0    0    0    0    0    0    0    0    0     0</span></code></pre></div>
 <p>Let’s run this epidemic forward, and plot the trajectories:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit">
-<span class="va">n_steps</span> <span class="op">&lt;-</span> <span class="fl">200</span>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">n_steps</span> <span class="op">&lt;-</span> <span class="fl">200</span>
 <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html">array</a></span><span class="op">(</span><span class="cn">NA</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">sir_model</span><span class="op">$</span><span class="fu">info</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">len</span>, <span class="va">n_particles</span>, <span class="va">n_steps</span><span class="op">)</span><span class="op">)</span>
 
 <span class="kw">for</span> <span class="op">(</span><span class="va">t</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_len</a></span><span class="op">(</span><span class="va">n_steps</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
@@ -422,7 +425,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
          col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"S"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matlines</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">2</span>, , <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"I"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matlines</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">3</span>, , <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"R"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/legend.html">legend</a></span><span class="op">(</span><span class="st">"left"</span>, lwd <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="va">cols</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">cols</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/graphics/legend.html">legend</a></span><span class="op">(</span><span class="st">"left"</span>, lwd <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="va">cols</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">cols</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></code></pre></div>
 <p><img src="sir_models_files/figure-html/unnamed-chunk-9-1.png" width="672"></p>
 <p>Many other methods are available on the dust object to support inference, but typically you may want to use the <a href="https://mrc-ide.github.io/mcstate/"><code>mcstate</code></a> package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from <a href="https://mrc-ide.github.io/dust/"><code>dust</code></a>.</p>
 </div>
