@@ -27,6 +27,17 @@ test_that("sir model smoke test", {
   cmp <- gen_odin(I_ini = 10)$run(tt, y0, replicate = n)
 
   expect_equal(colMeans(res[2, , ]), rowMeans(cmp[, 3, ]), tolerance = 0.01)
+
+  p <- coef(gen)
+  p_cmp <- coef(gen_odin)
+
+  expect_setequal(names(p), p_cmp$name)
+  expect_setequal(names(p[[1]]), setdiff(names(p_cmp), "name"))
+  i <- match(names(p), p_cmp$name)
+
+  for (v in names(p[[1]])) {
+    expect_equal(unname(lapply(p, "[[", v)), unclass(as.list(p_cmp[[v]][i])))
+  }
 })
 
 
@@ -291,7 +302,7 @@ test_that("NSE interface can accept a symbol and resolve to value", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(path, NULL, NULL, NULL, NULL, FALSE))
+    list(path, NULL, NULL, NULL))
 })
 
 
@@ -304,7 +315,7 @@ test_that("NSE interface can accept a character vector", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(c("a", "b", "c"), NULL, NULL, NULL, NULL, FALSE))
+    list(c("a", "b", "c"), NULL, NULL, NULL))
 })
 
 
@@ -317,23 +328,14 @@ test_that("don't encode specific types in generated code", {
   expect_match(grep("double", res$class, value = TRUE),
                "typedef double real_t;")
   expect_equal(sum(grepl("double", res$create)), 0)
-
-  ## A bit harder; this regex reads as "the string 'int' on a word
-  ## boundary followed by a character that is not an underscore"
-  re_int <- "int\\b[^_]"
-  expect_equal(sum(grepl(re_int, res$class)), 1)
-  expect_match(grep(re_int, res$class, value = TRUE),
-               "typedef int int_t;")
-  expect_equal(sum(grepl(re_int, res$create)), 0)
 })
 
 
 test_that("Generate code with different types", {
   options <- odin::odin_options(target = "dust")
   ir <- odin::odin_parse_("examples/sir.R", options)
-  res <- generate_dust(ir, options, "DOUBLE", "INT")
+  res <- generate_dust(ir, options, "DOUBLE")
 
-  expect_true(any(grepl("typedef INT int_t;", res$class)))
   expect_true(any(grepl("typedef DOUBLE real_t;", res$class)))
 
   cmp <- generate_dust(ir, options)
@@ -375,18 +377,6 @@ test_that("specify workdir", {
   expect_true(file.exists(path))
   expect_true(file.exists(file.path(path, "DESCRIPTION")))
   expect_true(file.exists(file.path(path, "src", "dust.cpp")))
-})
-
-
-test_that("generated code includes gpu decorator", {
-  ir <- odin::odin_parse({
-    initial(x) <- 0
-    update(x) <- runif(x, 1)
-  })
-  options <- odin::odin_options(target = "dust", verbose = FALSE,
-                                workdir = NULL)
-  dat <- generate_dust(ir, options, NULL, NULL)
-  expect_match(dat$class, "__device__", fixed = TRUE, all = FALSE)
 })
 
 

@@ -4,7 +4,7 @@
 \alias{odin_dust_package}
 \title{Update package code}
 \usage{
-odin_dust_package(path, verbose = NULL, real_t = NULL, int_t = NULL)
+odin_dust_package(path, verbose = NULL, real_t = NULL)
 }
 \arguments{
 \item{path}{Path to the package root (the directory that
@@ -16,9 +16,6 @@ be verbose.  Defaults to the value of the option
 
 \item{real_t}{C++ type to use for real (floating point)
 numbers. Defaults to \code{double}.}
-
-\item{int_t}{C++ type to use to use for integers. Defaults to
-\code{int}.}
 }
 \value{
 The path to the package

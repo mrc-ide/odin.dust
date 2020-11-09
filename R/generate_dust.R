@@ -1,4 +1,4 @@
-generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
+generate_dust <- function(ir, options, real_t = NULL) {
   dat <- odin::odin_ir_deserialise(ir)
 
   if (!dat$features$discrete) {
@@ -14,7 +14,7 @@ generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
          paste(squote(unsupported), collapse = ", "))
   }
 
-  dat$meta$dust <- generate_dust_meta(real_t, int_t)
+  dat$meta$dust <- generate_dust_meta(real_t)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta)
@@ -41,10 +41,9 @@ generate_dust <- function(ir, options, real_t = NULL, int_t = NULL) {
 }
 
 
-generate_dust_meta <- function(real_t, int_t) {
+generate_dust_meta <- function(real_t) {
   list(rng_state = "rng_state",
-       real_t = real_t %||% "double",
-       int_t = int_t %||% "int")
+       real_t = real_t %||% "double")
 }
 
 
@@ -54,8 +53,10 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   size <- generate_dust_core_size(dat, rewrite)
   initial <- generate_dust_core_initial(dat, rewrite)
   update <- generate_dust_core_update(eqs, dat, rewrite)
+  attributes <- generate_dust_core_attributes(dat)
 
   ret <- collector()
+  ret$add(attributes)
   ret$add("class %s {", dat$config$base)
   ret$add("public:")
   ret$add(paste0("  ", struct))
@@ -84,8 +85,7 @@ generate_dust_core_struct <- function(dat) {
   i <- vcapply(dat$data$elements, "[[", "location") == "internal"
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
 
-  c(sprintf("typedef %s int_t;", dat$meta$dust$int_t),
-    sprintf("typedef %s real_t;", dat$meta$dust$real_t),
+  c(sprintf("typedef %s real_t;", dat$meta$dust$real_t),
     "struct init_t {",
     paste0("  ", els),
     "};")
@@ -167,14 +167,6 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   body <- collector()
   body$add("typedef typename %s::real_t real_t;", dat$config$base)
 
-  ## Only add the integer typedef if we might need it, in order to
-  ## avoid a compiler warning about an unused typedef.  This is
-  ## slightly too generous (it might create the typedef when not
-  ## needed) but that's better than the reverse.
-  has_int <- any(vcapply(dat$data$elements, "[[", "storage_type") == "int")
-  if (has_int) {
-    body$add("typedef typename %s::int_t int_t;", dat$config$base)
-  }
   body$add("%s %s;", type, dat$meta$internal)
   body$add(dust_flatten_eqs(eqs[dat$components$create$equations]))
 
@@ -290,6 +282,31 @@ generate_dust_compiled_create_user <- function(name, dat, rewrite) {
     rhs <- "NA_INTEGER"
   }
   sprintf("%s = %s;", rewrite(data_info$name), rhs)
+}
+
+
+generate_dust_core_attributes <- function(dat) {
+  name <- names(dat$user)
+  user <- unname(dat$equations[name])
+  default_value <- unname(lapply(user, function(x) x$user$default))
+  has_default <- !vlapply(default_value, is.null)
+  min <- vcapply(user, function(x) deparse1(x$user$min %||% -Inf))
+  max <- vcapply(user, function(x) deparse1(x$user$max %||% Inf))
+  integer <- vlapply(user, function(x) x$user$integer %||% FALSE)
+  rank <- viapply(dat$data$elements[name], "[[", "rank", USE.NAMES = FALSE)
+  default <- vcapply(default_value, deparse1)
+
+  attr_class <- sprintf("// [[dust::class(%s)]]", dat$config$base)
+
+  ## We need the param attribute in one line only, so some faffery
+  ## required here:
+  attr_param <- paste(
+    sprintf("// [[dust::param(%s,", name),
+    sprintf("has_default = %s, default_value = %s,", has_default, default),
+    sprintf("rank = %d, min = %s, max = %s, integer = %s)]]",
+            rank, min, max, integer))
+
+  c(attr_class, attr_param)
 }
 
 
