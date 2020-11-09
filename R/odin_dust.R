@@ -26,34 +26,32 @@
 ##'   to \code{\link{dust}}; a mini package will be created at this
 ##'   path.
 ##'
-##' @param gpu Use the GPU
-##'
 ##' @export
 ##' @importFrom odin odin
 odin_dust <- function(x, verbose = NULL, real_t = NULL, int_t = NULL,
-                      workdir = NULL, gpu = FALSE) {
+                      workdir = NULL) {
   xx <- substitute(x)
   if (is.symbol(xx)) {
     xx <- force(x)
   } else if (is_call(xx, quote(c)) && all(vlapply(xx[-1], is.character))) {
     xx <- force(x)
   }
-  odin_dust_(xx, verbose, real_t, int_t, workdir, gpu)
+  odin_dust_(xx, verbose, real_t, int_t, workdir)
 }
 
 
 ##' @export
 ##' @rdname odin_dust
 odin_dust_ <- function(x, verbose = NULL, real_t = NULL, int_t = NULL,
-                       workdir = NULL, gpu = FALSE) {
+                       workdir = NULL) {
   options <- odin::odin_options(target = "dust", verbose = verbose,
                                 workdir = workdir)
   ir <- odin::odin_parse_(x, options)
-  odin_dust_wrapper(ir, options, real_t, int_t, gpu)
+  odin_dust_wrapper(ir, options, real_t, int_t)
 }
 
 
-odin_dust_wrapper <- function(ir, options, real_t, int_t, gpu) {
+odin_dust_wrapper <- function(ir, options, real_t, int_t) {
   dat <- generate_dust(ir, options, real_t, int_t)
   code <- odin_dust_code(dat, real_t, int_t)
 
@@ -65,8 +63,7 @@ odin_dust_wrapper <- function(ir, options, real_t, int_t, gpu) {
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
-  generator <- dust::dust(path, quiet = !options$verbose, workdir = workdir,
-                          gpu = gpu)
+  generator <- dust::dust(path, quiet = !options$verbose, workdir = workdir)
   if (!("transform_variables" %in% names(generator$public_methods))) {
     generator$set("public", "transform_variables",
                   odin_dust_transform_variables)

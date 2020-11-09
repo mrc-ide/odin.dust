@@ -21,7 +21,7 @@ Imports:
     brio,
     cpp11,
     decor,
-    dust (>= 0.4.13),
+    dust (>= 0.5.3),
     odin,
     tibble,
     vctrs
@@ -33,7 +33,7 @@ Suggests:
     rmarkdown,
     socialmixr,
     testthat
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 Remotes:
     mrc-ide/dust
