@@ -1,16 +1,21 @@
 ## Definition of the time-step and output as "time"
-dt <- user(1)
+dt <- user(0.25)
 initial(time) <- 0
 update(time) <- (step + 1) * dt
 
 ## Core equations for transitions between compartments:
+update(S_tot) <- S_tot - sum(n_SI)
+update(I_tot) <- I_tot + sum(n_SI) - sum(n_IR)
+update(R_tot) <- R_tot + sum(n_IR)
+
 update(S[]) <- S[i] - n_SI[i]
 update(I[]) <- I[i] + n_SI[i] - n_IR[i]
 update(R[]) <- R[i] + n_IR[i]
+update(cumu_inc[]) <- cumu_inc[i] + n_SI[i]
 
 ## Individual probabilities of transition:
-p_SI[] <- 1 - exp(-lambda[i] * dt) # S to I
-p_IR <- 1 - exp(-gamma * dt) # I to R
+p_SI[] <- 1 - exp(-lambda[i]) # S to I
+p_IR <- 1 - exp(-gamma) # I to R
 
 ## Force of infection
 m[, ] <- user() # age-structured contact matrix
@@ -19,13 +24,18 @@ lambda[] <- beta * sum(s_ij[i, ])
 
 ## Draws from binomial distributions for numbers changing between
 ## compartments:
-n_SI[] <- rbinom(S[i], sum(p_SI[i]))
-n_IR[] <- rbinom(I[i], p_IR)
+n_SI[] <- rbinom(S[i], sum(p_SI[i]) * dt)
+n_IR[] <- rbinom(I[i], p_IR * dt)
 
 ## Initial states:
+initial(S_tot) <- sum(S_ini)
+initial(I_tot) <- sum(I_ini)
+initial(R_tot) <- 0
+
 initial(S[]) <- S_ini[i]
 initial(I[]) <- I_ini[i]
 initial(R[]) <- 0
+initial(cumu_inc[]) <- 0
 
 ## User defined parameters - default in parentheses:
 S_ini[] <- user()
@@ -40,6 +50,7 @@ dim(I_ini) <- N_age
 dim(S) <- N_age
 dim(I) <- N_age
 dim(R) <- N_age
+dim(cumu_inc) <- N_age
 dim(n_SI) <- N_age
 dim(n_IR) <- N_age
 dim(p_SI) <- N_age
