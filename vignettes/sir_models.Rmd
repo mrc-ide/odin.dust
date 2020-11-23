@@ -106,9 +106,9 @@ sir_model$run(20)
 We can change the parameters, say by increasing the infection rate and the population size, by reinitalising the model with `reset()`. We will also use a smaller time step to calculate multiple transitions per unit time:
 
 ```{r}
-dt = 0.25
+dt < 0.25
 n_particles <- 10L
-sir_model$reset(data = list(dt = 0.25, 
+sir_model$reset(data = list(dt = dt, 
                             S_ini = 2000, 
                             I_ini = 10, 
                             beta = 0.4, 
@@ -182,6 +182,7 @@ We can generate an age-structured contact matrix based on the [POLYMOD](https://
 ```{r}
 data(polymod, package = "socialmixr")
 
+## In this example we use 8 age bands of 10 years from 0-70 years old.
 age.limits = seq(0, 70, 10)
 
 ## Get the contact matrix from socialmixr
@@ -192,7 +193,8 @@ contact <- socialmixr::contact_matrix(
   symmetric = TRUE)
 
 ## Transform the matrix to the (symetrical) transmission matrix
-## rather than the contact matrix
+## rather than the contact matrix. This transmission matrix is
+## weighted by the population in each age band.
 transmission <- contact$matrix /
   rep(contact$demography$population, each = ncol(contact$matrix))
 transmission
@@ -203,17 +205,18 @@ This can be given as a parameter to the model by adding the argument `data = lis
 ```{r, fig.height=3.5, fig.width=7}
 N_age <- length(age.limits)
 n_particles <- 5L
-model <- gen_age$new(data = list(dt = 0.25, 
-                                     S_ini = contact$demography$population,
-                                     I_ini = rep(10,8), 
-                                     beta = 0.2, 
-                                     gamma = 0.1,
-                                     m = transmission,
-                                     N_age = N_age),
-                         step = 1,
-                         n_particles = n_particles,
-                         n_threads = 4L,
-                         seed = 1L)
+dt <- 0.25
+model <- gen_age$new(data = list(dt = dt, 
+                                 S_ini = contact$demography$population,
+                                 I_ini = rep(10,8), 
+                                 beta = 0.2, 
+                                 gamma = 0.1,
+                                 m = transmission,
+                                 N_age = N_age),
+                     step = 1,
+                     n_particles = n_particles,
+                     n_threads = 1L,
+                     seed = 1L)
 
 # Define how long the model runs for, number of steps
 n_steps <- 300
@@ -242,6 +245,8 @@ for (i in 1:N_age) {
 }
 mtext("Number of individuals", side=2,line=1, outer=T)
 mtext("Time", side = 1, line = 0, outer =T)
+
+
 
 ```
 
