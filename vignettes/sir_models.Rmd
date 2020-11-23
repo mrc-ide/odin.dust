@@ -59,66 +59,6 @@ library(odin.dust)
 gen_sir <- odin.dust::odin_dust("sir.R")
 ```
 
-## Adding age structure to the model
-
-Adding age structure to the model consists of the following steps, which turn variables into arrays:
-
-- Define the number of age categories as a user parameter `N_age`.
-- Add age structure to each compartment, by adding square brackets to the lvalues.
-- Modify the rvalues to use quantities from the appropriate compartment, by adding an `i` index to the rvalues. These will automatically be looped over.
-- Where an age compartment needs to be reduced into a single compartment/variable, use `sum` (or another array function from https://mrc-ide.github.io/odin/articles/functions.html as appropriate)
-- Define the dimensions of all arrays, for example by setting `dim(S) <- N_age`.
-
-This would simply give `N_age` independent processes equivalent to the first model, scaled by the size of the population in each age category. To actually make this useful, you likely want to add some interaction or transitions between the compartments. An example of this would be to add an age-specific contact matrix, demonstrated below, which defines a different force of infection $\lambda$ for each age group. This is calculated by $$\lambda_i = \frac{\beta}{N} \cdot \sum_{j=1}^{N_{\mathrm{age}}} I_j m_{ij}$$ In the odin code:
-
-```r
-m[, ] <- user() # age-structured contact matrix
-s_ij[, ] <- m[i, j] * I[i]
-lambda[] <- beta / N * sum(s_ij[i, ])
-```
-
-The probability of infection of a susceptible is then indexed by this force of infection:
-
-```r
-p_SI[] <- 1 - exp(-lambda[i] * dt)
-```
-
-Putting this all together, the age structured SIR model is as follows:
-
-
-```{r odin_age, echo = FALSE, results = "asis"}
-r_output(readLines(file.path("sirage.R")))
-```
-
-As before, save the file, and use `odin.dust` to compile the model:
-
-```{r}
-gen_age <- odin.dust::odin_dust("sirage.R")
-```
-
-We can generate an age-structured contact matrix based on the [POLYMOD](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074) survey by using the [socialmixr](https://github.com/sbfnk/socialmixr) package:
-
-```{r}
-data(polymod, package = "socialmixr")
-
-age.limits = seq(0, 70, 10)
-
-## Get the contact matrix from socialmixr
-contact <- socialmixr::contact_matrix(
-  survey = polymod,
-  countries = "United Kingdom",
-  age.limits = age.limits,
-  symmetric = TRUE)
-
-## Transform the matrix to the (symetrical) transmission matrix
-## rather than the contact matrix
-transmission <- contact$matrix /
-  rep(contact$demography$population, each = ncol(contact$matrix))
-transmission
-```
-
-This can be given as a parameter to the model by adding the argument `data = list(m = transmission)` when using the `new()` method on the `gen_age` generator.
-
 ## Saving a model into a package
 
 If you want to distribute your model in an R package, rather than building it locally, you will want to use the `odin_dust_package()` function instead. This will write the transpiled C++ dust code into `src` and its R interface in `R/dust.R`. Package users are not required to regenerate the dust code, and their compiler will build the library when they install the package. You may also wish to add a file `R/zzz.R` to your package `myrpackage` with the following lines:
@@ -166,9 +106,9 @@ sir_model$run(20)
 We can change the parameters, say by increasing the infection rate and the population size, by reinitalising the model with `reset()`. We will also use a smaller time step to calculate multiple transitions per unit time:
 
 ```{r}
-dt = 0.25
+dt <- 0.25
 n_particles <- 10L
-sir_model$reset(data = list(dt = 0.25, 
+sir_model$reset(data = list(dt = dt, 
                             S_ini = 2000, 
                             I_ini = 10, 
                             beta = 0.4, 
@@ -197,6 +137,115 @@ matplot(time, t(x[1, , ]), type = "l",
 matlines(time, t(x[2, , ]), col = cols[["I"]], lty = 1)
 matlines(time, t(x[3, , ]), col = cols[["R"]], lty = 1)
 legend("left", lwd = 1, col = cols, legend = names(cols), bty = "n")
+```
+
+
+## Adding age structure to the model
+
+Adding age structure to the model consists of the following steps, which turn variables into arrays:
+
+- Define the number of age categories as a user parameter `N_age`.
+- Add age structure to each compartment, by adding square brackets to the lvalues.
+- Modify the rvalues to use quantities from the appropriate compartment, by adding an `i` index to the rvalues. These will automatically be looped over.
+- Where an age compartment needs to be reduced into a single compartment/variable, use `sum` (or another array function from https://mrc-ide.github.io/odin/articles/functions.html as appropriate)
+- Define the dimensions of all arrays, for example by setting `dim(S) <- N_age`.
+
+This would simply give `N_age` independent processes equivalent to the first model, scaled by the size of the population in each age category. To actually make this useful, you likely want to add some interaction or transitions between the compartments. An example of this would be to add an age-specific contact matrix, demonstrated below, which defines a different force of infection $\lambda$ for each age group. This is calculated by $$\lambda_i = \frac{\beta}{N} \cdot \sum_{j=1}^{N_{\mathrm{age}}} I_j m_{ij}$$ In the odin code:
+
+```r
+m[, ] <- user() # age-structured contact matrix
+s_ij[, ] <- m[i, j] * I[i]
+lambda[] <- beta / N * sum(s_ij[i, ])
+```
+
+The probability of infection of a susceptible is then indexed by this force of infection:
+
+```r
+p_SI[] <- 1 - exp(-lambda[i] * dt)
+```
+
+Putting this all together, the age structured SIR model is as follows:
+
+
+```{r odin_age, echo = FALSE, results = "asis"}
+r_output(readLines(file.path("sirage.R")))
+```
+
+As before, save the file, and use `odin.dust` to compile the model:
+
+```{r}
+gen_age <- odin.dust::odin_dust("sirage.R")
+```
+
+We can generate an age-structured contact matrix based on the [POLYMOD](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074) survey by using the [socialmixr](https://github.com/sbfnk/socialmixr) package:
+
+```{r}
+data(polymod, package = "socialmixr")
+
+## In this example we use 8 age bands of 10 years from 0-70 years old.
+age.limits = seq(0, 70, 10)
+
+## Get the contact matrix from socialmixr
+contact <- socialmixr::contact_matrix(
+  survey = polymod,
+  countries = "United Kingdom",
+  age.limits = age.limits,
+  symmetric = TRUE)
+
+## Transform the matrix to the (symetrical) transmission matrix
+## rather than the contact matrix. This transmission matrix is
+## weighted by the population in each age band.
+transmission <- contact$matrix /
+  rep(contact$demography$population, each = ncol(contact$matrix))
+transmission
+```
+
+This can be given as a parameter to the model by adding the argument `data = list(m = transmission)` when using the `new()` method on the `gen_age` generator.
+
+```{r, fig.height=3.5, fig.width=7}
+N_age <- length(age.limits)
+n_particles <- 5L
+dt <- 0.25
+model <- gen_age$new(data = list(dt = dt, 
+                                 S_ini = contact$demography$population,
+                                 I_ini = rep(10,8), 
+                                 beta = 0.2, 
+                                 gamma = 0.1,
+                                 m = transmission,
+                                 N_age = N_age),
+                     step = 1,
+                     n_particles = n_particles,
+                     n_threads = 1L,
+                     seed = 1L)
+
+# Define how long the model runs for, number of steps
+n_steps <- 300
+
+# Create an array to contain outputs after looping the model.
+x <- array(NA, dim = c(model$info()$len, n_particles, n_steps))
+
+# For loop to run the model iteratively
+for (t in seq_len(n_steps)) {
+  x[ , , t] <- model$run(t)
+}
+time <- x[1, 1, ]
+x <- x[-1, , ]
+# Plotting the trajectories
+par(mfrow = c(2,4), oma=c(2,3,0,0))
+for (i in 1:N_age) {
+  par(mar = c(3, 4, 2, 0.5))
+  cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
+  matplot(time, t(x[i,, ]), type = "l",
+          xlab = "", ylab = "", yaxt="none", main = paste0("Age ", contact$demography$age.group[i]),
+          col = cols[["S"]], lty = 1, ylim=range(x))
+  matlines(time, t(x[i+N_age, , ]), col = cols[["I"]], lty = 1)
+  matlines(time, t(x[i+2*N_age, , ]), col = cols[["R"]], lty = 1)
+  legend("right", lwd = 1, col = cols, legend = names(cols), bty = "n")
+  axis(2, las =2)
+}
+mtext("Number of individuals", side=2,line=1, outer=T)
+mtext("Time", side = 1, line = 0, outer =T)
+
 ```
 
 Many other methods are available on the dust object to support inference, but typically you may want to use the [`mcstate`](https://mrc-ide.github.io/mcstate/) package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from [`dust`](https://mrc-ide.github.io/dust/).

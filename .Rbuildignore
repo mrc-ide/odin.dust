@@ -6,3 +6,5 @@
 ^\.lintr$
 ^pkgdown$
 ^\.github$
+^.*\.Rproj$
+^\.Rproj\.user$
