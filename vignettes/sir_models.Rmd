@@ -246,8 +246,6 @@ for (i in 1:N_age) {
 mtext("Number of individuals", side=2,line=1, outer=T)
 mtext("Time", side = 1, line = 0, outer =T)
 
-
-
 ```
 
 Many other methods are available on the dust object to support inference, but typically you may want to use the [`mcstate`](https://mrc-ide.github.io/mcstate/) package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from [`dust`](https://mrc-ide.github.io/dust/).
