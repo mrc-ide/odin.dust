@@ -106,7 +106,7 @@ sir_model$run(20)
 We can change the parameters, say by increasing the infection rate and the population size, by reinitalising the model with `reset()`. We will also use a smaller time step to calculate multiple transitions per unit time:
 
 ```{r}
-dt < 0.25
+dt <- 0.25
 n_particles <- 10L
 sir_model$reset(data = list(dt = dt, 
                             S_ini = 2000, 
