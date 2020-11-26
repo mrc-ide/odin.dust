@@ -146,3 +146,8 @@ deparse_fun <- function(x) {
   str <- gsub("\\}\n\\s*else", "} else", str)
   str
 }
+
+
+deparse_str <- function(x) {
+  paste(deparse(x), collapse = "\n")
+}
