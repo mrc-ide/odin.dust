@@ -290,11 +290,11 @@ generate_dust_core_attributes <- function(dat) {
   user <- unname(dat$equations[name])
   default_value <- unname(lapply(user, function(x) x$user$default))
   has_default <- !vlapply(default_value, is.null)
-  min <- vcapply(user, function(x) deparse1(x$user$min %||% -Inf))
-  max <- vcapply(user, function(x) deparse1(x$user$max %||% Inf))
+  min <- vcapply(user, function(x) deparse_str(x$user$min %||% -Inf))
+  max <- vcapply(user, function(x) deparse_str(x$user$max %||% Inf))
   integer <- vlapply(user, function(x) x$user$integer %||% FALSE)
   rank <- viapply(dat$data$elements[name], "[[", "rank", USE.NAMES = FALSE)
-  default <- vcapply(default_value, deparse1)
+  default <- vcapply(default_value, deparse_str)
 
   attr_class <- sprintf("// [[dust::class(%s)]]", dat$config$base)
 
