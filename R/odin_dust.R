@@ -39,12 +39,17 @@ odin_dust <- function(x, verbose = NULL, real_t = NULL, workdir = NULL) {
 ##' @export
 ##' @rdname odin_dust
 odin_dust_ <- function(x, verbose = NULL, real_t = NULL, workdir = NULL) {
+  options <- odin_dust_options(verbose, workdir)
+  ir <- odin::odin_parse_(x, options)
+  odin_dust_wrapper(ir, options, real_t)
+}
+
+
+odin_dust_options <- function(verbose, workdir) {
   options <- odin::odin_options(target = "dust", verbose = verbose,
                                 workdir = workdir)
   options$read_include <- read_include_dust
-
-  ir <- odin::odin_parse_(x, options)
-  odin_dust_wrapper(ir, options, real_t)
+  options
 }
 
 
@@ -102,4 +107,16 @@ odin_dust_transform_variables <- function(y) {
   } else {
     Map(function(i, d) set_dim(y[i], d), info$index, info$dim)
   }
+}
+
+
+read_include_dust <- function(filename) {
+  dat <- decor::cpp_decorations(files = filename)
+  code <- dat$context[dat$decoration == "odin.dust::register"]
+  names <- vcapply(code, function(x) decor::parse_cpp_function(x)$name)
+  if (length(names) == 0) {
+    stop("Did not find any functions decorated with '[[odin.dust::register]]'")
+  }
+  list(names = names,
+       data = list(source = paste(readLines(filename), collapse = "\n")))
 }
