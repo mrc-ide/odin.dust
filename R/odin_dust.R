@@ -57,15 +57,11 @@ odin_dust_wrapper <- function(ir, options, real_t) {
   dat <- generate_dust(ir, options, real_t)
   code <- odin_dust_code(dat)
 
-  workdir <- options$workdir
-  if (workdir == tempdir()) {
-    workdir <- tempfile()
-  }
-
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
-  generator <- dust::dust(path, quiet = !options$verbose, workdir = workdir)
+  generator <- dust::dust(path, quiet = !options$verbose,
+                          workdir = options$workdir)
   if (!("transform_variables" %in% names(generator$public_methods))) {
     generator$set("public", "transform_variables",
                   odin_dust_transform_variables)
