@@ -403,3 +403,21 @@ test_that("transform_variables works with all 3 state options", {
   expect_equal(yy$x[, , 1, 1], x0)
   expect_equal(yy$x, array(rep(x0, 6), c(dim(x0), 2, 3)))
 })
+
+
+test_that("allow custom C++ code", {
+  gen <- odin_dust({
+    config(include) <- "include.cpp"
+    n <- 5
+    x[] <- user()
+    initial(y[]) <- 0
+    update(y[]) <- cumulative_to_i(i, x)
+    dim(x) <- n
+    dim(y) <- n
+  }, verbose = FALSE)
+
+  x <- runif(5)
+  mod <- gen$new(list(x = x), 0, 1)
+  y <- mod$run(1)
+  expect_equal(y[, 1], cumsum(x))
+})

@@ -41,6 +41,8 @@ odin_dust <- function(x, verbose = NULL, real_t = NULL, workdir = NULL) {
 odin_dust_ <- function(x, verbose = NULL, real_t = NULL, workdir = NULL) {
   options <- odin::odin_options(target = "dust", verbose = verbose,
                                 workdir = workdir)
+  options$read_include <- read_include_dust
+
   ir <- odin::odin_parse_(x, options)
   odin_dust_wrapper(ir, options, real_t)
 }
@@ -69,6 +71,7 @@ odin_dust_wrapper <- function(ir, options, real_t) {
 
 odin_dust_code <- function(dat) {
   c(dust_flatten_eqs(lapply(dat$support, "[[", "declaration")),
+    dat$include,
     dat$class,
     dust_flatten_eqs(lapply(dat$support, "[[", "definition")),
     readLines(odin_dust_file("support.hpp")),
