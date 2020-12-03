@@ -22,7 +22,7 @@ Imports:
     cpp11,
     decor,
     dust (>= 0.5.3),
-    odin,
+    odin (>= 1.1.2),
     tibble,
     vctrs
 Suggests:
@@ -36,4 +36,5 @@ Suggests:
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 Remotes:
-    mrc-ide/dust
+    mrc-ide/dust,
+    mrc-ide/odin@mrc-2016
