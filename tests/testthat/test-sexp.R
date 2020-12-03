@@ -3,11 +3,11 @@ context("sexp")
 test_that("Can use parens", {
   expr <- list("*", "a", list("+", "b", "c"))
   expect_equal(
-    generate_dust_sexp(expr, NULL, NULL),
+    generate_dust_sexp(expr, NULL, NULL, NULL),
     "a * b + c")
   expr <- list("*", "a", list("(", list("+", "b", "c")))
   expect_equal(
-    generate_dust_sexp(expr, NULL, NULL),
+    generate_dust_sexp(expr, NULL, NULL, NULL),
     "a * (b + c)")
 })
 
@@ -15,12 +15,12 @@ test_that("Can use parens", {
 test_that("^ becomes std::pow", {
   expr <- list("^", "a", "b")
   expect_equal(
-    generate_dust_sexp(expr, NULL, NULL),
+    generate_dust_sexp(expr, NULL, NULL, NULL),
     "std::pow(a, b)")
 
   expr <- list("^", "a", list("+", "b", "c"))
   expect_equal(
-    generate_dust_sexp(expr, NULL, NULL),
+    generate_dust_sexp(expr, NULL, NULL, NULL),
     "std::pow(a, b + c)")
 })
 
@@ -28,36 +28,36 @@ test_that("^ becomes std::pow", {
 test_that("if/else becomes ternary", {
   expr <- list("if", "cond", "a", "b")
   expect_equal(
-    generate_dust_sexp(expr, NULL, NULL),
+    generate_dust_sexp(expr, NULL, NULL, NULL),
     "(cond ? a : b)")
 
   expr <- list("if", list(">", "x", "y"), list("+", "a", "x"),
                list("-", "b", "y"))
   expect_equal(
-    generate_dust_sexp(expr, NULL, NULL),
+    generate_dust_sexp(expr, NULL, NULL, NULL),
     "(x > y ? a + x : b - y)")
 })
 
 
 test_that("Handling of log", {
   expect_equal(
-    generate_dust_sexp(list("log", "a"), NULL, NULL),
+    generate_dust_sexp(list("log", "a"), NULL, NULL, NULL),
     "std::log(a)")
   expect_equal(
-    generate_dust_sexp(list("log", "a", "b"), NULL, NULL),
+    generate_dust_sexp(list("log", "a", "b"), NULL, NULL, NULL),
     "(std::log(a) / std::log(b))")
   expect_equal(
-    generate_dust_sexp(list("log10", "a"), NULL, NULL),
+    generate_dust_sexp(list("log10", "a"), NULL, NULL, NULL),
     "std::log10(a)")
 })
 
 
 test_that("2-arg round is not supported", {
   expect_equal(
-    generate_dust_sexp(list("round", "a"), NULL, NULL),
+    generate_dust_sexp(list("round", "a"), NULL, NULL, NULL),
     "std::round(a)")
   expect_error(
-    generate_dust_sexp(list("round", "a", "b"), NULL, NULL),
+    generate_dust_sexp(list("round", "a", "b"), NULL, NULL, NULL),
     "odin.dust does not support 2-arg round",
     fixed = TRUE)
 })
@@ -65,13 +65,13 @@ test_that("2-arg round is not supported", {
 
 test_that("fold min", {
   expect_equal(
-    generate_dust_sexp(list("min", "a"), NULL, NULL),
+    generate_dust_sexp(list("min", "a"), NULL, NULL, NULL),
     "a")
   expect_equal(
-    generate_dust_sexp(list("min", "a", "b"), NULL, NULL),
+    generate_dust_sexp(list("min", "a", "b"), NULL, NULL, NULL),
     "std::min(a, b)")
   expect_equal(
-    generate_dust_sexp(list("min", "a", "b", "c"), NULL, NULL),
+    generate_dust_sexp(list("min", "a", "b", "c"), NULL, NULL, NULL),
     "std::min(a, std::min(b, c))")
 })
 
@@ -79,20 +79,20 @@ test_that("fold min", {
 test_that("generate random number code", {
   meta <- list(dust = list(rng_state = "rng_state"))
   expect_equal(
-    generate_dust_sexp(list("rbinom", "n", "p"), NULL, meta),
+    generate_dust_sexp(list("rbinom", "n", "p"), NULL, meta, NULL),
     "dust::distr::rbinom(rng_state, std::round(n), p)")
   expect_equal(
-    generate_dust_sexp(list("rpois", "lambda"), NULL, meta),
+    generate_dust_sexp(list("rpois", "lambda"), NULL, meta, NULL),
     "dust::distr::rpois(rng_state, lambda)")
   expect_equal(
-    generate_dust_sexp(list("runif", "a", "b"), NULL, meta),
+    generate_dust_sexp(list("runif", "a", "b"), NULL, meta, NULL),
     "dust::distr::runif(rng_state, a, b)")
   expect_equal(
-    generate_dust_sexp(list("rnorm", "mu", "sd"), NULL, meta),
+    generate_dust_sexp(list("rnorm", "mu", "sd"), NULL, meta, NULL),
     "dust::distr::rnorm(rng_state, mu, sd)")
 
   expect_error(
-    generate_dust_sexp(list("rchisq", "df"), NULL, meta),
+    generate_dust_sexp(list("rchisq", "df"), NULL, meta, NULL),
     "unsupported function 'rchisq'")
 })
 
@@ -141,12 +141,12 @@ test_that("Generate sum code", {
 
 test_that("renames", {
   expect_equal(
-    generate_dust_sexp(list("gamma", "x"), NULL, NULL),
+    generate_dust_sexp(list("gamma", "x"), NULL, NULL, NULL),
     "std::tgamma(x)")
   expect_equal(
-    generate_dust_sexp(list("lgamma", "x"), NULL, NULL),
+    generate_dust_sexp(list("lgamma", "x"), NULL, NULL, NULL),
     "std::lgamma(x)")
   expect_equal(
-    generate_dust_sexp(list("ceiling", "x"), NULL, NULL),
+    generate_dust_sexp(list("ceiling", "x"), NULL, NULL, NULL),
     "std::ceil(x)")
 })

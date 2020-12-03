@@ -173,7 +173,7 @@ test_that("Implement sum", {
   yy <- mod$transform_variables(drop(y))
 
   cmp <- odin::odin_("examples/sum.R", target = "r", verbose = FALSE)
-  expect_equal(yy, cmp(m)$transform_variables(drop(y))[-1])
+  expect_equal(yy, cmp(m = m)$transform_variables(drop(y))[-1])
 
   expect_identical(
     mod$info(),
