@@ -1,4 +1,4 @@
-# odin.dust 0.1.3
+# odin.dust 0.1.4
 
 * Add support for `config(include) <- file.cpp` for including custom C++ code to extend the library support (#39)
 
