@@ -41,15 +41,15 @@ squote <- function(...) {
 }
 
 
-dust_array_access <- function(target, index, data, meta) {
+dust_array_access <- function(target, index, data, meta, supported) {
   mult <- data$elements[[target]]$dimnames$mult
 
   f <- function(i) {
-    index_i <- dust_minus_1(index[[i]], i > 1, data, meta)
+    index_i <- dust_minus_1(index[[i]], i > 1, data, meta, supported)
     if (i == 1) {
       index_i
     } else {
-      mult_i <- generate_dust_sexp(mult[[i]], data, meta)
+      mult_i <- generate_dust_sexp(mult[[i]], data, meta, supported)
       sprintf("%s * %s", mult_i, index_i)
     }
   }
@@ -58,11 +58,11 @@ dust_array_access <- function(target, index, data, meta) {
 }
 
 
-dust_minus_1 <- function(x, protect, data, meta) {
+dust_minus_1 <- function(x, protect, data, meta, supported) {
   if (is.numeric(x)) {
-    generate_dust_sexp(x - 1L, data, meta)
+    generate_dust_sexp(x - 1L, data, meta, supported)
   } else {
-    x_expr <- generate_dust_sexp(x, data, meta)
+    x_expr <- generate_dust_sexp(x, data, meta, supported)
     sprintf(if (protect) "(%s - 1)" else "%s - 1", x_expr)
   }
 }
