@@ -78,3 +78,38 @@ test_that("Do not overwrite files that are not ours", {
     odin_dust_package(path),
     "Refusing to overwrite edited file")
 })
+
+
+test_that("include user support in package", {
+  skip_if_not_installed("pkgload")
+  path <- tempfile()
+  dir.create(path)
+  dir.create(file.path(path, "inst/odin"), FALSE, TRUE)
+
+  code <- c(
+    'config(include) <- "include.cpp"',
+    "n <- 5",
+    "x[] <- user()",
+    "initial(y[]) <- 0",
+    "update(y[]) <- cumulative_to_i(i, x)",
+    "dim(x) <- n",
+    "dim(y) <- n")
+
+  name <- "pkg2"
+  data <- list(name = name)
+  writeLines(sub_package_name(readLines("examples/pkg/DESCRIPTION"), name),
+             file.path(path, "DESCRIPTION"))
+  writeLines(sub_package_name(readLines("examples/pkg/NAMESPACE"), name),
+             file.path(path, "NAMESPACE"))
+  writeLines(code, file.path(path, "inst/odin/example.R"))
+  file.copy("include.cpp", file.path(path, "inst/odin"))
+
+  odin_dust_package(path)
+
+  pkg <- pkgload::load_all(path, quiet = TRUE)
+
+  x <- runif(5)
+  mod <- pkg$env$example$new(list(x = x), 0, 1)
+  y <- mod$run(1)
+  expect_equal(y[, 1], cumsum(x))
+})

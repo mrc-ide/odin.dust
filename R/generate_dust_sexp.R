@@ -1,15 +1,15 @@
 ## This most closely follows the js version
-generate_dust_sexp <- function(x, data, meta) {
+generate_dust_sexp <- function(x, data, meta, supported) {
   if (is.recursive(x)) {
     fn <- x[[1L]]
     args <- x[-1L]
     n <- length(args)
-    values <- vcapply(args, generate_dust_sexp, data, meta)
+    values <- vcapply(args, generate_dust_sexp, data, meta, supported)
 
     if (fn == "(") {
       ret <- sprintf("(%s)", values[[1]])
     } else if (fn == "[") {
-      pos <- dust_array_access(args[[1L]], args[-1], data, meta)
+      pos <- dust_array_access(args[[1L]], args[-1], data, meta, supported)
       ret <- sprintf("%s[%s]", values[[1L]], pos)
     } else if (fn == "^") {
       ret <- sprintf("std::pow(%s, %s)", values[[1]], values[[2]])
@@ -30,17 +30,17 @@ generate_dust_sexp <- function(x, data, meta) {
                      values[[1L]], values[[2L]], values[[3L]])
     } else if (fn == "length") {
       ret <- generate_dust_sexp(data$elements[[args[[1L]]]]$dimnames$length,
-                             data, meta)
+                             data, meta, supported)
     } else if (fn == "dim") {
       dim <- data$elements[[args[[1L]]]]$dimnames$dim[[args[[2]]]]
-      ret <- generate_dust_sexp(dim, data, meta)
+      ret <- generate_dust_sexp(dim, data, meta, supported)
     } else if (fn == "log" && length(values) == 2L) {
       ret <- sprintf("(std::log(%s) / std::log(%s))",
                      values[[1L]], values[[2L]])
     } else if (fn == "min" || fn == "max") {
       ret <- dust_fold_call(paste0("std::", fn), values)
     } else if (fn == "sum" || fn == "odin_sum") {
-      ret <- generate_dust_sexp_sum(args, data, meta)
+      ret <- generate_dust_sexp_sum(args, data, meta, supported)
     } else if (any(FUNCTIONS_STOCHASTIC == fn)) {
       if (fn == "rbinom") {
         ## This is a little extreme but is useful in at least some
@@ -58,7 +58,7 @@ generate_dust_sexp <- function(x, data, meta) {
           stop("odin.dust does not support 2-arg round")
         }
         fn <- sprintf("std::%s", fn)
-      } else {
+      } else if (!(fn %in% supported)) {
         stop(sprintf("unsupported function '%s'", fn))
       }
       ret <- sprintf("%s(%s)", fn, paste(values, collapse = ", "))
@@ -77,8 +77,8 @@ generate_dust_sexp <- function(x, data, meta) {
 }
 
 
-generate_dust_sexp_sum <- function(args, data, meta) {
-  target <- generate_dust_sexp(args[[1]], data, meta)
+generate_dust_sexp_sum <- function(args, data, meta, supported) {
+  target <- generate_dust_sexp(args[[1]], data, meta, supported)
   data_info <- data$elements[[args[[1]]]]
 
   if (data_info$location == "internal") {
@@ -86,7 +86,7 @@ generate_dust_sexp_sum <- function(args, data, meta) {
   }
 
   if (length(args) == 1L) {
-    len <- generate_dust_sexp(data_info$dimnames$length, data, meta)
+    len <- generate_dust_sexp(data_info$dimnames$length, data, meta, supported)
     sprintf("odin_sum1(%s, 0, %s)", target, len)
   } else {
     i <- seq(2, length(args), by = 2)
@@ -95,7 +95,7 @@ generate_dust_sexp_sum <- function(args, data, meta) {
     values <- character(length(all_args))
     values[i] <- vcapply(all_args[i], dust_minus_1, FALSE, data, meta)
     values[-i] <- vcapply(all_args[-i], generate_dust_sexp,
-                          data, meta)
+                          data, meta, supported)
     values[[1]] <- target
     arg_str <- paste(values, collapse = ", ")
 

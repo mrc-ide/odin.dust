@@ -28,7 +28,7 @@ odin_dust_package <- function(path, verbose = NULL, real_t = NULL) {
   ## NOTE: that mixing odin and odin.dust models together is unlikely
   ## to go well, and we assume here that all models are compilable to
   ## dust.
-  options <- odin::odin_options(target = "dust", verbose = verbose)
+  options <- odin_dust_options(verbose, NULL)
   nms <- character()
 
   for (f in filenames) {

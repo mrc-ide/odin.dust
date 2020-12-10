@@ -7,7 +7,7 @@ generate_dust <- function(ir, options, real_t = NULL) {
 
   features <- vlapply(dat$features, identity)
   supported <- c("initial_time_dependent", "has_user", "has_array",
-                 "discrete", "has_stochastic")
+                 "discrete", "has_stochastic", "has_include")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
@@ -17,13 +17,15 @@ generate_dust <- function(ir, options, real_t = NULL) {
   dat$meta$dust <- generate_dust_meta(real_t)
 
   rewrite <- function(x) {
-    generate_dust_sexp(x, dat$data, dat$meta)
+    generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names)
   }
   eqs <- generate_dust_equations(dat, rewrite)
 
   class <- generate_dust_core_class(eqs, dat, rewrite)
   create <- generate_dust_core_create(eqs, dat, rewrite)
   info <- generate_dust_core_info(dat, rewrite)
+
+  include <- generate_dust_include(dat$config$include$data)
 
   used <- unique(unlist(lapply(dat$equations, function(x)
     x$depends$functions), FALSE, FALSE))
@@ -37,7 +39,7 @@ generate_dust <- function(ir, options, real_t = NULL) {
   }
 
   list(class = class, create = create, info = info, support = support,
-       name = dat$config$base)
+       include = include, name = dat$config$base)
 }
 
 
@@ -290,11 +292,11 @@ generate_dust_core_attributes <- function(dat) {
   user <- unname(dat$equations[name])
   default_value <- unname(lapply(user, function(x) x$user$default))
   has_default <- !vlapply(default_value, is.null)
-  min <- vcapply(user, function(x) deparse1(x$user$min %||% -Inf))
-  max <- vcapply(user, function(x) deparse1(x$user$max %||% Inf))
+  min <- vcapply(user, function(x) deparse_str(x$user$min %||% -Inf))
+  max <- vcapply(user, function(x) deparse_str(x$user$max %||% Inf))
   integer <- vlapply(user, function(x) x$user$integer %||% FALSE)
   rank <- viapply(dat$data$elements[name], "[[", "rank", USE.NAMES = FALSE)
-  default <- vcapply(default_value, deparse1)
+  default <- vcapply(default_value, deparse_str)
 
   attr_class <- sprintf("// [[dust::class(%s)]]", dat$config$base)
 
@@ -333,4 +335,12 @@ dust_extract_variable <- function(x, data_elements, state, rewrite) {
     len <- rewrite(d$dimnames$length)
     sprintf("%s + %s", state, offset)
   }
+}
+
+
+generate_dust_include <- function(include) {
+  if (length(include) == 0L) {
+    return(NULL)
+  }
+  unlist(lapply(include, function(x) x$source))
 }
