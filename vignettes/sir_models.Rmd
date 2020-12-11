@@ -222,6 +222,8 @@ model <- gen_age$new(data = list(dt = dt,
 n_steps <- 300
 
 # Create an array to contain outputs after looping the model.
+# Array contains 35 rows = Total S, I, R (3), and
+# in each age compartment (24) as well as the cumulative incidence (8)
 x <- array(NA, dim = c(model$info()$len, n_particles, n_steps))
 
 # For loop to run the model iteratively
@@ -235,17 +237,16 @@ par(mfrow = c(2,4), oma=c(2,3,0,0))
 for (i in 1:N_age) {
   par(mar = c(3, 4, 2, 0.5))
   cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
-  matplot(time, t(x[i,, ]), type = "l",
+  matplot(time, t(x[i + 3,, ]), type = "l", # Offset to access numbers in age compartment
           xlab = "", ylab = "", yaxt="none", main = paste0("Age ", contact$demography$age.group[i]),
-          col = cols[["S"]], lty = 1, ylim=range(x))
-  matlines(time, t(x[i+N_age, , ]), col = cols[["I"]], lty = 1)
-  matlines(time, t(x[i+2*N_age, , ]), col = cols[["R"]], lty = 1)
+          col = cols[["S"]], lty = 1, ylim=range(x[-1:-3,,]))
+  matlines(time, t(x[i + 3 + N_age, , ]), col = cols[["I"]], lty = 1)
+  matlines(time, t(x[i + 3 + 2*N_age, , ]), col = cols[["R"]], lty = 1)
   legend("right", lwd = 1, col = cols, legend = names(cols), bty = "n")
   axis(2, las =2)
 }
 mtext("Number of individuals", side=2,line=1, outer=T)
 mtext("Time", side = 1, line = 0, outer =T)
-
 ```
 
 Many other methods are available on the dust object to support inference, but typically you may want to use the [`mcstate`](https://mrc-ide.github.io/mcstate/) package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from [`dust`](https://mrc-ide.github.io/dust/).
