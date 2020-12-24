@@ -43,8 +43,13 @@ generate_dust <- function(ir, options, real_t = NULL) {
 }
 
 
+## NOTE that none of these names are protected by odin; we probably
+## should try and move to names where we are sure that we won't
+## collide.
 generate_dust_meta <- function(real_t) {
-  list(rng_state = "rng_state",
+  list(init = "init",
+       shared = "shared",
+       rng_state = "rng_state",
        real_t = real_t %||% "double")
 }
 
@@ -67,7 +72,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ret$add(paste0("  ", initial))
   ret$add(paste0("  ", update))
   ret$add("private:")
-  ret$add("  init_t %s;", dat$meta$internal)
+  ret$add("  internal_t %s;", dat$meta$internal)
   ret$add("};")
 
   ret$get()
@@ -88,15 +93,19 @@ generate_dust_core_struct <- function(dat) {
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
 
   c(sprintf("typedef %s real_t;", dat$meta$dust$real_t),
-    "struct init_t {",
+    "struct internal_t {",
     paste0("  ", els),
+    "};",
+    "struct init_t {",
+    "  internal_t internal;",
     "};")
 }
 
 
 generate_dust_core_ctor <- function(dat) {
-  c(sprintf("%s(const init_t& data): %s(data) {",
-            dat$config$base, dat$meta$internal),
+  init <- dat$meta$dust$init
+  c(sprintf("%s(const init_t& %s): %s(%s.internal) {",
+            dat$config$base, init, dat$meta$internal, init),
     "}")
 }
 
@@ -164,12 +173,14 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
 
 
 generate_dust_core_create <- function(eqs, dat, rewrite) {
-  type <- sprintf("%s::init_t", dat$config$base)
+  init_name <- dat$meta$dust$init
+  init_type <- sprintf("%s::init_t", dat$config$base)
+  internal_type <- sprintf("%s::internal_t", dat$config$base)
 
   body <- collector()
   body$add("typedef typename %s::real_t real_t;", dat$config$base)
+  body$add("%s %s;", internal_type, dat$meta$internal)
 
-  body$add("%s %s;", type, dat$meta$internal)
   body$add(dust_flatten_eqs(eqs[dat$components$create$equations]))
 
   data_info <- dat$data$elements
@@ -182,21 +193,26 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   }
 
   body$add(dust_flatten_eqs(eqs[dat$components$user$equations]))
-  body$add("return %s;", dat$meta$internal)
+
+  body$add("%s %s = {%s};", init_type, init_name, dat$meta$internal)
+  body$add("return %s;", init_name)
 
   name <- sprintf("dust_data<%s>", dat$config$base)
   args <- c("cpp11::list" = dat$meta$user)
   c("template<>",
-    cpp_function(type, name, args, body$get()))
+    cpp_function(init_type, name, args, body$get()))
 }
 
 
 generate_dust_core_info <- function(dat, rewrite) {
   nms <- names(dat$data$variable$contents)
-  args <- dat$meta$internal
+  args <- dat$meta$dust$init
   names(args) <- sprintf("const %s::init_t&", dat$config$base)
 
   body <- collector()
+  body$add("const %s::internal_t %s = %s.%s;",
+           dat$config$base, dat$meta$internal, dat$meta$dust$init,
+           dat$meta$internal)
 
   body$add("cpp11::writable::strings nms({%s});",
            paste(dquote(nms), collapse = ", "))
