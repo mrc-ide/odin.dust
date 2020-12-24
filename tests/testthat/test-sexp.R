@@ -149,4 +149,7 @@ test_that("renames", {
   expect_equal(
     generate_dust_sexp(list("ceiling", "x"), NULL, NULL, NULL),
     "std::ceil(x)")
+  expect_equal(
+    generate_dust_sexp(list("as.integer", "x"), NULL, NULL, NULL),
+    "static_cast<int>(x)")
 })
