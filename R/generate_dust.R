@@ -72,6 +72,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ret$add(paste0("  ", initial))
   ret$add(paste0("  ", update))
   ret$add("private:")
+  ret$add("  std::shared_ptr<const shared_t> %s;", dat$meta$dust$shared)
   ret$add("  internal_t %s;", dat$meta$internal)
   ret$add("};")
 
@@ -93,10 +94,13 @@ generate_dust_core_struct <- function(dat) {
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
 
   c(sprintf("typedef %s real_t;", dat$meta$dust$real_t),
+    "struct shared_t {",
+    "};",
     "struct internal_t {",
     paste0("  ", els),
     "};",
     "struct init_t {",
+    "  std::shared_ptr<const shared_t> shared;",
     "  internal_t internal;",
     "};")
 }
@@ -104,8 +108,10 @@ generate_dust_core_struct <- function(dat) {
 
 generate_dust_core_ctor <- function(dat) {
   init <- dat$meta$dust$init
-  c(sprintf("%s(const init_t& %s): %s(%s.internal) {",
-            dat$config$base, init, dat$meta$internal, init),
+  c(sprintf("%s(const init_t& %s): %s(%s.shared), %s(%s.internal) {",
+            dat$config$base, init,
+            dat$meta$dust$shared, init,
+            dat$meta$internal, init),
     "}")
 }
 
@@ -179,6 +185,7 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 
   body <- collector()
   body$add("typedef typename %s::real_t real_t;", dat$config$base)
+  body$add("%s::shared_t %s = {};", dat$config$base, dat$meta$dust$shared)
   body$add("%s %s;", internal_type, dat$meta$internal)
 
   body$add(dust_flatten_eqs(eqs[dat$components$create$equations]))
@@ -194,7 +201,9 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 
   body$add(dust_flatten_eqs(eqs[dat$components$user$equations]))
 
-  body$add("%s %s = {%s};", init_type, init_name, dat$meta$internal)
+  body$add("%s %s = {std::make_shared<const %s::shared_t>(%s), %s};",
+           init_type, init_name, dat$config$base,
+           dat$meta$dust$shared, dat$meta$internal)
   body$add("return %s;", init_name)
 
   name <- sprintf("dust_data<%s>", dat$config$base)
