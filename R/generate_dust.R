@@ -129,7 +129,7 @@ generate_dust_core_initial <- function(dat, rewrite) {
     data_info <- dat$data$elements[[el$name]]
     if (data_info$rank == 0L) {
       lhs <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
-      sprintf("%s = %s.%s;", lhs, dat$meta$internal, el$initial)
+      sprintf("%s = %s;", lhs, rewrite(el$initial))
     } else {
       src <- rewrite(el$initial)
       sprintf(
