@@ -126,7 +126,7 @@ test_that("Generate sum code", {
                1L, list("dim", "m", 1),
                2L, list("dim", "m", 2))
   expect_equal(
-    generate_dust_sexp(expr, data, internal),
+    generate_dust_sexp(expr, data, meta),
     paste("odin_sum2(internal.m.data(), 0, shared->dim_m_1,",
           "1, shared->dim_m_2, shared->dim_m_1)"))
 
@@ -135,7 +135,7 @@ test_that("Generate sum code", {
     generate_dust_sexp(list("sum", "m"), data, meta),
     "odin_sum1(m, 0, shared->dim_m)")
   expect_equal(
-    generate_dust_sexp(expr, data, internal),
+    generate_dust_sexp(expr, data, meta),
     paste("odin_sum2(m, 0, shared->dim_m_1,",
           "1, shared->dim_m_2, shared->dim_m_1)"))
 })
