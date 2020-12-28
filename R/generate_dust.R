@@ -85,19 +85,21 @@ generate_dust_core_struct <- function(dat) {
     type <- dust_type(x$storage_type)
     is_ptr <- x$rank > 0L || type == "void"
     if (is_ptr) {
-      sprintf("std::vector<%s> %s;", type, x$name)
+      sprintf("  std::vector<%s> %s;", type, x$name)
     } else {
-      sprintf("%s %s;", type, x$name)
+      sprintf("  %s %s;", type, x$name)
     }
   }
   i <- vcapply(dat$data$elements, "[[", "location") == "internal"
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
+  i_internal <- vcapply(dat$data$elements[i], "[[", "stage") == "time"
 
   c(sprintf("typedef %s real_t;", dat$meta$dust$real_t),
     "struct shared_t {",
+    els[!i_internal],
     "};",
     "struct internal_t {",
-    paste0("  ", els),
+    els[i_internal],
     "};",
     "struct init_t {",
     "  std::shared_ptr<const shared_t> shared;",
@@ -185,7 +187,8 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 
   body <- collector()
   body$add("typedef typename %s::real_t real_t;", dat$config$base)
-  body$add("%s::shared_t %s = {};", dat$config$base, dat$meta$dust$shared)
+  body$add("auto %s = std::make_shared<%s::shared_t>();",
+           dat$meta$dust$shared, dat$config$base)
   body$add("%s %s;", internal_type, dat$meta$internal)
 
   body$add(dust_flatten_eqs(eqs[dat$components$create$equations]))
@@ -201,9 +204,8 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 
   body$add(dust_flatten_eqs(eqs[dat$components$user$equations]))
 
-  body$add("%s %s = {std::make_shared<const %s::shared_t>(%s), %s};",
-           init_type, init_name, dat$config$base,
-           dat$meta$dust$shared, dat$meta$internal)
+  body$add("%s %s = {%s, %s};",
+           init_type, init_name, dat$meta$dust$shared, dat$meta$internal)
   body$add("return %s;", init_name)
 
   name <- sprintf("dust_data<%s>", dat$config$base)
@@ -222,6 +224,9 @@ generate_dust_core_info <- function(dat, rewrite) {
   body$add("const %s::internal_t %s = %s.%s;",
            dat$config$base, dat$meta$internal, dat$meta$dust$init,
            dat$meta$internal)
+  body$add("const std::shared_ptr<const %s::shared_t> %s = %s.%s;",
+           dat$config$base, dat$meta$dust$shared, dat$meta$dust$init,
+           dat$meta$dust$shared)
 
   body$add("cpp11::writable::strings nms({%s});",
            paste(dquote(nms), collapse = ", "))

@@ -65,9 +65,13 @@ generate_dust_sexp <- function(x, data, meta, supported) {
     }
     ret
   } else if (is.character(x)) {
-    location <- data$elements[[x]]$location
-    if (!is.null(location) && location == "internal") {
-      sprintf("%s.%s", meta$internal, x)
+    el <- data$elements[[x]]
+    if (!is.null(el$location) && el$location == "internal") {
+      if (el$stage == "time") {
+        sprintf("%s.%s", meta$internal, x)
+      } else {
+        sprintf("%s->%s", meta$dust$shared, x)
+      }
     } else {
       x
     }
