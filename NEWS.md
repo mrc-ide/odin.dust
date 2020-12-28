@@ -1,3 +1,7 @@
+# odin.dust 0.1.7
+
+* Separate internal data into mutable and non-mutable components (#45)
+
 # odin.dust 0.1.6
 
 * Support for vectors of floats (rather than doubles) (#6)
