@@ -368,6 +368,28 @@ test_that("sir model float test", {
 })
 
 
+test_that("array model float test", {
+  gen_f <- odin_dust_("examples/array.R", real_t = "float", verbose = FALSE)
+  gen_d <- odin_dust_("examples/array.R", real_t = "double", verbose = FALSE)
+
+  r <- matrix(runif(10), 2, 5)
+  x0 <- matrix(runif(10), 2, 5)
+
+  mod_f <- gen_f$new(list(x0 = x0, r = r), 0, 1)
+  mod_d <- gen_d$new(list(x0 = x0, r = r), 0, 1)
+
+  expect_identical(mod_d$state(), matrix(c(x0)))
+  expect_equal(mod_f$state(), mod_d$state(), tolerance = 1e-7)
+  expect_false(identical(mod_f$state(), mod_d$state()))
+
+  y_d <- mod_d$run(1)
+  y_f <- mod_f$run(1)
+  expect_identical(y_d, matrix(c(x0 + r)))
+  expect_equal(y_f, y_d, tolerance = 1e-7)
+  expect_false(identical(y_f, y_d))
+})
+
+
 test_that("specify workdir", {
   path <- tempfile()
   gen <- odin_dust({
