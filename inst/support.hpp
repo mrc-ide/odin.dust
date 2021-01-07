@@ -7,21 +7,6 @@
 #include <cpp11/strings.hpp>
 #include <vector>
 
-// These would be nice to make constexpr but the way that NA values
-// are defined in R's include files do not allow it.
-template <typename T>
-inline T na_value();
-
-template <>
-inline int na_value<int>() {
-  return NA_INTEGER;
-}
-
-template <>
-inline double na_value<double>() {
-  return NA_REAL;
-}
-
 template <typename T>
 inline bool is_na(T x);
 
@@ -41,13 +26,13 @@ inline size_t object_length(cpp11::sexp x) {
 
 template <typename T>
 void user_check_value(T value, const char *name, T min, T max) {
-  if (ISNA(value)) {
+  if (is_na(value)) {
     cpp11::stop("'%s' must not be NA", name);
   }
-  if (min != na_value<T>() && value < min) {
+  if (!is_na(min) && value < min) {
     cpp11::stop("Expected '%s' to be at least %g", name, (double) min);
   }
-  if (max != na_value<T>() && value > max) {
+  if (!is_na(max) && value > max) {
     cpp11::stop("Expected '%s' to be at most %g", name, (double) max);
   }
 }
@@ -142,24 +127,19 @@ T user_get_scalar(cpp11::list user, const char *name,
   return ret;
 }
 
-// This is not actually really enough to work generally as there's an
-// issue with what to do with checking previous, min and max against
-// NA_REAL -- which is not going to be the correct value for float
-// rather than double.  Further, this is not extendable to the vector
-// cases because we hit issues around partial template specification.
-//
-// We can make the latter go away by replacing std::array<T, N> with
-// std::vector<T> - the cost is not great.  But the NA issues remain
-// and will require further thought. However, this template
-// specialisation and the tests that use it ensure that the core code
-// generation is at least compatible with floats.
-//
-// See #6
 template <>
 inline float user_get_scalar<float>(cpp11::list user, const char *name,
                                     const float previous, float min, float max) {
   double value = user_get_scalar<double>(user, name, previous, min, max);
   return static_cast<float>(value);
+}
+
+template <typename T>
+std::vector<T> user_get_array_value(cpp11::sexp x, const char * name,
+                                    T min, T max) {
+  std::vector<T> ret = cpp11::as_cpp<std::vector<T>>(x);
+  user_check_array_value<T>(ret, name, min, max);
+  return ret;
 }
 
 template <typename T, size_t N>
@@ -178,10 +158,7 @@ std::vector<T> user_get_array_fixed(cpp11::list user, const char *name,
   user_check_array_rank<N>(x, name);
   user_check_array_dim<N>(x, name, dim);
 
-  std::vector<T> ret = cpp11::as_cpp<std::vector<T>>(x);
-  user_check_array_value(ret, name, min, max);
-
-  return ret;
+  return user_get_array_value<T>(x, name, min, max);
 }
 
 template <typename T, size_t N>
@@ -200,9 +177,17 @@ std::vector<T> user_get_array_variable(cpp11::list user, const char *name,
   user_check_array_rank<N>(x, name);
   user_set_array_dim<N>(x, name, dim);
 
-  std::vector<T> ret = cpp11::as_cpp<std::vector<T>>(x);
-  user_check_array_value(ret, name, min, max);
+  return user_get_array_value<T>(x, name, min, max);
+}
 
+template <>
+inline std::vector<float> user_get_array_value(cpp11::sexp x, const char * name,
+                                               float min, float max) {
+  // NOTE: possible under/overflow here for min/max because we've
+  // downcast this.
+  std::vector<double> value = user_get_array_value<double>(x, name, min, max);
+  std::vector<float> ret(value.size());
+  std::copy(value.begin(), value.end(), ret.begin());
   return ret;
 }
 
