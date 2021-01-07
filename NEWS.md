@@ -1,6 +1,6 @@
 # odin.dust 0.1.6
 
-* Support for vectors of floats (rater than doubles) (#6)
+* Support for vectors of floats (rather than doubles) (#6)
 
 # odin.dust 0.1.5
 
