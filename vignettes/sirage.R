@@ -23,7 +23,7 @@ p_IR <- 1 - exp(-gamma * dt) # I to R
 ## Force of infection
 m[, ] <- user() # age-structured contact matrix
 s_ij[, ] <- m[i, j] * I[i]
-lambda[] <- beta * sum(s_ij[i, ])
+lambda[] <- beta * sum(s_ij[, i])
 
 ## Draws from binomial distributions for numbers changing between
 ## compartments:
@@ -43,7 +43,7 @@ initial(cumu_inc[]) <- 0
 ## User defined parameters - default in parentheses:
 S_ini[] <- user()
 I_ini[] <- user()
-beta <- user(0.2)
+beta <- user(0.0165)
 gamma <- user(0.1)
 
 # dimensions of arrays
