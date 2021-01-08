@@ -23,7 +23,7 @@ plain_output <- function(x) lang_output(x, "plain")
 # Stochastic SIR model definition
 
 A simple definition of the SIR model, as given in the [odin documentation](https://mrc-ide.github.io/odin/articles/discrete.html) is:
-$$\begin{align*} 
+$$\begin{align*}
 \frac{dS}{dt} &= -\beta \frac{SI}{N} \\
 \frac{dI}{dt} &= \beta \frac{SI}{N} - \gamma I \\
 \frac{dR}{dt} &= \gamma I \\
@@ -32,14 +32,14 @@ $S$ is the number of susceptibles, $I$ is the number of infected and $R$ is the 
 
 Discretising this model in time steps of width $dt$ gives the following update equations for each time step:
 
-$$\begin{align*} 
+$$\begin{align*}
 S_{t+1} &= S_t - n_{SI} \\
 I_{t+1} &= I_t + n_{SI} - n_{IR} \\
 R_{t+1} &= R_t - n_{IR}
 \end{align*}$$
 
 where
-$$\begin{align*} 
+$$\begin{align*}
 n_{SI} &\sim B(S, 1 - e^{-\beta \frac{I}{N} \cdot dt}) \\
 n_{IR} &\sim B(I, 1 - e^{-\gamma \cdot dt})
 \end{align*}$$
@@ -79,10 +79,10 @@ Now we can use the `new` method on the generator to make `dust` objects. `dust` 
 Additional arguments include the number of threads to parallelise the particles over, and the seed for the random number generator. The seed must be an integer, and using the same seed will ensure reproducible results for all particles. To use this to directly create a new dust object with 10 particles, run using 4 threads:
 
 ```{r}
-sir_model <- gen_sir$new(data = list(dt = 1, 
-                                     S_ini = 1000, 
-                                     I_ini = 10, 
-                                     beta = 0.2, 
+sir_model <- gen_sir$new(data = list(dt = 1,
+                                     S_ini = 1000,
+                                     I_ini = 10,
+                                     beta = 0.2,
                                      gamma = 0.1),
                          step = 1,
                          n_particles = 10L,
@@ -108,10 +108,10 @@ We can change the parameters, say by increasing the infection rate and the popul
 ```{r}
 dt <- 0.25
 n_particles <- 10L
-sir_model$reset(data = list(dt = dt, 
-                            S_ini = 2000, 
-                            I_ini = 10, 
-                            beta = 0.4, 
+sir_model$reset(data = list(dt = dt,
+                            S_ini = 2000,
+                            I_ini = 10,
+                            beta = 0.4,
                             gamma = 0.1),
                 step = 0)
 sir_model$state()
@@ -206,10 +206,10 @@ This can be given as a parameter to the model by adding the argument `data = lis
 N_age <- length(age.limits)
 n_particles <- 5L
 dt <- 0.25
-model <- gen_age$new(data = list(dt = dt, 
+model <- gen_age$new(data = list(dt = dt,
                                  S_ini = contact$demography$population,
-                                 I_ini = rep(10,8), 
-                                 beta = 0.2, 
+                                 I_ini = rep(10,8),
+                                 beta = 0.2 / 12.11,
                                  gamma = 0.1,
                                  m = transmission,
                                  N_age = N_age),
@@ -219,7 +219,7 @@ model <- gen_age$new(data = list(dt = dt,
                      seed = 1L)
 
 # Define how long the model runs for, number of steps
-n_steps <- 300
+n_steps <- 400
 
 # Create an array to contain outputs after looping the model.
 # Array contains 35 rows = Total S, I, R (3), and
@@ -248,5 +248,9 @@ for (i in 1:N_age) {
 mtext("Number of individuals", side=2,line=1, outer=T)
 mtext("Time", side = 1, line = 0, outer =T)
 ```
+
+Note that a scale factor is introduced for beta so that $R_0$ remains at 2,
+offsetting the scaling of the contact matrix `m`. This is calculated using the
+next-generation matrix. See [Driessche](https://doi.org/10.1016/j.idm.2017.06.002) and [Towers and Feng](https://dx.doi.org/10.1016/j.mbs.2012.07.007).
 
 Many other methods are available on the dust object to support inference, but typically you may want to use the [`mcstate`](https://mrc-ide.github.io/mcstate/) package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from [`dust`](https://mrc-ide.github.io/dust/).

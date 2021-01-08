@@ -43,7 +43,7 @@ initial(cumu_inc[]) <- 0
 ## User defined parameters - default in parentheses:
 S_ini[] <- user()
 I_ini[] <- user()
-beta <- user(0.2)
+beta <- user(0.0165)
 gamma <- user(0.1)
 
 # dimensions of arrays
