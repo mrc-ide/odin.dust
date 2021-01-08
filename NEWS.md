@@ -1,3 +1,7 @@
+# odin.dust 0.1.8
+
+* Correct age-structured model in package vignette
+
 # odin.dust 0.1.7
 
 * Separate internal data into mutable and non-mutable components (#45)
