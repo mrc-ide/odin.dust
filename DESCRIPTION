@@ -1,6 +1,6 @@
 Package: odin.dust
 Title: Compile Odin to Dust
-Version: 0.1.8
+Version: 0.1.9
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("John", "Lees", role = "aut"),
@@ -21,7 +21,7 @@ Imports:
     brio,
     cpp11,
     decor,
-    dust (>= 0.5.3),
+    dust (>= 0.6.0),
     odin (>= 1.1.5),
     tibble,
     vctrs

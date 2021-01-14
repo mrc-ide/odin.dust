@@ -208,7 +208,7 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
            init_type, init_name, dat$meta$dust$shared, dat$meta$internal)
   body$add("return %s;", init_name)
 
-  name <- sprintf("dust_data<%s>", dat$config$base)
+  name <- sprintf("dust_pars<%s>", dat$config$base)
   args <- c("cpp11::list" = dat$meta$user)
   c("template<>",
     cpp_function(init_type, name, args, body$get()))

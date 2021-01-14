@@ -79,7 +79,7 @@ Now we can use the `new` method on the generator to make `dust` objects. `dust` 
 Additional arguments include the number of threads to parallelise the particles over, and the seed for the random number generator. The seed must be an integer, and using the same seed will ensure reproducible results for all particles. To use this to directly create a new dust object with 10 particles, run using 4 threads:
 
 ```{r}
-sir_model <- gen_sir$new(data = list(dt = 1,
+sir_model <- gen_sir$new(pars = list(dt = 1,
                                      S_ini = 1000,
                                      I_ini = 10,
                                      beta = 0.2,
@@ -108,7 +108,7 @@ We can change the parameters, say by increasing the infection rate and the popul
 ```{r}
 dt <- 0.25
 n_particles <- 10L
-sir_model$reset(data = list(dt = dt,
+sir_model$reset(pars = list(dt = dt,
                             S_ini = 2000,
                             I_ini = 10,
                             beta = 0.4,
@@ -200,13 +200,13 @@ transmission <- contact$matrix /
 transmission
 ```
 
-This can be given as a parameter to the model by adding the argument `data = list(m = transmission)` when using the `new()` method on the `gen_age` generator.
+This can be given as a parameter to the model by adding the argument `pars = list(m = transmission)` when using the `new()` method on the `gen_age` generator.
 
 ```{r, fig.height=3.5, fig.width=7}
 N_age <- length(age.limits)
 n_particles <- 5L
 dt <- 0.25
-model <- gen_age$new(data = list(dt = dt,
+model <- gen_age$new(pars = list(dt = dt,
                                  S_ini = contact$demography$population,
                                  I_ini = c(0, 10, 0, 0, 0, 0, 0, 0),
                                  beta = 0.2 / 12.11,
