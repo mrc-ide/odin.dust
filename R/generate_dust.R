@@ -95,6 +95,7 @@ generate_dust_core_struct <- function(dat) {
   i_internal <- vcapply(dat$data$elements[i], "[[", "stage") == "time"
 
   c(sprintf("typedef %s real_t;", dat$meta$dust$real_t),
+    "typedef dust::no_data data_t;",
     "struct shared_t {",
     els[!i_internal],
     "};",
