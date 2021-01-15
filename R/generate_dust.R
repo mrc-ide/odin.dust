@@ -15,6 +15,7 @@ generate_dust <- function(ir, options, real_t = NULL) {
   }
 
   dat$meta$dust <- generate_dust_meta(real_t)
+  dat$compare <- dust_compare_info(dat)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names)
@@ -25,7 +26,9 @@ generate_dust <- function(ir, options, real_t = NULL) {
   create <- generate_dust_core_create(eqs, dat, rewrite)
   info <- generate_dust_core_info(dat, rewrite)
 
-  include <- generate_dust_include(dat$config$include$data)
+  include <- c(
+    generate_dust_include(dat$config$include$data),
+    dat$compare$include)
 
   used <- unique(unlist(lapply(dat$equations, function(x)
     x$depends$functions), FALSE, FALSE))
@@ -48,6 +51,7 @@ generate_dust <- function(ir, options, real_t = NULL) {
 ## collide.
 generate_dust_meta <- function(real_t) {
   list(init = "init",
+       data = "data",
        shared = "shared",
        rng_state = "rng_state",
        real_t = real_t %||% "double")
@@ -61,6 +65,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   initial <- generate_dust_core_initial(dat, rewrite)
   update <- generate_dust_core_update(eqs, dat, rewrite)
   attributes <- generate_dust_core_attributes(dat)
+  compare <- generate_dust_compare_method(dat)
 
   ret <- collector()
   ret$add(attributes)
@@ -71,6 +76,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ret$add(paste0("  ", size))
   ret$add(paste0("  ", initial))
   ret$add(paste0("  ", update))
+  ret$add(paste0("  ", compare))
   ret$add("private:")
   ret$add("  std::shared_ptr<const shared_t> %s;", dat$meta$dust$shared)
   ret$add("  internal_t %s;", dat$meta$internal)
@@ -94,8 +100,10 @@ generate_dust_core_struct <- function(dat) {
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
   i_internal <- vcapply(dat$data$elements[i], "[[", "stage") == "time"
 
+  data_t <- dat$compare$data_type %||% "dust::no_data"
+
   c(sprintf("typedef %s real_t;", dat$meta$dust$real_t),
-    "typedef dust::no_data data_t;",
+    sprintf("typedef %s data_t;", data_t),
     "struct shared_t {",
     els[!i_internal],
     "};",
@@ -374,4 +382,45 @@ generate_dust_include <- function(include) {
     return(NULL)
   }
   unlist(lapply(include, function(x) x$source))
+}
+
+
+dust_compare_info <- function(dat) {
+  i <- vcapply(dat$config$custom, function(x) x$name) == "compare"
+  if (sum(i) == 0) {
+    return(list(data_t = "dust::no_data"))
+  }
+  if (sum(i) > 1) {
+    ## TODO: this will eventually be enforced by odin for us, but this
+    ## is ok for now. The advantage of doing it in odin is it's done
+    ## in the parse section with all the source code details.
+    stop("Only one 'config(compare)' block is allowed")
+  }
+  compare <- dat$config$custom[[which(i)]]$value
+  ## Might join these up later
+  ret <- read_compare_dust(compare)
+  ret$include <- readLines(compare)
+  ret
+}
+
+
+generate_dust_compare_method <- function(dat) {
+  if (is.null(dat$compare)) {
+    return(NULL)
+  }
+  args <- c("const real_t *" = dat$meta$state,
+            "const data_t&" = dat$meta$dust$data,
+            "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state)
+  body <- sprintf("return %s<%s>(%s, %s, %s, %s, %s);",
+                  dat$compare$function_name,
+                  dat$config$base,
+                  dat$meta$state,
+                  dat$meta$dust$data,
+                  dat$meta$internal,
+                  dat$meta$dust$shared,
+                  dat$meta$dust$rng_state)
+  cpp_function("real_t",
+               "compare_data",
+               args,
+               body)
 }

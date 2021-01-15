@@ -49,6 +49,7 @@ odin_dust_options <- function(verbose, workdir) {
   options <- odin::odin_options(target = "dust", verbose = verbose,
                                 workdir = workdir)
   options$read_include <- read_include_dust
+  options$config_custom <- "compare"
   options
 }
 
@@ -73,6 +74,7 @@ odin_dust_wrapper <- function(ir, options, real_t) {
 odin_dust_code <- function(dat) {
   c(dust_flatten_eqs(lapply(dat$support, "[[", "declaration")),
     dat$include,
+    dat$compare$support,
     dat$class,
     dust_flatten_eqs(lapply(dat$support, "[[", "definition")),
     readLines(odin_dust_file("support.hpp")),
@@ -115,4 +117,30 @@ read_include_dust <- function(filename) {
   }
   list(names = names,
        data = list(source = paste(readLines(filename), collapse = "\n")))
+}
+
+
+read_compare_dust <- function(filename) {
+  dat <- decor::cpp_decorations(files = filename)
+  i_fn <- dat$decoration == "odin.dust::compare_function"
+  if (sum(i_fn) != 1L) {
+    stop("Expected one decoration '[[odin.dust::compare_function]]'")
+  }
+  fn <- decor::parse_cpp_function(dat$context[[which(i_fn)]])
+
+  ## NOTE: we coule check the args here but doing that in a sensible
+  ## way that will not be broken by spacing differences will be hard
+  ## to get right. If the name is templated we should respond to that.
+  function_name <- fn$name
+
+  i_type <- dat$decoration == "odin.dust::compare_data"
+  if (sum(i_type) != 1L) {
+    stop("Expected one decoration '[[odin.dust::compare_data]]'")
+  }
+  type <- decor::parse_cpp_function(dat$context[[which(i_type)]])
+
+  data_type <- type$name
+
+  list(function_name = function_name,
+       data_type = data_type)
 }
