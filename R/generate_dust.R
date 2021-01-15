@@ -25,6 +25,7 @@ generate_dust <- function(ir, options, real_t = NULL) {
   class <- generate_dust_core_class(eqs, dat, rewrite)
   create <- generate_dust_core_create(eqs, dat, rewrite)
   info <- generate_dust_core_info(dat, rewrite)
+  data <- generate_dust_core_data(dat)
 
   include <- c(
     generate_dust_include(dat$config$include$data),
@@ -41,8 +42,8 @@ generate_dust <- function(ir, options, real_t = NULL) {
     }
   }
 
-  list(class = class, create = create, info = info, support = support,
-       include = include, name = dat$config$base)
+  list(class = class, create = create, info = info, data = data,
+       support = support, include = include, name = dat$config$base)
 }
 
 
@@ -100,10 +101,17 @@ generate_dust_core_struct <- function(dat) {
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
   i_internal <- vcapply(dat$data$elements[i], "[[", "stage") == "time"
 
-  data_t <- dat$compare$data_type %||% "dust::no_data"
+  if (is.null(dat$compare)) {
+    data_t <- "typedef dust::no_data data_t;"
+  } else {
+    data_t <- c(
+      "struct data_t {",
+      sprintf("  %s %s;", unname(dat$compare$data), names(dat$compare$data)),
+      "};")
+  }
 
   c(sprintf("typedef %s real_t;", dat$meta$dust$real_t),
-    sprintf("typedef %s data_t;", data_t),
+    data_t,
     "struct shared_t {",
     els[!i_internal],
     "};",
@@ -385,6 +393,59 @@ generate_dust_include <- function(include) {
 }
 
 
+read_compare_dust <- function(filename) {
+  dat <- decor::cpp_decorations(files = filename)
+  i_fn <- dat$decoration == "odin.dust::compare_function"
+  if (sum(i_fn) != 1L) {
+    stop("Expected one decoration '[[odin.dust::compare_function]]'")
+  }
+  ctx <- dat$context[[which(i_fn)]]
+  ## There's a long message here because this is a trick:
+  msg <- paste(
+    "Failed to parse function directly beneath [[odin.dust::compare_function]]",
+    "This must be the line immediately above your function definition, and",
+    "if you have your [[odin.dust::compare_data]] decorations there, please",
+    "move them elsewhere",
+    sep = "\n")
+  fn <- tryCatch(
+    decor::parse_cpp_function(ctx),
+    error = function(e) stop(msg, call. = FALSE))
+
+  ## NOTE: we coule check the args here but doing that in a sensible
+  ## way that will not be broken by spacing differences will be hard
+  ## to get right. If the name is templated we should respond to that.
+  function_name <- fn$name
+
+  i_data <- dat$decoration == "odin.dust::compare_data"
+  if (sum(i_data) == 0L) {
+    stop("Expected at least one decoration '[[odin.dust::compare_data(...)]]'")
+  }
+  data <- unlist(dat$params[i_data], FALSE, TRUE)
+  ## There's heaps of boring things to check here:
+  if (is.null(names(data)) || !all(nzchar(names(data)))) {
+    stop("All [[odin.dust::compare_data()]] arguments must be named")
+  }
+  if (any(duplicated(names(data)))) {
+    dups <- unique(names(data)[duplicated(names(data))])
+    stop(sprintf("Duplicated arguments in [[odin.dust::compare_data()]]: %s",
+                 paste(squote(dups), collapse = ", ")))
+  }
+  err <- !vlapply(data, is.symbol)
+  if (any(err)) {
+    stop(sprintf(
+      "All arguments to [[odin.dust::compare_data()]] must be symbols: %s",
+      paste(squote(names(which(err))), collapse = ", ")))
+  }
+  ## We might check that things conform to a known set of types, but
+  ## that's not really needed.
+  data <- vcapply(data, as.character)
+
+  list(function_name = function_name,
+       data = data,
+       include = readLines(filename))
+}
+
+
 dust_compare_info <- function(dat) {
   i <- vcapply(dat$config$custom, function(x) x$name) == "compare"
   if (sum(i) == 0) {
@@ -396,11 +457,7 @@ dust_compare_info <- function(dat) {
     ## in the parse section with all the source code details.
     stop("Only one 'config(compare)' block is allowed")
   }
-  compare <- dat$config$custom[[which(i)]]$value
-  ## Might join these up later
-  ret <- read_compare_dust(compare)
-  ret$include <- readLines(compare)
-  ret
+  read_compare_dust(dat$config$custom[[which(i)]]$value)
 }
 
 
@@ -423,4 +480,21 @@ generate_dust_compare_method <- function(dat) {
                "compare_data",
                args,
                body)
+}
+
+
+generate_dust_core_data <- function(dat) {
+  if (is.null(dat$compare)) {
+    return(NULL)
+  }
+  contents <- sprintf('    cpp11::as_cpp<%s>(data["%s"])',
+                      unname(dat$compare$data), names(dat$compare$data))
+  body <- c(sprintf("return %s::data_t{", dat$config$base),
+            contents,
+            "  };")
+  c("template <>",
+    cpp_function(sprintf("%s::data_t", dat$config$base),
+                 sprintf("dust_data<%s>", dat$config$base),
+                 c("cpp11::list" = dat$meta$dust$data),
+                 body))
 }
