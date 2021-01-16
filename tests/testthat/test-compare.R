@@ -6,11 +6,21 @@ test_that("Can parse compare metadata", {
   res <- read_compare_dust("examples/compare_simple.cpp")
   expect_equal(res$function_name, "compare")
   expect_equal(res$data, c(observed = "double"))
-  expect_equal(res$include, readLines("examples/compare_simple.cpp"))
 })
 
 
 test_that("Can error if correct metadata not found", {
+  fn <- c(
+    "// [[odin.dust::compare_function]]",
+    "template <typename T>",
+    "typename T::real_t f(const typename T::real_t * state,",
+    "                     const typename T::data_t& data,",
+    "                     const typename T::internal_t internal,",
+    "                     std::shared_ptr<const typename T::shared_t> shared,",
+    "                     dust::rng_state_t<typename T::real_t>& rng_state) {",
+    "  return 0;",
+    "}")
+
   path <- tempfile()
   writeLines(character(), path)
   expect_error(
@@ -18,7 +28,6 @@ test_that("Can error if correct metadata not found", {
     "Expected one decoration '[[odin.dust::compare_function]]'",
     fixed = TRUE)
 
-  fn <- c("// [[odin.dust::compare_function]]", "double f();")
   writeLines(fn, path)
   expect_error(
     read_compare_dust(path),
@@ -59,13 +68,12 @@ test_that("Can error if correct metadata not found", {
 
 
 test_that("Basic compare", {
-  ## We do get myvar through and added into the object (as shared) but
-  ## we suffer an unused variable warning there (which we want to avoid)
-  gen <- odin_dust({
-    initial(y) <- 0
-    update(y) <- y + rnorm(0, 1)
-    config(compare) <- "examples/compare_simple.cpp"
-  }, verbose = FALSE)
+  gen <- odin_dust(
+    c("initial(y) <- 0",
+      "update(y) <- y + rnorm(0, 1)",
+      "scale <- user(1) # ignore.unused",
+      'config(compare) <- "examples/compare_simple.cpp"'),
+    verbose = FALSE)
 
   np <- 10
   mod <- gen$new(list(), 0, np, seed = 1L)
@@ -109,4 +117,48 @@ test_that("rewrite compare source", {
   expect_error(
     dust_compare_rewrite(c("a", "odin(y) + odin(a)"), dat, rewrite),
     "Unable to find odin variable 'y'")
+})
+
+
+test_that("check_compare_args detects errors", {
+  args <- c(
+    "const typename T::real_t *" = "state",
+    "const typename T::data_t&" = "data",
+    "const typename T::internal_t" = "internal",
+    "std::shared_ptr<const typename T::shared_t>" = "shared",
+    "dust::rng_state_t<typename T::real_t>&" = "rng_state")
+  df <- data.frame(
+    type = names(args), name = unname(args), stringsAsFactors = FALSE)
+  expect_silent(check_compare_args(df, "compare"))
+  expect_error(
+    check_compare_args(df[-3, ], "compare"),
+    "Expected compare function 'compare' to have 5 args (but given 4)",
+    fixed = TRUE)
+
+  df$type[[1]] <- "typename T::real_t *"
+  df$name[[2]] <- "thedata"
+  err <- expect_error(
+    check_compare_args(df, "compare"),
+    "Compare function 'compare' does not conform")
+  expect_match(
+    err$message,
+    "Expected: const typename T::data_t& data")
+  expect_match(
+    err$message,
+    "   Given: const typename T::data_t& thedata")
+  expect_match(
+    err$message,
+    "Expected: const typename T::real_t * state",
+    fixed = TRUE)
+  expect_match(
+    err$message,
+    "   Given: typename T::real_t * state",
+    fixed = TRUE)
+
+  df <- data.frame(type = names(args), name = unname(args),
+                   stringsAsFactors = FALSE)
+  df$type <- gsub(" ", "  ", df$type)
+  df$type <- gsub("<", " < ", df$type)
+  df$type <- gsub(">", " > ", df$type)
+  expect_silent(check_compare_args(df, "compare"))
 })

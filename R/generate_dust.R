@@ -412,10 +412,8 @@ read_compare_dust <- function(filename) {
     decor::parse_cpp_function(ctx),
     error = function(e) stop(msg, call. = FALSE))
 
-  ## NOTE: we coule check the args here but doing that in a sensible
-  ## way that will not be broken by spacing differences will be hard
-  ## to get right. If the name is templated we should respond to that.
   function_name <- fn$name
+  check_compare_args(fn$args[[1]], function_name)
 
   i_data <- dat$decoration == "odin.dust::compare_data"
   if (sum(i_data) == 0L) {
@@ -443,6 +441,37 @@ read_compare_dust <- function(filename) {
 
   list(function_name = function_name,
        data = data)
+}
+
+
+check_compare_args <- function(args, name) {
+  if (nrow(args) != 5L) {
+    stop(sprintf(
+      "Expected compare function '%s' to have 5 args (but given %d)",
+      name, nrow(args)))
+  }
+  norm <- function(x) {
+    gsub("\\s*([<>])\\s*", "\\1", gsub("\\s+", " ", x))
+  }
+  args_expected <- c(
+    "const typename T::real_t *" = "state",
+    "const typename T::data_t&" = "data",
+    "const typename T::internal_t" = "internal",
+    "std::shared_ptr<const typename T::shared_t>" = "shared",
+    "dust::rng_state_t<typename T::real_t>&" = "rng_state")
+  err <- norm(args$type) != norm(names(args_expected)) |
+    args$name != unname(args_expected)
+  if (any(err)) {
+    msg <- sprintf("Arg %d:\n  Expected: %s %s\n     Given: %s %s",
+                   which(err),
+                   names(args_expected)[err],
+                   unname(args_expected)[err],
+                   args$type[err],
+                   args$name[err])
+    stop(sprintf(
+      "Compare function '%s' does not conform to expected signature:\n%s",
+      name, paste(msg, collapse = "\n")), call. = FALSE)
+  }
 }
 
 
