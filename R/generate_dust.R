@@ -15,11 +15,12 @@ generate_dust <- function(ir, options, real_t = NULL) {
   }
 
   dat$meta$dust <- generate_dust_meta(real_t)
-  dat$compare <- dust_compare_info(dat)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names)
   }
+
+  dat$compare <- dust_compare_info(dat, rewrite)
   eqs <- generate_dust_equations(dat, rewrite)
 
   class <- generate_dust_core_class(eqs, dat, rewrite)
@@ -441,12 +442,11 @@ read_compare_dust <- function(filename) {
   data <- vcapply(data, as.character)
 
   list(function_name = function_name,
-       data = data,
-       include = readLines(filename))
+       data = data)
 }
 
 
-dust_compare_info <- function(dat) {
+dust_compare_info <- function(dat, rewrite) {
   i <- vcapply(dat$config$custom, function(x) x$name) == "compare"
   if (sum(i) == 0) {
     return(NULL)
@@ -457,7 +457,18 @@ dust_compare_info <- function(dat) {
     ## in the parse section with all the source code details.
     stop("Only one 'config(compare)' block is allowed")
   }
-  read_compare_dust(dat$config$custom[[which(i)]]$value)
+  filename <- dat$config$custom[[which(i)]]$value
+  ret <- read_compare_dust(filename)
+  ret$include <- dust_compare_rewrite(readLines(filename), dat, rewrite)
+  ret
+}
+
+
+dust_compare_rewrite <- function(text, dat, rewrite) {
+  text <- paste(text, collapse = "\n")
+  text <- glue::glue(text, .open = "odin(", .close = ")",
+                     .transformer = odin_variable_transformer(dat, rewrite))
+  strsplit(text, "\n", fixed = TRUE)[[1]]
 }
 
 
@@ -497,4 +508,19 @@ generate_dust_core_data <- function(dat) {
                  sprintf("dust_data<%s>", dat$config$base),
                  c("cpp11::list" = dat$meta$dust$data),
                  body))
+}
+
+
+odin_variable_transformer <- function(dat, rewrite) {
+  function(text, envir) {
+    ans <- rewrite(text)
+    if (ans == text) {
+      el <- dat$data$variable$contents[[text]]
+      if (is.null(el)) {
+        stop(sprintf("Unable to find odin variable '%s'", text))
+      }
+      ans <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
+    }
+    ans
+  }
 }

@@ -85,3 +85,28 @@ test_that("Basic compare", {
     mod$compare_data(),
     drop(y) - d[[2]][[2]]$observed)
 })
+
+
+test_that("rewrite compare source", {
+  rewrite <- function(x) {
+    switch(as.character(x),
+           "a" = "shared->a",
+           "b" = "internal.b",
+           x)
+  }
+  dat <- list(data = list(
+                variable = list(
+                  contents = list(
+                    x = list(offset = 4)))),
+              meta = list(state = "state"))
+
+  expect_equal(
+    dust_compare_rewrite(c("a", "a + odin(a)", "y / odin(b)"), dat, rewrite),
+    c("a", "a + shared->a", "y / internal.b"))
+  expect_equal(
+    dust_compare_rewrite(c("a", "odin(x) + odin(a)"), dat, rewrite),
+    c("a", "state[4] + shared->a"))
+  expect_error(
+    dust_compare_rewrite(c("a", "odin(y) + odin(a)"), dat, rewrite),
+    "Unable to find odin variable 'y'")
+})

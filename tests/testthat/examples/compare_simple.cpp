@@ -6,5 +6,6 @@ typename T::real_t compare(const typename T::real_t * state,
                            const typename T::internal_t internal,
                            std::shared_ptr<const typename T::shared_t> shared,
                            dust::rng_state_t<typename T::real_t>& rng_state) {
-  return state[0] - data.observed;
+  // Here, odin(y) refers to state[0]
+  return odin(y) - data.observed;
 }
