@@ -162,3 +162,17 @@ test_that("check_compare_args detects errors", {
   df$type <- gsub(">", " > ", df$type)
   expect_silent(check_compare_args(df, "compare"))
 })
+
+
+test_that("Only one compare block allowed", {
+  expect_error(
+    odin_dust(
+      c("initial(y) <- 0",
+        "update(y) <- y + rnorm(0, 1)",
+        "scale <- user(1) # ignore.unused",
+        'config(compare) <- "examples/compare_simple.cpp"',
+        'config(compare) <- "examples/compare_simple.cpp"'),
+      verbose = FALSE),
+    "Only one 'config(compare)' statement is allowed",
+    fixed = TRUE)
+})

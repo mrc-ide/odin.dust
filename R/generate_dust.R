@@ -481,10 +481,10 @@ dust_compare_info <- function(dat, rewrite) {
     return(NULL)
   }
   if (sum(i) > 1) {
-    ## TODO: this will eventually be enforced by odin for us, but this
+    ## NOTE: this will eventually be enforced by odin for us, but this
     ## is ok for now. The advantage of doing it in odin is it's done
     ## in the parse section with all the source code details.
-    stop("Only one 'config(compare)' block is allowed")
+    stop("Only one 'config(compare)' statement is allowed")
   }
   filename <- dat$config$custom[[which(i)]]$value
   ret <- read_compare_dust(filename)
