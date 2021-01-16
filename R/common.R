@@ -2,7 +2,8 @@ FUNCTIONS_RENAME <- c( # nolint
   gamma = "std::tgamma",
   lgamma = "std::lgamma",
   ceiling = "std::ceil",
-  as.integer = "static_cast<int>")
+  as.integer = "static_cast<int>",
+  "%%" = "std::fmod")
 
 ## Basically odin's FUNCTIONS_MATH:
 FUNCTIONS_STDLIB <- c( # nolint

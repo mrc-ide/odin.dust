@@ -154,4 +154,7 @@ test_that("renames", {
   expect_equal(
     generate_dust_sexp(list("as.integer", "x"), NULL, NULL, NULL),
     "static_cast<int>(x)")
+  expect_equal(
+    generate_dust_sexp(list("%%", "x", "y"), NULL, NULL, NULL),
+    "std::fmod(x, y)")
 })
