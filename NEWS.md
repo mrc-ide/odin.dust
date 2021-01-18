@@ -1,3 +1,7 @@
+# odin.dust 0.1.10
+
+* Implement modulo (`%%`) operator, which uses `std::fmod`
+
 # odin.dust 0.1.8
 
 * Correct age-structured model in package vignette

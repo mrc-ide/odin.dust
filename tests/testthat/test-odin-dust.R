@@ -443,3 +443,25 @@ test_that("allow custom C++ code", {
   y <- mod$run(1)
   expect_equal(y[, 1], cumsum(x))
 })
+
+
+## This is a little less good than the version in odin because that
+## implements a specific interpretation of modulo in the presence of
+## negative divisors
+test_that("modulo works", {
+  gen <- odin_dust({
+    a <- user()
+    b <- user(integer = TRUE)
+    initial(x) <- 0
+    update(x) <- step %% a
+    initial(y) <- 0
+    update(y) <- step %% b
+    initial(z) <- 0
+    update(z) <- step
+  }, verbose = TRUE)
+  mod <- gen$new(list(a = 4, b = 5), 0, 1)
+  y <- drop(dust::dust_iterate(mod, 0:10))
+  yy <- mod$transform_variables(y)
+  expect_equal(yy$x, yy$z %% 4)
+  expect_equal(yy$y, yy$z %% 5)
+})
