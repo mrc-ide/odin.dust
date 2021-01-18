@@ -446,7 +446,7 @@ test_that("allow custom C++ code", {
 
 
 ## This is a little less good than the version in odin because that
-## implements s specific interpretation of modulo in the presence of
+## implements a specific interpretation of modulo in the presence of
 ## negative divisors
 test_that("modulo works", {
   gen <- odin_dust({
