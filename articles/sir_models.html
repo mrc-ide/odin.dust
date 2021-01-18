@@ -38,7 +38,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.10</span>
       </span>
     </div>
 
@@ -168,44 +168,42 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt; Re-compiling sir1c3c405e</span></span>
 <span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt;   </span></span>
 <span id="cb2-12"><a href="#cb2-12"></a>─  installing <span class="op">*</span>source<span class="op">*</span><span class="st"> </span>package ‘sir1c3c405e’ ...</span>
-<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt; </span></span>
-<span id="cb2-14"><a href="#cb2-14"></a>  </span>
-<span id="cb2-15"><a href="#cb2-15"></a>   <span class="op">**</span><span class="st"> </span>using staged installation</span>
-<span id="cb2-16"><a href="#cb2-16"></a><span class="co">#&gt; </span></span>
-<span id="cb2-17"><a href="#cb2-17"></a>  </span>
-<span id="cb2-18"><a href="#cb2-18"></a>   <span class="op">**</span><span class="st"> </span>libs</span>
-<span id="cb2-19"><a href="#cb2-19"></a><span class="co">#&gt; </span></span>
-<span id="cb2-20"><a href="#cb2-20"></a>  </span>
-<span id="cb2-21"><a href="#cb2-21"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>c cpp11.cpp <span class="op">-</span>o cpp11.o</span>
-<span id="cb2-22"><a href="#cb2-22"></a><span class="co">#&gt; </span></span>
-<span id="cb2-23"><a href="#cb2-23"></a>  </span>
-<span id="cb2-24"><a href="#cb2-24"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>c dust.cpp <span class="op">-</span>o dust.o</span>
-<span id="cb2-25"><a href="#cb2-25"></a><span class="co">#&gt; </span></span>
-<span id="cb2-26"><a href="#cb2-26"></a>  </span>
-<span id="cb2-27"><a href="#cb2-27"></a>   dust.cpp<span class="op">:</span><span class="dv">307</span><span class="op">:</span><span class="dv">25</span><span class="op">:</span><span class="st"> </span>warning<span class="op">:</span><span class="st"> </span>unused variable <span class="st">'internal'</span> [<span class="op">-</span>Wunused<span class="op">-</span>variable]</span>
-<span id="cb2-28"><a href="#cb2-28"></a><span class="co">#&gt;      const sir::internal_t internal = init.internal;</span></span>
-<span id="cb2-29"><a href="#cb2-29"></a><span class="co">#&gt;                            ^</span></span>
-<span id="cb2-30"><a href="#cb2-30"></a><span class="co">#&gt; </span></span>
-<span id="cb2-31"><a href="#cb2-31"></a>  </span>
-<span id="cb2-32"><a href="#cb2-32"></a>   dust.cpp<span class="op">:</span><span class="dv">63</span><span class="op">:</span><span class="dv">14</span><span class="op">:</span><span class="st"> </span>warning<span class="op">:</span><span class="st"> </span>private field <span class="st">'internal'</span> is not used [<span class="op">-</span>Wunused<span class="op">-</span>private<span class="op">-</span>field]</span>
-<span id="cb2-33"><a href="#cb2-33"></a><span class="co">#&gt;      internal_t internal;</span></span>
-<span id="cb2-34"><a href="#cb2-34"></a><span class="co">#&gt;                 ^</span></span>
-<span id="cb2-35"><a href="#cb2-35"></a><span class="co">#&gt; </span></span>
-<span id="cb2-36"><a href="#cb2-36"></a>  </span>
-<span id="cb2-37"><a href="#cb2-37"></a>   <span class="dv">2</span> warnings generated.</span>
-<span id="cb2-38"><a href="#cb2-38"></a><span class="co">#&gt; </span></span>
-<span id="cb2-39"><a href="#cb2-39"></a>  </span>
-<span id="cb2-40"><a href="#cb2-40"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o sir1c3c405e.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
-<span id="cb2-41"><a href="#cb2-41"></a><span class="co">#&gt; </span></span>
-<span id="cb2-42"><a href="#cb2-42"></a>  </span>
-<span id="cb2-43"><a href="#cb2-43"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>Rtmp8Azw8B<span class="op">/</span>devtools_install_b3a5324da2c<span class="op">/</span>00LOCK<span class="op">-</span>fileb3a689bf5ea<span class="op">/</span>00new<span class="op">/</span>sir1c3c405e<span class="op">/</span>libs</span>
-<span id="cb2-44"><a href="#cb2-44"></a><span class="co">#&gt; </span></span>
-<span id="cb2-45"><a href="#cb2-45"></a>  </span>
-<span id="cb2-46"><a href="#cb2-46"></a>   <span class="op">**</span><span class="st"> </span>checking absolute paths <span class="cf">in</span> shared objects and dynamic libraries</span>
-<span id="cb2-47"><a href="#cb2-47"></a><span class="co">#&gt; </span></span>
-<span id="cb2-48"><a href="#cb2-48"></a>  </span>
-<span id="cb2-49"><a href="#cb2-49"></a>─  <span class="kw">DONE</span> (sir1c3c405e)</span>
-<span id="cb2-50"><a href="#cb2-50"></a><span class="co">#&gt; </span></span></code></pre></div>
+<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt;    ** using staged installation</span></span>
+<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#&gt; </span></span>
+<span id="cb2-15"><a href="#cb2-15"></a>  </span>
+<span id="cb2-16"><a href="#cb2-16"></a>   <span class="op">**</span><span class="st"> </span>libs</span>
+<span id="cb2-17"><a href="#cb2-17"></a><span class="co">#&gt; </span></span>
+<span id="cb2-18"><a href="#cb2-18"></a>  </span>
+<span id="cb2-19"><a href="#cb2-19"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>c cpp11.cpp <span class="op">-</span>o cpp11.o</span>
+<span id="cb2-20"><a href="#cb2-20"></a><span class="co">#&gt; </span></span>
+<span id="cb2-21"><a href="#cb2-21"></a>  </span>
+<span id="cb2-22"><a href="#cb2-22"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>c dust.cpp <span class="op">-</span>o dust.o</span>
+<span id="cb2-23"><a href="#cb2-23"></a><span class="co">#&gt; </span></span>
+<span id="cb2-24"><a href="#cb2-24"></a>  </span>
+<span id="cb2-25"><a href="#cb2-25"></a>   dust.cpp<span class="op">:</span><span class="dv">307</span><span class="op">:</span><span class="dv">25</span><span class="op">:</span><span class="st"> </span>warning<span class="op">:</span><span class="st"> </span>unused variable <span class="st">'internal'</span> [<span class="op">-</span>Wunused<span class="op">-</span>variable]</span>
+<span id="cb2-26"><a href="#cb2-26"></a><span class="co">#&gt;      const sir::internal_t internal = init.internal;</span></span>
+<span id="cb2-27"><a href="#cb2-27"></a><span class="co">#&gt;                            ^</span></span>
+<span id="cb2-28"><a href="#cb2-28"></a><span class="co">#&gt; </span></span>
+<span id="cb2-29"><a href="#cb2-29"></a>  </span>
+<span id="cb2-30"><a href="#cb2-30"></a>   dust.cpp<span class="op">:</span><span class="dv">63</span><span class="op">:</span><span class="dv">14</span><span class="op">:</span><span class="st"> </span>warning<span class="op">:</span><span class="st"> </span>private field <span class="st">'internal'</span> is not used [<span class="op">-</span>Wunused<span class="op">-</span>private<span class="op">-</span>field]</span>
+<span id="cb2-31"><a href="#cb2-31"></a><span class="co">#&gt;      internal_t internal;</span></span>
+<span id="cb2-32"><a href="#cb2-32"></a><span class="co">#&gt;                 ^</span></span>
+<span id="cb2-33"><a href="#cb2-33"></a><span class="co">#&gt; </span></span>
+<span id="cb2-34"><a href="#cb2-34"></a>  </span>
+<span id="cb2-35"><a href="#cb2-35"></a>   <span class="dv">2</span> warnings generated.</span>
+<span id="cb2-36"><a href="#cb2-36"></a><span class="co">#&gt; </span></span>
+<span id="cb2-37"><a href="#cb2-37"></a>  </span>
+<span id="cb2-38"><a href="#cb2-38"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o sir1c3c405e.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
+<span id="cb2-39"><a href="#cb2-39"></a><span class="co">#&gt; </span></span>
+<span id="cb2-40"><a href="#cb2-40"></a>  </span>
+<span id="cb2-41"><a href="#cb2-41"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>RtmpOBij1n<span class="op">/</span>devtools_install_8d2b43fd2c<span class="op">/</span>00LOCK<span class="op">-</span>file8d2769cdf56<span class="op">/</span>00new<span class="op">/</span>sir1c3c405e<span class="op">/</span>libs</span>
+<span id="cb2-42"><a href="#cb2-42"></a><span class="co">#&gt; </span></span>
+<span id="cb2-43"><a href="#cb2-43"></a>  </span>
+<span id="cb2-44"><a href="#cb2-44"></a>   <span class="op">**</span><span class="st"> </span>checking absolute paths <span class="cf">in</span> shared objects and dynamic libraries</span>
+<span id="cb2-45"><a href="#cb2-45"></a><span class="co">#&gt; </span></span>
+<span id="cb2-46"><a href="#cb2-46"></a>  </span>
+<span id="cb2-47"><a href="#cb2-47"></a>─  <span class="kw">DONE</span> (sir1c3c405e) (1s)</span>
+<span id="cb2-48"><a href="#cb2-48"></a><span class="co">#&gt; </span></span></code></pre></div>
 </div>
 <div id="saving-a-model-into-a-package" class="section level2">
 <h2 class="hasAnchor">
@@ -403,7 +401,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span id="cb12-25"><a href="#cb12-25"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o sirage8f8952c4.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
 <span id="cb12-26"><a href="#cb12-26"></a><span class="co">#&gt; </span></span>
 <span id="cb12-27"><a href="#cb12-27"></a>  </span>
-<span id="cb12-28"><a href="#cb12-28"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>Rtmp8Azw8B<span class="op">/</span>devtools_install_b3a5f5e8d54<span class="op">/</span>00LOCK<span class="op">-</span>fileb3a6ede73fe<span class="op">/</span>00new<span class="op">/</span>sirage8f8952c4<span class="op">/</span>libs</span>
+<span id="cb12-28"><a href="#cb12-28"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>RtmpOBij1n<span class="op">/</span>devtools_install_8d2173517a<span class="op">/</span>00LOCK<span class="op">-</span>file8d22c135d53<span class="op">/</span>00new<span class="op">/</span>sirage8f8952c4<span class="op">/</span>libs</span>
 <span id="cb12-29"><a href="#cb12-29"></a><span class="co">#&gt; </span></span>
 <span id="cb12-30"><a href="#cb12-30"></a>  </span>
 <span id="cb12-31"><a href="#cb12-31"></a>   <span class="op">**</span><span class="st"> </span>checking absolute paths <span class="cf">in</span> shared objects and dynamic libraries</span>
