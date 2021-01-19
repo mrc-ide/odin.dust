@@ -19,13 +19,18 @@ generate_dust <- function(ir, options, real_t = NULL) {
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names)
   }
+
+  dat$compare <- dust_compare_info(dat, rewrite)
   eqs <- generate_dust_equations(dat, rewrite)
 
   class <- generate_dust_core_class(eqs, dat, rewrite)
   create <- generate_dust_core_create(eqs, dat, rewrite)
   info <- generate_dust_core_info(dat, rewrite)
+  data <- generate_dust_core_data(dat)
 
-  include <- generate_dust_include(dat$config$include$data)
+  include <- c(
+    generate_dust_include(dat$config$include$data),
+    dat$compare$include)
 
   used <- unique(unlist(lapply(dat$equations, function(x)
     x$depends$functions), FALSE, FALSE))
@@ -38,8 +43,8 @@ generate_dust <- function(ir, options, real_t = NULL) {
     }
   }
 
-  list(class = class, create = create, info = info, support = support,
-       include = include, name = dat$config$base)
+  list(class = class, create = create, info = info, data = data,
+       support = support, include = include, name = dat$config$base)
 }
 
 
@@ -48,6 +53,7 @@ generate_dust <- function(ir, options, real_t = NULL) {
 ## collide.
 generate_dust_meta <- function(real_t) {
   list(init = "init",
+       data = "data",
        shared = "shared",
        rng_state = "rng_state",
        real_t = real_t %||% "double")
@@ -61,6 +67,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   initial <- generate_dust_core_initial(dat, rewrite)
   update <- generate_dust_core_update(eqs, dat, rewrite)
   attributes <- generate_dust_core_attributes(dat)
+  compare <- generate_dust_compare_method(dat)
 
   ret <- collector()
   ret$add(attributes)
@@ -71,6 +78,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ret$add(paste0("  ", size))
   ret$add(paste0("  ", initial))
   ret$add(paste0("  ", update))
+  ret$add(sprintf("%s   ", compare)) # ensures we don't add trailing whitespace
   ret$add("private:")
   ret$add("  std::shared_ptr<const shared_t> %s;", dat$meta$dust$shared)
   ret$add("  internal_t %s;", dat$meta$internal)
@@ -94,7 +102,17 @@ generate_dust_core_struct <- function(dat) {
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
   i_internal <- vcapply(dat$data$elements[i], "[[", "stage") == "time"
 
+  if (is.null(dat$compare)) {
+    data_t <- "typedef dust::no_data data_t;"
+  } else {
+    data_t <- c(
+      "struct data_t {",
+      sprintf("  %s %s;", unname(dat$compare$data), names(dat$compare$data)),
+      "};")
+  }
+
   c(sprintf("typedef %s real_t;", dat$meta$dust$real_t),
+    data_t,
     "struct shared_t {",
     els[!i_internal],
     "};",
@@ -373,4 +391,165 @@ generate_dust_include <- function(include) {
     return(NULL)
   }
   unlist(lapply(include, function(x) x$source))
+}
+
+
+read_compare_dust <- function(filename) {
+  dat <- decor::cpp_decorations(files = filename)
+  i_fn <- dat$decoration == "odin.dust::compare_function"
+  if (sum(i_fn) != 1L) {
+    stop("Expected one decoration '[[odin.dust::compare_function]]'")
+  }
+  ctx <- dat$context[[which(i_fn)]]
+  ## There's a long message here because this is a trick:
+  msg <- paste(
+    "Failed to parse function directly beneath [[odin.dust::compare_function]]",
+    "This must be the line immediately above your function definition, and",
+    "if you have your [[odin.dust::compare_data]] decorations there, please",
+    "move them elsewhere",
+    sep = "\n")
+  fn <- tryCatch(
+    decor::parse_cpp_function(ctx),
+    error = function(e) stop(msg, call. = FALSE))
+
+  function_name <- fn$name
+  check_compare_args(fn$args[[1]], function_name)
+
+  i_data <- dat$decoration == "odin.dust::compare_data"
+  if (sum(i_data) == 0L) {
+    stop("Expected at least one decoration '[[odin.dust::compare_data(...)]]'")
+  }
+  data <- unlist(dat$params[i_data], FALSE, TRUE)
+  ## There's heaps of boring things to check here:
+  if (is.null(names(data)) || !all(nzchar(names(data)))) {
+    stop("All [[odin.dust::compare_data()]] arguments must be named")
+  }
+  if (any(duplicated(names(data)))) {
+    dups <- unique(names(data)[duplicated(names(data))])
+    stop(sprintf("Duplicated arguments in [[odin.dust::compare_data()]]: %s",
+                 paste(squote(dups), collapse = ", ")))
+  }
+  err <- !vlapply(data, is.symbol)
+  if (any(err)) {
+    stop(sprintf(
+      "All arguments to [[odin.dust::compare_data()]] must be symbols: %s",
+      paste(squote(names(which(err))), collapse = ", ")))
+  }
+  ## We might check that things conform to a known set of types, but
+  ## that's not really needed.
+  data <- vcapply(data, as.character)
+
+  list(function_name = function_name,
+       data = data)
+}
+
+
+check_compare_args <- function(args, name) {
+  if (nrow(args) != 5L) {
+    stop(sprintf(
+      "Expected compare function '%s' to have 5 args (but given %d)",
+      name, nrow(args)))
+  }
+  norm <- function(x) {
+    gsub("\\s*([<>])\\s*", "\\1", gsub("\\s+", " ", x))
+  }
+  args_expected <- c(
+    "const typename T::real_t *" = "state",
+    "const typename T::data_t&" = "data",
+    "const typename T::internal_t" = "internal",
+    "std::shared_ptr<const typename T::shared_t>" = "shared",
+    "dust::rng_state_t<typename T::real_t>&" = "rng_state")
+  err <- norm(args$type) != norm(names(args_expected)) |
+    args$name != unname(args_expected)
+  if (any(err)) {
+    msg <- sprintf("Arg %d:\n  Expected: %s %s\n     Given: %s %s",
+                   which(err),
+                   names(args_expected)[err],
+                   unname(args_expected)[err],
+                   args$type[err],
+                   args$name[err])
+    stop(sprintf(
+      "Compare function '%s' does not conform to expected signature:\n%s",
+      name, paste(msg, collapse = "\n")), call. = FALSE)
+  }
+}
+
+
+dust_compare_info <- function(dat, rewrite) {
+  i <- vcapply(dat$config$custom, function(x) x$name) == "compare"
+  if (sum(i) == 0) {
+    return(NULL)
+  }
+  if (sum(i) > 1) {
+    ## NOTE: this will eventually be enforced by odin for us, but this
+    ## is ok for now. The advantage of doing it in odin is it's done
+    ## in the parse section with all the source code details.
+    stop("Only one 'config(compare)' statement is allowed")
+  }
+  filename <- dat$config$custom[[which(i)]]$value
+  ret <- read_compare_dust(filename)
+  ret$include <- dust_compare_rewrite(readLines(filename), dat, rewrite)
+  ret
+}
+
+
+dust_compare_rewrite <- function(text, dat, rewrite) {
+  text <- paste(text, collapse = "\n")
+  text <- glue::glue(text, .open = "odin(", .close = ")",
+                     .transformer = odin_variable_transformer(dat, rewrite))
+  strsplit(text, "\n", fixed = TRUE)[[1]]
+}
+
+
+generate_dust_compare_method <- function(dat) {
+  if (is.null(dat$compare)) {
+    return(NULL)
+  }
+  args <- c("const real_t *" = dat$meta$state,
+            "const data_t&" = dat$meta$dust$data,
+            "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state)
+  body <- sprintf("return %s<%s>(%s, %s, %s, %s, %s);",
+                  dat$compare$function_name,
+                  dat$config$base,
+                  dat$meta$state,
+                  dat$meta$dust$data,
+                  dat$meta$internal,
+                  dat$meta$dust$shared,
+                  dat$meta$dust$rng_state)
+  cpp_function("real_t",
+               "compare_data",
+               args,
+               body)
+}
+
+
+generate_dust_core_data <- function(dat) {
+  if (is.null(dat$compare)) {
+    return(NULL)
+  }
+  contents <- sprintf('    cpp11::as_cpp<%s>(data["%s"])',
+                      unname(dat$compare$data), names(dat$compare$data))
+  body <- c(sprintf("return %s::data_t{", dat$config$base),
+            contents,
+            "  };")
+  c("template <>",
+    cpp_function(sprintf("%s::data_t", dat$config$base),
+                 sprintf("dust_data<%s>", dat$config$base),
+                 c("cpp11::list" = dat$meta$dust$data),
+                 body))
+}
+
+
+odin_variable_transformer <- function(dat, rewrite) {
+  function(text, envir) {
+    ans <- rewrite(text)
+    if (ans == text) {
+      el <- dat$data$variable$contents[[text]]
+      if (is.null(el)) {
+        stop(sprintf("Unable to find odin variable '%s'", text))
+      }
+      ans <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
+    }
+    ans
+  }
 }

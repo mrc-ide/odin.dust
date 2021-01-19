@@ -49,6 +49,7 @@ odin_dust_options <- function(verbose, workdir) {
   options <- odin::odin_options(target = "dust", verbose = verbose,
                                 workdir = workdir)
   options$read_include <- read_include_dust
+  options$config_custom <- "compare"
   options
 }
 
@@ -73,11 +74,13 @@ odin_dust_wrapper <- function(ir, options, real_t) {
 odin_dust_code <- function(dat) {
   c(dust_flatten_eqs(lapply(dat$support, "[[", "declaration")),
     dat$include,
+    dat$compare$support,
     dat$class,
     dust_flatten_eqs(lapply(dat$support, "[[", "definition")),
     readLines(odin_dust_file("support.hpp")),
     dat$create,
-    dat$info)
+    dat$info,
+    dat$data)
 }
 
 

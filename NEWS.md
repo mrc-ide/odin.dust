@@ -1,3 +1,7 @@
+# odin.dust 0.1.11
+
+* Support for dust `compare` functions (#51)
+
 # odin.dust 0.1.10
 
 * Implement modulo (`%%`) operator, which uses `std::fmod`
