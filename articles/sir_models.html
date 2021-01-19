@@ -38,7 +38,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.11</span>
       </span>
     </div>
 
@@ -159,51 +159,53 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(odin.dust)</span>
 <span id="cb2-2"><a href="#cb2-2"></a>gen_sir &lt;-<span class="st"> </span>odin.dust<span class="op">::</span><span class="kw">odin_dust</span>(<span class="st">"sir.R"</span>)</span>
 <span id="cb2-3"><a href="#cb2-3"></a><span class="co">#&gt; Loading required namespace: pkgbuild</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt; ℹ 14 functions decorated with [[cpp11::register]]</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt; ℹ 16 functions decorated with [[cpp11::register]]</span></span>
 <span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt; ✔ generated file cpp11.R</span></span>
 <span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt; ✔ generated file cpp11.cpp</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt; ℹ 14 functions decorated with [[cpp11::register]]</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt; ℹ 16 functions decorated with [[cpp11::register]]</span></span>
 <span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt; ✔ generated file cpp11.R</span></span>
 <span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt; ✔ generated file cpp11.cpp</span></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt; Re-compiling sir1c3c405e</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt; Re-compiling sirc2af9330</span></span>
 <span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt;   </span></span>
-<span id="cb2-12"><a href="#cb2-12"></a>─  installing <span class="op">*</span>source<span class="op">*</span><span class="st"> </span>package ‘sir1c3c405e’ ...</span>
-<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt;    ** using staged installation</span></span>
-<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#&gt; </span></span>
-<span id="cb2-15"><a href="#cb2-15"></a>  </span>
-<span id="cb2-16"><a href="#cb2-16"></a>   <span class="op">**</span><span class="st"> </span>libs</span>
-<span id="cb2-17"><a href="#cb2-17"></a><span class="co">#&gt; </span></span>
-<span id="cb2-18"><a href="#cb2-18"></a>  </span>
-<span id="cb2-19"><a href="#cb2-19"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>c cpp11.cpp <span class="op">-</span>o cpp11.o</span>
-<span id="cb2-20"><a href="#cb2-20"></a><span class="co">#&gt; </span></span>
-<span id="cb2-21"><a href="#cb2-21"></a>  </span>
-<span id="cb2-22"><a href="#cb2-22"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>c dust.cpp <span class="op">-</span>o dust.o</span>
-<span id="cb2-23"><a href="#cb2-23"></a><span class="co">#&gt; </span></span>
-<span id="cb2-24"><a href="#cb2-24"></a>  </span>
-<span id="cb2-25"><a href="#cb2-25"></a>   dust.cpp<span class="op">:</span><span class="dv">307</span><span class="op">:</span><span class="dv">25</span><span class="op">:</span><span class="st"> </span>warning<span class="op">:</span><span class="st"> </span>unused variable <span class="st">'internal'</span> [<span class="op">-</span>Wunused<span class="op">-</span>variable]</span>
-<span id="cb2-26"><a href="#cb2-26"></a><span class="co">#&gt;      const sir::internal_t internal = init.internal;</span></span>
-<span id="cb2-27"><a href="#cb2-27"></a><span class="co">#&gt;                            ^</span></span>
-<span id="cb2-28"><a href="#cb2-28"></a><span class="co">#&gt; </span></span>
-<span id="cb2-29"><a href="#cb2-29"></a>  </span>
-<span id="cb2-30"><a href="#cb2-30"></a>   dust.cpp<span class="op">:</span><span class="dv">63</span><span class="op">:</span><span class="dv">14</span><span class="op">:</span><span class="st"> </span>warning<span class="op">:</span><span class="st"> </span>private field <span class="st">'internal'</span> is not used [<span class="op">-</span>Wunused<span class="op">-</span>private<span class="op">-</span>field]</span>
-<span id="cb2-31"><a href="#cb2-31"></a><span class="co">#&gt;      internal_t internal;</span></span>
-<span id="cb2-32"><a href="#cb2-32"></a><span class="co">#&gt;                 ^</span></span>
-<span id="cb2-33"><a href="#cb2-33"></a><span class="co">#&gt; </span></span>
-<span id="cb2-34"><a href="#cb2-34"></a>  </span>
-<span id="cb2-35"><a href="#cb2-35"></a>   <span class="dv">2</span> warnings generated.</span>
-<span id="cb2-36"><a href="#cb2-36"></a><span class="co">#&gt; </span></span>
-<span id="cb2-37"><a href="#cb2-37"></a>  </span>
-<span id="cb2-38"><a href="#cb2-38"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o sir1c3c405e.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
-<span id="cb2-39"><a href="#cb2-39"></a><span class="co">#&gt; </span></span>
-<span id="cb2-40"><a href="#cb2-40"></a>  </span>
-<span id="cb2-41"><a href="#cb2-41"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>RtmpOBij1n<span class="op">/</span>devtools_install_8d2b43fd2c<span class="op">/</span>00LOCK<span class="op">-</span>file8d2769cdf56<span class="op">/</span>00new<span class="op">/</span>sir1c3c405e<span class="op">/</span>libs</span>
-<span id="cb2-42"><a href="#cb2-42"></a><span class="co">#&gt; </span></span>
-<span id="cb2-43"><a href="#cb2-43"></a>  </span>
-<span id="cb2-44"><a href="#cb2-44"></a>   <span class="op">**</span><span class="st"> </span>checking absolute paths <span class="cf">in</span> shared objects and dynamic libraries</span>
-<span id="cb2-45"><a href="#cb2-45"></a><span class="co">#&gt; </span></span>
-<span id="cb2-46"><a href="#cb2-46"></a>  </span>
-<span id="cb2-47"><a href="#cb2-47"></a>─  <span class="kw">DONE</span> (sir1c3c405e) (1s)</span>
-<span id="cb2-48"><a href="#cb2-48"></a><span class="co">#&gt; </span></span></code></pre></div>
+<span id="cb2-12"><a href="#cb2-12"></a>─  installing <span class="op">*</span>source<span class="op">*</span><span class="st"> </span>package ‘sirc2af9330’ ...</span>
+<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt; </span></span>
+<span id="cb2-14"><a href="#cb2-14"></a>  </span>
+<span id="cb2-15"><a href="#cb2-15"></a>   <span class="op">**</span><span class="st"> </span>using staged installation</span>
+<span id="cb2-16"><a href="#cb2-16"></a><span class="co">#&gt; </span></span>
+<span id="cb2-17"><a href="#cb2-17"></a>  </span>
+<span id="cb2-18"><a href="#cb2-18"></a>   <span class="op">**</span><span class="st"> </span>libs</span>
+<span id="cb2-19"><a href="#cb2-19"></a><span class="co">#&gt; </span></span>
+<span id="cb2-20"><a href="#cb2-20"></a>  </span>
+<span id="cb2-21"><a href="#cb2-21"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>c cpp11.cpp <span class="op">-</span>o cpp11.o</span>
+<span id="cb2-22"><a href="#cb2-22"></a><span class="co">#&gt; </span></span>
+<span id="cb2-23"><a href="#cb2-23"></a>  </span>
+<span id="cb2-24"><a href="#cb2-24"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>c dust.cpp <span class="op">-</span>o dust.o</span>
+<span id="cb2-25"><a href="#cb2-25"></a><span class="co">#&gt; </span></span>
+<span id="cb2-26"><a href="#cb2-26"></a>  </span>
+<span id="cb2-27"><a href="#cb2-27"></a>   dust.cpp<span class="op">:</span><span class="dv">308</span><span class="op">:</span><span class="dv">25</span><span class="op">:</span><span class="st"> </span>warning<span class="op">:</span><span class="st"> </span>unused variable <span class="st">'internal'</span> [<span class="op">-</span>Wunused<span class="op">-</span>variable]</span>
+<span id="cb2-28"><a href="#cb2-28"></a><span class="co">#&gt;      const sir::internal_t internal = init.internal;</span></span>
+<span id="cb2-29"><a href="#cb2-29"></a><span class="co">#&gt;                            ^</span></span>
+<span id="cb2-30"><a href="#cb2-30"></a><span class="co">#&gt; </span></span>
+<span id="cb2-31"><a href="#cb2-31"></a>  </span>
+<span id="cb2-32"><a href="#cb2-32"></a>   dust.cpp<span class="op">:</span><span class="dv">64</span><span class="op">:</span><span class="dv">14</span><span class="op">:</span><span class="st"> </span>warning<span class="op">:</span><span class="st"> </span>private field <span class="st">'internal'</span> is not used [<span class="op">-</span>Wunused<span class="op">-</span>private<span class="op">-</span>field]</span>
+<span id="cb2-33"><a href="#cb2-33"></a><span class="co">#&gt;      internal_t internal;</span></span>
+<span id="cb2-34"><a href="#cb2-34"></a><span class="co">#&gt;                 ^</span></span>
+<span id="cb2-35"><a href="#cb2-35"></a><span class="co">#&gt; </span></span>
+<span id="cb2-36"><a href="#cb2-36"></a>  </span>
+<span id="cb2-37"><a href="#cb2-37"></a>   <span class="dv">2</span> warnings generated.</span>
+<span id="cb2-38"><a href="#cb2-38"></a><span class="co">#&gt; </span></span>
+<span id="cb2-39"><a href="#cb2-39"></a>  </span>
+<span id="cb2-40"><a href="#cb2-40"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o sirc2af9330.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
+<span id="cb2-41"><a href="#cb2-41"></a><span class="co">#&gt; </span></span>
+<span id="cb2-42"><a href="#cb2-42"></a>  </span>
+<span id="cb2-43"><a href="#cb2-43"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>RtmpC2ztv2<span class="op">/</span>devtools_install_a465412934d<span class="op">/</span>00LOCK<span class="op">-</span>filea4659daad8b<span class="op">/</span>00new<span class="op">/</span>sirc2af9330<span class="op">/</span>libs</span>
+<span id="cb2-44"><a href="#cb2-44"></a><span class="co">#&gt; </span></span>
+<span id="cb2-45"><a href="#cb2-45"></a>  </span>
+<span id="cb2-46"><a href="#cb2-46"></a>   <span class="op">**</span><span class="st"> </span>checking absolute paths <span class="cf">in</span> shared objects and dynamic libraries</span>
+<span id="cb2-47"><a href="#cb2-47"></a><span class="co">#&gt; </span></span>
+<span id="cb2-48"><a href="#cb2-48"></a>  </span>
+<span id="cb2-49"><a href="#cb2-49"></a>─  <span class="kw">DONE</span> (sirc2af9330)</span>
+<span id="cb2-50"><a href="#cb2-50"></a><span class="co">#&gt; </span></span></code></pre></div>
 </div>
 <div id="saving-a-model-into-a-package" class="section level2">
 <h2 class="hasAnchor">
@@ -375,15 +377,15 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">lambda</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span></code></pre></div>
 <p>As before, save the file, and use <code>odin.dust</code> to compile the model:</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>gen_age &lt;-<span class="st"> </span>odin.dust<span class="op">::</span><span class="kw">odin_dust</span>(<span class="st">"sirage.R"</span>)</span>
-<span id="cb12-2"><a href="#cb12-2"></a><span class="co">#&gt; ℹ 14 functions decorated with [[cpp11::register]]</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="co">#&gt; ℹ 16 functions decorated with [[cpp11::register]]</span></span>
 <span id="cb12-3"><a href="#cb12-3"></a><span class="co">#&gt; ✔ generated file cpp11.R</span></span>
 <span id="cb12-4"><a href="#cb12-4"></a><span class="co">#&gt; ✔ generated file cpp11.cpp</span></span>
-<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt; ℹ 14 functions decorated with [[cpp11::register]]</span></span>
+<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt; ℹ 16 functions decorated with [[cpp11::register]]</span></span>
 <span id="cb12-6"><a href="#cb12-6"></a><span class="co">#&gt; ✔ generated file cpp11.R</span></span>
 <span id="cb12-7"><a href="#cb12-7"></a><span class="co">#&gt; ✔ generated file cpp11.cpp</span></span>
-<span id="cb12-8"><a href="#cb12-8"></a><span class="co">#&gt; Re-compiling sirage8f8952c4</span></span>
+<span id="cb12-8"><a href="#cb12-8"></a><span class="co">#&gt; Re-compiling sirage2cbeeb10</span></span>
 <span id="cb12-9"><a href="#cb12-9"></a><span class="co">#&gt;   </span></span>
-<span id="cb12-10"><a href="#cb12-10"></a>─  installing <span class="op">*</span>source<span class="op">*</span><span class="st"> </span>package ‘sirage8f8952c4’ ...</span>
+<span id="cb12-10"><a href="#cb12-10"></a>─  installing <span class="op">*</span>source<span class="op">*</span><span class="st"> </span>package ‘sirage2cbeeb10’ ...</span>
 <span id="cb12-11"><a href="#cb12-11"></a><span class="co">#&gt; </span></span>
 <span id="cb12-12"><a href="#cb12-12"></a>  </span>
 <span id="cb12-13"><a href="#cb12-13"></a>   <span class="op">**</span><span class="st"> </span>using staged installation</span>
@@ -398,16 +400,16 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span id="cb12-22"><a href="#cb12-22"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>c dust.cpp <span class="op">-</span>o dust.o</span>
 <span id="cb12-23"><a href="#cb12-23"></a><span class="co">#&gt; </span></span>
 <span id="cb12-24"><a href="#cb12-24"></a>  </span>
-<span id="cb12-25"><a href="#cb12-25"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o sirage8f8952c4.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
+<span id="cb12-25"><a href="#cb12-25"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o sirage2cbeeb10.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
 <span id="cb12-26"><a href="#cb12-26"></a><span class="co">#&gt; </span></span>
 <span id="cb12-27"><a href="#cb12-27"></a>  </span>
-<span id="cb12-28"><a href="#cb12-28"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>RtmpOBij1n<span class="op">/</span>devtools_install_8d2173517a<span class="op">/</span>00LOCK<span class="op">-</span>file8d22c135d53<span class="op">/</span>00new<span class="op">/</span>sirage8f8952c4<span class="op">/</span>libs</span>
+<span id="cb12-28"><a href="#cb12-28"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>RtmpC2ztv2<span class="op">/</span>devtools_install_a4616fde884<span class="op">/</span>00LOCK<span class="op">-</span>filea4623a82224<span class="op">/</span>00new<span class="op">/</span>sirage2cbeeb10<span class="op">/</span>libs</span>
 <span id="cb12-29"><a href="#cb12-29"></a><span class="co">#&gt; </span></span>
 <span id="cb12-30"><a href="#cb12-30"></a>  </span>
 <span id="cb12-31"><a href="#cb12-31"></a>   <span class="op">**</span><span class="st"> </span>checking absolute paths <span class="cf">in</span> shared objects and dynamic libraries</span>
 <span id="cb12-32"><a href="#cb12-32"></a><span class="co">#&gt; </span></span>
 <span id="cb12-33"><a href="#cb12-33"></a>  </span>
-<span id="cb12-34"><a href="#cb12-34"></a>─  <span class="kw">DONE</span> (sirage8f8952c4)</span>
+<span id="cb12-34"><a href="#cb12-34"></a>─  <span class="kw">DONE</span> (sirage2cbeeb10)</span>
 <span id="cb12-35"><a href="#cb12-35"></a><span class="co">#&gt; </span></span></code></pre></div>
 <p>We can generate an age-structured contact matrix based on the <a href="https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074">POLYMOD</a> survey by using the <a href="https://github.com/sbfnk/socialmixr">socialmixr</a> package:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
