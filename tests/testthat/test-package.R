@@ -137,6 +137,13 @@ test_that("use compiled compare function in package", {
 
   odin_dust_package(path)
 
+  ## No whitespace in generated files:
+  files <- list.files(path, recursive = TRUE, all.files = TRUE,
+                      include.dirs = FALSE, no.. = TRUE,
+                      full.names = TRUE)
+  txt <- unlist(lapply(files, readLines))
+  expect_false(any(grepl("\\s+$", txt)))
+
   pkg <- pkgload::load_all(path, quiet = TRUE)
 
   np <- 10

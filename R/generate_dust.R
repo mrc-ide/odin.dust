@@ -78,7 +78,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ret$add(paste0("  ", size))
   ret$add(paste0("  ", initial))
   ret$add(paste0("  ", update))
-  ret$add(sprintf("%s   ", compare)) # ensures we don't add trailing whitespace
+  ret$add(sprintf("  %s", compare)) # ensures we don't add trailing whitespace
   ret$add("private:")
   ret$add("  std::shared_ptr<const shared_t> %s;", dat$meta$dust$shared)
   ret$add("  internal_t %s;", dat$meta$internal)
