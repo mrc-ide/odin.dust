@@ -221,3 +221,21 @@ test_that("Sensible error messages on substitution failure", {
     err$message,
     "- scale: line 11")
 })
+
+
+test_that("Sensible error message when files are not found in other dir", {
+  path <- tempfile()
+  dir.create(path)
+  filename <- file.path(path, "code.R")
+
+  code <- c("initial(y) <- 0",
+            "update(y) <- y + rnorm(0, 1)",
+            "scale <- user(1) # ignore.unused",
+            'config(compare) <- "examples/compare_simple.cpp"')
+  writeLines(code, filename)
+
+  expect_error(
+    odin_dust(filename),
+    "Did not find a file 'examples/compare_simple.cpp' (relative to odin",
+    fixed = TRUE)
+})
