@@ -395,6 +395,10 @@ generate_dust_include <- function(include) {
 
 
 read_compare_dust <- function(filename) {
+  if (!file.exists(filename)) {
+    stop(sprintf("Did not find a file '%s' (relative to odin source)",
+                 filename))
+  }
   dat <- decor::cpp_decorations(files = filename)
   i_fn <- dat$decoration == "odin.dust::compare_function"
   if (sum(i_fn) == 0L) {

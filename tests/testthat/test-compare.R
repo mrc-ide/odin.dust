@@ -183,3 +183,15 @@ test_that("Only one compare block allowed", {
     "Only one 'config(compare)' statement is allowed",
     fixed = TRUE)
 })
+
+test_that("Find correct compare file", {
+  expect_error(
+    odin_dust(
+      c("initial(y) <- 0",
+        "update(y) <- y + rnorm(0, 1)",
+        "scale <- user(1) # ignore.unused",
+        'config(compare) <- "examples/compare-simple.cpp"'),
+      verbose = FALSE),
+    "Did not find a file 'examples/compare-simple.cpp' (relative to odin",
+    fixed = TRUE)
+})
