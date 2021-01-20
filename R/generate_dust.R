@@ -397,8 +397,13 @@ generate_dust_include <- function(include) {
 read_compare_dust <- function(filename) {
   dat <- decor::cpp_decorations(files = filename)
   i_fn <- dat$decoration == "odin.dust::compare_function"
-  if (sum(i_fn) != 1L) {
-    stop("Expected one decoration '[[odin.dust::compare_function]]'")
+  if (sum(i_fn) == 0L) {
+    stop("Did not find a decoration '[[odin.dust::compare_function]]'")
+  }
+  if (sum(i_fn) > 1L) {
+    stop(sprintf(
+      "Expected one decoration '[[odin.dust::compare_function]]' but found %d",
+      sum(i_fn)))
   }
   ctx <- dat$context[[which(i_fn)]]
   ## There's a long message here because this is a trick:

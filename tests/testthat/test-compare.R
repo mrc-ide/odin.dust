@@ -25,7 +25,14 @@ test_that("Can error if correct metadata not found", {
   writeLines(character(), path)
   expect_error(
     read_compare_dust(path),
-    "Expected one decoration '[[odin.dust::compare_function]]'",
+    "Did not find a decoration '[[odin.dust::compare_function]]'",
+    fixed = TRUE)
+
+  path <- tempfile()
+  writeLines(c(fn[[1]], fn), path)
+  expect_error(
+    read_compare_dust(path),
+    "Expected one decoration '[[odin.dust::compare_function]]' but found 2",
     fixed = TRUE)
 
   writeLines(fn, path)
