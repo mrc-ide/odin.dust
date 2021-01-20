@@ -505,20 +505,19 @@ dust_compare_info <- function(dat, rewrite) {
 
 dust_compare_rewrite <- function(text, dat, rewrite, filename) {
   str <- paste(text, collapse = "\n")
-  tr <- odin_variable_transformer(dat, rewrite)
-  res <- glue::glue(str, .open = "odin(", .close = ")",
-                    .transformer = tr$transform)
-  errors <- tr$errors()
-  if (length(errors)) {
-    re <- sprintf("odin\\(\\s*%s\\s*\\)", errors)
+  res <- transform_compare_odin(text, dat, rewrite)
+
+  if (length(res$errors) > 0) {
+    re <- sprintf("odin\\(\\s*%s\\s*\\)", res$errors)
     line <- vcapply(re, function(i) paste(grep(i, text), collapse = ", "),
                     USE.NAMES = FALSE)
     msg <- c(
       sprintf("Did not find odin variables when reading '%s':", filename),
-      sprintf("  - %s: line %s", errors, line))
+      sprintf("  - %s: line %s", res$errors, line))
     stop(paste(msg, collapse = "\n"), call. = FALSE)
   }
-  strsplit(res, "\n", fixed = TRUE)[[1]]
+
+  res$result
 }
 
 
@@ -582,4 +581,42 @@ odin_variable_transformer <- function(dat, rewrite) {
     names(err)
   }
   list(transform = transform, errors = errors)
+}
+
+
+## It would be really nice to use glue for this but we can't disable
+## escaping whcih means that a '))' becomes ')' which results in
+## broken code. This approach is pretty ugly but should do the trick
+## for now.
+transform_compare_odin <- function(text, dat, rewrite) {
+  re <- "odin\\(\\s*([^) ]+)\\s*\\)"
+  i <- grep(re, text)
+  d <- gregexpr(re, text[i])
+
+  err <- new.env(parent = emptyenv())
+  transform <- function(text) {
+    ans <- rewrite(text)
+    if (ans == text) {
+      el <- dat$data$variable$contents[[text]]
+      if (is.null(el)) {
+        err[[text]] <- TRUE
+      } else {
+        ans <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
+      }
+    }
+    ans
+  }
+
+  for (j in seq_along(i)) {
+    s <- text[[i[[j]]]]
+    start <- as.vector(d[[j]])
+    end <- start + attr(d[[j]], "match.length") - 1L
+    for (k in rev(seq_along(d[[j]]))) {
+      s_sub <- substr(s, start[[k]], end[[k]])
+      s <- sub(s_sub, transform(sub(re, "\\1", s_sub)), s, fixed = TRUE)
+    }
+    text[[i[[j]]]] <- s
+  }
+
+  list(result = text, errors = names(err))
 }

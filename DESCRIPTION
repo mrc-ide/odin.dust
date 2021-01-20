@@ -22,7 +22,6 @@ Imports:
     cpp11,
     decor,
     dust (>= 0.6.1),
-    glue,
     odin (>= 1.1.7),
     tibble,
     vctrs
