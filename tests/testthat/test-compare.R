@@ -5,7 +5,7 @@ read_compare_dust("examples/compare_simple.cpp")
 test_that("Can parse compare metadata", {
   res <- read_compare_dust("examples/compare_simple.cpp")
   expect_equal(res$function_name, "compare")
-  expect_equal(res$data, c(observed = "double"))
+  expect_equal(res$data, c(observed = "double", another = "int"))
 })
 
 
@@ -88,7 +88,9 @@ test_that("Basic compare", {
 
   t <- seq(0, 20, by = 2)
   d <- dust::dust_data(
-    data.frame(step = t, observed = runif(length(t), 0, sqrt(t))))
+    data.frame(step = t,
+               observed = runif(length(t), 0, sqrt(t)),
+               another = 0L))
   mod$set_data(d)
   expect_equal(mod$compare_data(), rep(0, np))
 
@@ -217,5 +219,5 @@ test_that("Sensible error messages on substitution failure", {
     "Did not find odin variables when reading 'examples/compare_simple.cpp'")
   expect_match(
     err$message,
-    "- scale: line 10")
+    "- scale: line 11")
 })

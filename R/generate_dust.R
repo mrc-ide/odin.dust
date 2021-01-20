@@ -548,8 +548,10 @@ generate_dust_core_data <- function(dat) {
   if (is.null(dat$compare)) {
     return(NULL)
   }
-  contents <- sprintf('    cpp11::as_cpp<%s>(data["%s"])',
-                      unname(dat$compare$data), names(dat$compare$data))
+  contents <- sprintf('    cpp11::as_cpp<%s>(data["%s"])%s',
+                      unname(dat$compare$data),
+                      names(dat$compare$data),
+                      rep(c(",", ""), c(length(dat$compare$data) - 1, 1)))
   body <- c(sprintf("return %s::data_t{", dat$config$base),
             contents,
             "  };")

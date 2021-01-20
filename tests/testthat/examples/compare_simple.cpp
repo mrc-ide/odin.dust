@@ -1,4 +1,5 @@
 // [[odin.dust::compare_data(observed = double)]]
+// [[odin.dust::compare_data(another = int)]]
 // [[odin.dust::compare_function]]
 template <typename T>
 typename T::real_t compare(const typename T::real_t * state,
