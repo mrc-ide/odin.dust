@@ -458,7 +458,7 @@ test_that("modulo works", {
     update(y) <- step %% b
     initial(z) <- 0
     update(z) <- step
-  }, verbose = TRUE)
+  }, verbose = FALSE)
   mod <- gen$new(list(a = 4, b = 5), 0, 1)
   y <- drop(dust::dust_iterate(mod, 0:10))
   yy <- mod$transform_variables(y)
