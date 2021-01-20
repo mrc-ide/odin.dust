@@ -497,16 +497,28 @@ dust_compare_info <- function(dat, rewrite) {
   }
   filename <- dat$config$custom[[which(i)]]$value
   ret <- read_compare_dust(filename)
-  ret$include <- dust_compare_rewrite(readLines(filename), dat, rewrite)
+  ret$include <- dust_compare_rewrite(readLines(filename), dat, rewrite,
+                                      filename)
   ret
 }
 
 
-dust_compare_rewrite <- function(text, dat, rewrite) {
-  text <- paste(text, collapse = "\n")
-  text <- glue::glue(text, .open = "odin(", .close = ")",
-                     .transformer = odin_variable_transformer(dat, rewrite))
-  strsplit(text, "\n", fixed = TRUE)[[1]]
+dust_compare_rewrite <- function(text, dat, rewrite, filename) {
+  str <- paste(text, collapse = "\n")
+  tr <- odin_variable_transformer(dat, rewrite)
+  res <- glue::glue(str, .open = "odin(", .close = ")",
+                    .transformer = tr$transform)
+  errors <- tr$errors()
+  if (length(errors)) {
+    re <- sprintf("odin\\(\\s*%s\\s*\\)", errors)
+    line <- vcapply(re, function(i) paste(grep(i, text), collapse = ", "),
+                    USE.NAMES = FALSE)
+    msg <- c(
+      sprintf("Did not find odin variables when reading '%s':", filename),
+      sprintf("  - %s: line %s", errors, line))
+    stop(paste(msg, collapse = "\n"), call. = FALSE)
+  }
+  strsplit(res, "\n", fixed = TRUE)[[1]]
 }
 
 
@@ -550,15 +562,22 @@ generate_dust_core_data <- function(dat) {
 
 
 odin_variable_transformer <- function(dat, rewrite) {
-  function(text, envir) {
+  err <- new.env(parent = emptyenv())
+  transform <- function(text, envir) {
+    text <- trimws(text)
     ans <- rewrite(text)
     if (ans == text) {
       el <- dat$data$variable$contents[[text]]
       if (is.null(el)) {
-        stop(sprintf("Unable to find odin variable '%s'", text))
+        err[[text]] <- TRUE
+      } else {
+        ans <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
       }
-      ans <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
     }
     ans
   }
+  errors <- function() {
+    names(err)
+  }
+  list(transform = transform, errors = errors)
 }

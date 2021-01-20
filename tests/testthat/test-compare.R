@@ -114,16 +114,22 @@ test_that("rewrite compare source", {
                   contents = list(
                     x = list(offset = 4)))),
               meta = list(state = "state"))
+  filename <- "myfile.cpp"
 
   expect_equal(
-    dust_compare_rewrite(c("a", "a + odin(a)", "y / odin(b)"), dat, rewrite),
+    dust_compare_rewrite(c("a", "a + odin(a)", "y / odin(b)"), dat, rewrite,
+                         filename),
     c("a", "a + shared->a", "y / internal.b"))
   expect_equal(
-    dust_compare_rewrite(c("a", "odin(x) + odin(a)"), dat, rewrite),
+    dust_compare_rewrite(c("a", "odin(x) + odin(a)"), dat, rewrite, filename),
+    c("a", "state[4] + shared->a"))
+  expect_equal(
+    dust_compare_rewrite(c("a", "odin( x ) + odin( a )"), dat, rewrite,
+                         filename),
     c("a", "state[4] + shared->a"))
   expect_error(
-    dust_compare_rewrite(c("a", "odin(y) + odin(a)"), dat, rewrite),
-    "Unable to find odin variable 'y'")
+    dust_compare_rewrite(c("a", "odin(y) + odin(a)"), dat, rewrite, filename),
+    "Did not find odin variables when reading 'myfile.cpp':\n  - y: line 2")
 })
 
 
@@ -194,4 +200,22 @@ test_that("Find correct compare file", {
       verbose = FALSE),
     "Did not find a file 'examples/compare-simple.cpp' (relative to odin",
     fixed = TRUE)
+})
+
+
+test_that("Sensible error messages on substitution failure", {
+  ## Here we don't have a 'scale' odin variable so the substitution
+  ## will fail, and we want to indicate where in the compare function
+  ## it was used.
+  err <- expect_error(
+    odin_dust(
+      c("initial(y) <- 0",
+        "update(y) <- y + rnorm(0, 1)",
+        "s <- user(1) # ignore.unused",
+        'config(compare) <- "examples/compare_simple.cpp"'),
+      verbose = FALSE),
+    "Did not find odin variables when reading 'examples/compare_simple.cpp'")
+  expect_match(
+    err$message,
+    "- scale: line 10")
 })
