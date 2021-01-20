@@ -113,3 +113,45 @@ test_that("include user support in package", {
   y <- mod$run(1)
   expect_equal(y[, 1], cumsum(x))
 })
+
+
+test_that("use compiled compare function in package", {
+  skip_if_not_installed("pkgload")
+  path <- tempfile()
+  dir.create(path)
+  dir.create(file.path(path, "inst/odin"), FALSE, TRUE)
+
+  code <- c("initial(y) <- 0",
+            "update(y) <- y + rnorm(0, 1)",
+            "scale <- user(1) # ignore.unused",
+            'config(compare) <- "compare_simple.cpp"')
+
+  name <- "pkg3"
+  data <- list(name = name)
+  writeLines(sub_package_name(readLines("examples/pkg/DESCRIPTION"), name),
+             file.path(path, "DESCRIPTION"))
+  writeLines(sub_package_name(readLines("examples/pkg/NAMESPACE"), name),
+             file.path(path, "NAMESPACE"))
+  writeLines(code, file.path(path, "inst/odin/example.R"))
+  file.copy("examples/compare_simple.cpp", file.path(path, "inst/odin"))
+
+  odin_dust_package(path)
+
+  pkg <- pkgload::load_all(path, quiet = TRUE)
+
+  np <- 10
+  mod <- pkg$env$example$new(list(), 0, np, seed = 1L)
+  expect_null(mod$compare_data())
+
+  t <- seq(0, 20, by = 2)
+  d <- dust::dust_data(
+    data.frame(step = t, observed = runif(length(t), 0, sqrt(t))))
+  mod$set_data(d)
+
+  y <- mod$run(1)
+  expect_null(mod$compare_data())
+  y <- mod$run(2)
+  expect_equal(
+    mod$compare_data(),
+    drop(y) - d[[2]][[2]]$observed)
+})
