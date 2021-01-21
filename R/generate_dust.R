@@ -562,28 +562,6 @@ generate_dust_core_data <- function(dat) {
 }
 
 
-odin_variable_transformer <- function(dat, rewrite) {
-  err <- new.env(parent = emptyenv())
-  transform <- function(text, envir) {
-    text <- trimws(text)
-    ans <- rewrite(text)
-    if (ans == text) {
-      el <- dat$data$variable$contents[[text]]
-      if (is.null(el)) {
-        err[[text]] <- TRUE
-      } else {
-        ans <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
-      }
-    }
-    ans
-  }
-  errors <- function() {
-    names(err)
-  }
-  list(transform = transform, errors = errors)
-}
-
-
 ## It would be really nice to use glue for this but we can't disable
 ## escaping whcih means that a '))' becomes ')' which results in
 ## broken code. This approach is pretty ugly but should do the trick
