@@ -78,7 +78,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ret$add(paste0("  ", size))
   ret$add(paste0("  ", initial))
   ret$add(paste0("  ", update))
-  ret$add(sprintf("%s   ", compare)) # ensures we don't add trailing whitespace
+  ret$add(sprintf("  %s", compare)) # ensures we don't add trailing whitespace
   ret$add("private:")
   ret$add("  std::shared_ptr<const shared_t> %s;", dat$meta$dust$shared)
   ret$add("  internal_t %s;", dat$meta$internal)
@@ -395,10 +395,19 @@ generate_dust_include <- function(include) {
 
 
 read_compare_dust <- function(filename) {
+  if (!file.exists(filename)) {
+    stop(sprintf("Did not find a file '%s' (relative to odin source)",
+                 filename))
+  }
   dat <- decor::cpp_decorations(files = filename)
   i_fn <- dat$decoration == "odin.dust::compare_function"
-  if (sum(i_fn) != 1L) {
-    stop("Expected one decoration '[[odin.dust::compare_function]]'")
+  if (sum(i_fn) == 0L) {
+    stop("Did not find a decoration '[[odin.dust::compare_function]]'")
+  }
+  if (sum(i_fn) > 1L) {
+    stop(sprintf(
+      "Expected one decoration '[[odin.dust::compare_function]]' but found %d",
+      sum(i_fn)))
   }
   ctx <- dat$context[[which(i_fn)]]
   ## There's a long message here because this is a trick:
@@ -488,16 +497,27 @@ dust_compare_info <- function(dat, rewrite) {
   }
   filename <- dat$config$custom[[which(i)]]$value
   ret <- read_compare_dust(filename)
-  ret$include <- dust_compare_rewrite(readLines(filename), dat, rewrite)
+  ret$include <- dust_compare_rewrite(readLines(filename), dat, rewrite,
+                                      filename)
   ret
 }
 
 
-dust_compare_rewrite <- function(text, dat, rewrite) {
-  text <- paste(text, collapse = "\n")
-  text <- glue::glue(text, .open = "odin(", .close = ")",
-                     .transformer = odin_variable_transformer(dat, rewrite))
-  strsplit(text, "\n", fixed = TRUE)[[1]]
+dust_compare_rewrite <- function(text, dat, rewrite, filename) {
+  str <- paste(text, collapse = "\n")
+  res <- transform_compare_odin(text, dat, rewrite)
+
+  if (length(res$errors) > 0) {
+    re <- sprintf("odin\\(\\s*%s\\s*\\)", res$errors)
+    line <- vcapply(re, function(i) paste(grep(i, text), collapse = ", "),
+                    USE.NAMES = FALSE)
+    msg <- c(
+      sprintf("Did not find odin variables when reading '%s':", filename),
+      sprintf("  - %s: line %s", res$errors, line))
+    stop(paste(msg, collapse = "\n"), call. = FALSE)
+  }
+
+  res$result
 }
 
 
@@ -527,8 +547,10 @@ generate_dust_core_data <- function(dat) {
   if (is.null(dat$compare)) {
     return(NULL)
   }
-  contents <- sprintf('    cpp11::as_cpp<%s>(data["%s"])',
-                      unname(dat$compare$data), names(dat$compare$data))
+  contents <- sprintf('    cpp11::as_cpp<%s>(data["%s"])%s',
+                      unname(dat$compare$data),
+                      names(dat$compare$data),
+                      rep(c(",", ""), c(length(dat$compare$data) - 1, 1)))
   body <- c(sprintf("return %s::data_t{", dat$config$base),
             contents,
             "  };")
@@ -540,16 +562,53 @@ generate_dust_core_data <- function(dat) {
 }
 
 
-odin_variable_transformer <- function(dat, rewrite) {
-  function(text, envir) {
+## Convert the 'odin(var)' expressions within the C code to point at
+## the location of the odin variable. Depending on if var is a
+## variable, internal or shared (const) value this will be one of:
+##
+## * state[shared->offset_var]
+## * internal.var
+## * shared->var
+##
+## We'll keep track of the ones that were not found and let the
+## calling function throw an error that includes some context.
+##
+## text will be the contents of the .cpp file as a character vector
+##
+## It would be really nice to use glue for this but we can't disable
+## escaping whcih means that a '))' becomes ')' which results in
+## broken code. This approach is pretty ugly but should do the trick
+## for now.
+transform_compare_odin <- function(text, dat, rewrite) {
+  re <- "odin\\(\\s*([^) ]+)\\s*\\)"
+  line_transform <- grep(re, text)
+
+  err <- new.env(parent = emptyenv())
+  transform <- function(text) {
     ans <- rewrite(text)
     if (ans == text) {
       el <- dat$data$variable$contents[[text]]
       if (is.null(el)) {
-        stop(sprintf("Unable to find odin variable '%s'", text))
+        err[[text]] <- TRUE
+      } else {
+        ans <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
       }
-      ans <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
     }
     ans
   }
+
+  for (i in line_transform) {
+    line <- text[[i]]
+    match <- gregexpr(re, line)[[1]]
+    start <- as.vector(match)
+    end <- start + attr(match, "match.length") - 1L
+    for (k in rev(seq_along(match))) {
+      line_sub <- substr(line, start[[k]], end[[k]])
+      line <- sub(line_sub, transform(sub(re, "\\1", line_sub)), line,
+                  fixed = TRUE)
+    }
+    text[[i]] <- line
+  }
+
+  list(result = text, errors = names(err))
 }

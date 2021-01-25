@@ -33,7 +33,9 @@ odin_dust_package <- function(path, verbose = NULL, real_t = NULL) {
 
   for (f in filenames) {
     ir <- odin::odin_parse_(f, options)
-    dat <- generate_dust(ir, options, real_t)
+    dat <- with_dir(
+      dirname(f),
+      generate_dust(ir, options, real_t))
     code <- odin_dust_code(dat)
     dest <- file.path(path, "inst", "dust", sub(re_r, ".cpp", basename(f)))
     if (file.exists(dest)) {

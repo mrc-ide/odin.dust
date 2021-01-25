@@ -41,7 +41,12 @@ odin_dust <- function(x, verbose = NULL, real_t = NULL, workdir = NULL) {
 odin_dust_ <- function(x, verbose = NULL, real_t = NULL, workdir = NULL) {
   options <- odin_dust_options(verbose, workdir)
   ir <- odin::odin_parse_(x, options)
-  odin_dust_wrapper(ir, options, real_t)
+  if (is.character(x) && length(x) == 1L && file.exists(x)) {
+    srcdir <- dirname(x)
+  } else {
+    srcdir <- "."
+  }
+  odin_dust_wrapper(ir, options, real_t, srcdir)
 }
 
 
@@ -54,8 +59,10 @@ odin_dust_options <- function(verbose, workdir) {
 }
 
 
-odin_dust_wrapper <- function(ir, options, real_t) {
-  dat <- generate_dust(ir, options, real_t)
+odin_dust_wrapper <- function(ir, options, real_t, srcdir) {
+  dat <- with_dir(
+    srcdir,
+    generate_dust(ir, options, real_t))
   code <- odin_dust_code(dat)
 
   path <- tempfile(fileext = ".cpp")

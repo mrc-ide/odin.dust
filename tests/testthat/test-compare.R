@@ -5,7 +5,7 @@ read_compare_dust("examples/compare_simple.cpp")
 test_that("Can parse compare metadata", {
   res <- read_compare_dust("examples/compare_simple.cpp")
   expect_equal(res$function_name, "compare")
-  expect_equal(res$data, c(observed = "double"))
+  expect_equal(res$data, c(observed = "double", another = "int"))
 })
 
 
@@ -25,7 +25,14 @@ test_that("Can error if correct metadata not found", {
   writeLines(character(), path)
   expect_error(
     read_compare_dust(path),
-    "Expected one decoration '[[odin.dust::compare_function]]'",
+    "Did not find a decoration '[[odin.dust::compare_function]]'",
+    fixed = TRUE)
+
+  path <- tempfile()
+  writeLines(c(fn[[1]], fn), path)
+  expect_error(
+    read_compare_dust(path),
+    "Expected one decoration '[[odin.dust::compare_function]]' but found 2",
     fixed = TRUE)
 
   writeLines(fn, path)
@@ -81,7 +88,9 @@ test_that("Basic compare", {
 
   t <- seq(0, 20, by = 2)
   d <- dust::dust_data(
-    data.frame(step = t, observed = runif(length(t), 0, sqrt(t))))
+    data.frame(step = t,
+               observed = runif(length(t), 0, sqrt(t)),
+               another = 0L))
   mod$set_data(d)
   expect_equal(mod$compare_data(), rep(0, np))
 
@@ -107,16 +116,22 @@ test_that("rewrite compare source", {
                   contents = list(
                     x = list(offset = 4)))),
               meta = list(state = "state"))
+  filename <- "myfile.cpp"
 
   expect_equal(
-    dust_compare_rewrite(c("a", "a + odin(a)", "y / odin(b)"), dat, rewrite),
+    dust_compare_rewrite(c("a", "a + odin(a)", "y / odin(b)"), dat, rewrite,
+                         filename),
     c("a", "a + shared->a", "y / internal.b"))
   expect_equal(
-    dust_compare_rewrite(c("a", "odin(x) + odin(a)"), dat, rewrite),
+    dust_compare_rewrite(c("a", "odin(x) + odin(a)"), dat, rewrite, filename),
+    c("a", "state[4] + shared->a"))
+  expect_equal(
+    dust_compare_rewrite(c("a", "odin( x ) + odin( a )"), dat, rewrite,
+                         filename),
     c("a", "state[4] + shared->a"))
   expect_error(
-    dust_compare_rewrite(c("a", "odin(y) + odin(a)"), dat, rewrite),
-    "Unable to find odin variable 'y'")
+    dust_compare_rewrite(c("a", "odin(y) + odin(a)"), dat, rewrite, filename),
+    "Did not find odin variables when reading 'myfile.cpp':\n  - y: line 2")
 })
 
 
@@ -174,5 +189,53 @@ test_that("Only one compare block allowed", {
         'config(compare) <- "examples/compare_simple.cpp"'),
       verbose = FALSE),
     "Only one 'config(compare)' statement is allowed",
+    fixed = TRUE)
+})
+
+test_that("Find correct compare file", {
+  expect_error(
+    odin_dust(
+      c("initial(y) <- 0",
+        "update(y) <- y + rnorm(0, 1)",
+        "scale <- user(1) # ignore.unused",
+        'config(compare) <- "examples/compare-simple.cpp"'),
+      verbose = FALSE),
+    "Did not find a file 'examples/compare-simple.cpp' (relative to odin",
+    fixed = TRUE)
+})
+
+
+test_that("Sensible error messages on substitution failure", {
+  ## Here we don't have a 'scale' odin variable so the substitution
+  ## will fail, and we want to indicate where in the compare function
+  ## it was used.
+  err <- expect_error(
+    odin_dust(
+      c("initial(y) <- 0",
+        "update(y) <- y + rnorm(0, 1)",
+        "s <- user(1) # ignore.unused",
+        'config(compare) <- "examples/compare_simple.cpp"'),
+      verbose = FALSE),
+    "Did not find odin variables when reading 'examples/compare_simple.cpp'")
+  expect_match(
+    err$message,
+    "- scale: line 11")
+})
+
+
+test_that("Sensible error message when files are not found in other dir", {
+  path <- tempfile()
+  dir.create(path)
+  filename <- file.path(path, "code.R")
+
+  code <- c("initial(y) <- 0",
+            "update(y) <- y + rnorm(0, 1)",
+            "scale <- user(1) # ignore.unused",
+            'config(compare) <- "examples/compare_simple.cpp"')
+  writeLines(code, filename)
+
+  expect_error(
+    odin_dust(filename),
+    "Did not find a file 'examples/compare_simple.cpp' (relative to odin",
     fixed = TRUE)
 })
