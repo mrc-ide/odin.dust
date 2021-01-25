@@ -562,14 +562,26 @@ generate_dust_core_data <- function(dat) {
 }
 
 
+## Convert the 'odin(var)' expressions within the C code to point at
+## the location of the odin variable. Depending on if var is a
+## variable, internal or shared (const) value this will be one of:
+##
+## * state[shared->offset_var]
+## * internal.var
+## * shared->var
+##
+## We'll keep track of the ones that were not found and let the
+## calling function throw an error that includes some context.
+##
+## text will be the contents of the .cpp file as a character vector
+##
 ## It would be really nice to use glue for this but we can't disable
 ## escaping whcih means that a '))' becomes ')' which results in
 ## broken code. This approach is pretty ugly but should do the trick
 ## for now.
 transform_compare_odin <- function(text, dat, rewrite) {
   re <- "odin\\(\\s*([^) ]+)\\s*\\)"
-  i <- grep(re, text)
-  d <- gregexpr(re, text[i])
+  line_transform <- grep(re, text)
 
   err <- new.env(parent = emptyenv())
   transform <- function(text) {
@@ -585,15 +597,17 @@ transform_compare_odin <- function(text, dat, rewrite) {
     ans
   }
 
-  for (j in seq_along(i)) {
-    s <- text[[i[[j]]]]
-    start <- as.vector(d[[j]])
-    end <- start + attr(d[[j]], "match.length") - 1L
-    for (k in rev(seq_along(d[[j]]))) {
-      s_sub <- substr(s, start[[k]], end[[k]])
-      s <- sub(s_sub, transform(sub(re, "\\1", s_sub)), s, fixed = TRUE)
+  for (i in line_transform) {
+    line <- text[[i]]
+    match <- gregexpr(re, line)[[1]]
+    start <- as.vector(match)
+    end <- start + attr(match, "match.length") - 1L
+    for (k in rev(seq_along(match))) {
+      line_sub <- substr(line, start[[k]], end[[k]])
+      line <- sub(line_sub, transform(sub(re, "\\1", line_sub)), line,
+                  fixed = TRUE)
     }
-    text[[i[[j]]]] <- s
+    text[[i]] <- line
   }
 
   list(result = text, errors = names(err))
