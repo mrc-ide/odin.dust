@@ -52,7 +52,7 @@ generate_dust <- function(ir, options, real_t = NULL) {
 ## should try and move to names where we are sure that we won't
 ## collide.
 generate_dust_meta <- function(real_t) {
-  list(init = "init",
+  list(pars = "pars",
        data = "data",
        shared = "shared",
        rng_state = "rng_state",
@@ -118,20 +118,16 @@ generate_dust_core_struct <- function(dat) {
     "};",
     "struct internal_t {",
     els[i_internal],
-    "};",
-    "struct init_t {",
-    "  std::shared_ptr<const shared_t> shared;",
-    "  internal_t internal;",
     "};")
 }
 
 
 generate_dust_core_ctor <- function(dat) {
-  init <- dat$meta$dust$init
-  c(sprintf("%s(const init_t& %s): %s(%s.shared), %s(%s.internal) {",
-            dat$config$base, init,
-            dat$meta$dust$shared, init,
-            dat$meta$internal, init),
+  c(sprintf("%s(const dust::pars_t<%s>& %s) :",
+            dat$config$base, dat$config$base, dat$meta$dust$pars),
+    sprintf("  %s(%s.shared), %s(%s.internal) {",
+            dat$meta$dust$shared, dat$meta$dust$pars,
+            dat$meta$internal, dat$meta$dust$pars),
     "}")
 }
 
@@ -199,8 +195,8 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
 
 
 generate_dust_core_create <- function(eqs, dat, rewrite) {
-  init_name <- dat$meta$dust$init
-  init_type <- sprintf("%s::init_t", dat$config$base)
+  pars_name <- dat$meta$dust$pars
+  pars_type <- sprintf("dust::pars_t<%s>", dat$config$base)
   internal_type <- sprintf("%s::internal_t", dat$config$base)
 
   body <- collector()
@@ -222,28 +218,27 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 
   body$add(dust_flatten_eqs(eqs[dat$components$user$equations]))
 
-  body$add("%s %s = {%s, %s};",
-           init_type, init_name, dat$meta$dust$shared, dat$meta$internal)
-  body$add("return %s;", init_name)
+  body$add("return %s(%s, %s);",
+           pars_type, dat$meta$dust$shared, dat$meta$internal)
 
   name <- sprintf("dust_pars<%s>", dat$config$base)
   args <- c("cpp11::list" = dat$meta$user)
   c("template<>",
-    cpp_function(init_type, name, args, body$get()))
+    cpp_function(pars_type, name, args, body$get()))
 }
 
 
 generate_dust_core_info <- function(dat, rewrite) {
   nms <- names(dat$data$variable$contents)
-  args <- dat$meta$dust$init
-  names(args) <- sprintf("const %s::init_t&", dat$config$base)
+  args <- dat$meta$dust$pars
+  names(args) <- sprintf("const dust::pars_t<%s>&", dat$config$base)
 
   body <- collector()
   body$add("const %s::internal_t %s = %s.%s;",
-           dat$config$base, dat$meta$internal, dat$meta$dust$init,
+           dat$config$base, dat$meta$internal, dat$meta$dust$pars,
            dat$meta$internal)
   body$add("const std::shared_ptr<const %s::shared_t> %s = %s.%s;",
-           dat$config$base, dat$meta$dust$shared, dat$meta$dust$init,
+           dat$config$base, dat$meta$dust$shared, dat$meta$dust$pars,
            dat$meta$dust$shared)
 
   body$add("cpp11::writable::strings nms({%s});",
