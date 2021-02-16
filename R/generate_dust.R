@@ -617,6 +617,24 @@ transform_compare_odin <- function(text, dat, rewrite) {
 
 
 generate_dust_gpu <- function(eqs, dat, rewrite) {
+  ## We need to do a little extra work here to collect up our
+  ## information about gpu types. This will likely move elsewhere,
+  ## because typically we don't do much of this sort of interrogation
+  ## after the parse phase.
+
+  ## We want to store all time varying things that have rank of at
+  ## least 1.
+  i <- vlapply(dat$data$elements, function(x)
+    x$location == "internal" && x$stage == "time" && x$rank > 0)
+  internal <- dat$data$elements[i]
+
+  ## It's actually really hard to get integers here, so for now just
+  ## assert that there aren't any!
+  stopifnot(vcapply(internal, "[[", "storage_type") == "double")
+
+  len <- vcapply(internal, function(x) rewrite(x$dimnames$length))
+  dat$gpu <- list(internal = list(real = len))
+
   c(generate_dust_gpu_declaration(dat, rewrite),
     generate_dust_gpu_update(eqs, dat, rewrite),
     generate_dust_gpu_size(dat, rewrite))
@@ -645,25 +663,72 @@ generate_dust_gpu_update <- function(eqs, dat, rewrite) {
 
   body <- character()
 
-  ## We'll need to regenerate the equations again. It's possible that
-  ## we can just do a blanket replace of internal.x for x though.
-  eqs <- generate_dust_equations(dat, rewrite)
-  generate_dust_core_update(eqs, dat, rewrite)
-
   variables <- dat$components$rhs$variables
   equations <- dat$components$rhs$equations
 
+  ## We'll use this shorthand everywhere
   typedef_real <- sprintf("typedef %s::real_t real_t;", name)
+
+  ## Then we need to unpack things; not just the variables but also
+  ## our internal data.
   unpack <- lapply(variables, dust_unpack_variable,
                    dat, dat$meta$state, rewrite, TRUE)
+  unpack_internal_real <- dust_gpu_unpack_internal(
+    dat$gpu$internal$real, dat$meta$dust$internal_real, name, "real_t")
+  unpack_internal_int <- dust_gpu_unpack_internal(
+    dat$gpu$internal$int, dat$meta$dust$internal_int, name, "int")
 
-  body <- dust_flatten_eqs(c(typedef_real, unpack, eqs[equations]))
+  ## The body is the same as before, except that we'll need to replace
+  ## all accesses into internal (like internal.x) with the simpler
+  ## version (x). Doing this directly with gsub() is pretty gory but
+  ## it will work for all but really nasty cases, and that saves us
+  ## rewriting and rerunning rewrite() - we can address that later if
+  ## we need to.
+  body_eqs <- dust_flatten_eqs(eqs[equations])
+  body_eqs <- gsub(sprintf("\\b%s\\.", dat$meta$internal), "", body_eqs)
 
+  body <- c(typedef_real, dust_flatten_eqs(unpack),
+            unpack_internal_real, unpack_internal_int,
+            body_eqs)
   c("template<>",
     cpp_function("void", sprintf("update_device<%s>", name), args, body))
 }
 
 
 generate_dust_gpu_size <- function(dat, rewrite) {
-  NULL
+  c(dust_gpu_len_internal(dat, TRUE),
+    dust_gpu_len_internal(dat, FALSE))
+}
+
+
+dust_gpu_unpack_internal <- function(len, internal, name, type) {
+  if (length(len) == 0L) {
+    return(NULL)
+  }
+  fmt <- "dust::interleaved<%s::%s> %s = %s;"
+  nms <- names(len)
+  n <- length(len)
+  rhs <- c(internal,
+           sprintf("%s + %s", nms[-n], len[-n]))
+  sprintf(fmt, name, type, nms, rhs)
+}
+
+
+dust_gpu_len_internal <- function(dat, integer) {
+  if (integer) {
+    name_type <- "int"
+  } else {
+    name_type <- "real"
+  }
+  len <- dat$gpu$internal[[name_type]]
+  name <- sprintf("dust::device_work_size_%s<%s>", name_type, dat$config$base)
+  if (length(len) == 0) {
+    len_total <- "0"
+  } else {
+    len_total <- paste(len, collapse = " + ")
+  }
+  args <- set_names(dat$meta$dust$shared,
+                    sprintf("dust::shared_ptr<%s>", dat$config$base))
+  c("template <>",
+    cpp_function("size_t", name, args, sprintf("return %s;", len_total)))
 }
