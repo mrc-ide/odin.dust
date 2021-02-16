@@ -16,8 +16,8 @@ generate_dust <- function(ir, options, real_t = NULL, gpu = FALSE) {
 
   dat$meta$dust <- generate_dust_meta(real_t)
 
-  rewrite <- function(x) {
-    generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names)
+  rewrite <- function(x, gpu = FALSE) {
+    generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, gpu)
   }
 
   dat$compare <- dust_compare_info(dat, rewrite)
@@ -678,18 +678,13 @@ generate_dust_gpu_update <- function(eqs, dat, rewrite) {
   unpack_internal_int <- dust_gpu_unpack_internal(
     dat$gpu$internal$int, dat$meta$dust$internal_int, name, "int")
 
-  ## The body is the same as before, except that we'll need to replace
-  ## all accesses into internal (like internal.x) with the simpler
-  ## version (x). Doing this directly with gsub() is pretty gory but
-  ## it will work for all but really nasty cases, and that saves us
-  ## rewriting and rerunning rewrite() - we can address that later if
-  ## we need to.
-  body_eqs <- dust_flatten_eqs(eqs[equations])
-  body_eqs <- gsub(sprintf("\\b%s\\.", dat$meta$internal), "", body_eqs)
+  ## Regenerate the equations, with tweaks for the device update function
+  rewrite_gpu <- function(x) rewrite(x, TRUE)
+  eqs <- dust_flatten_eqs(generate_dust_equations(dat, rewrite_gpu, equations))
 
   body <- c(typedef_real, dust_flatten_eqs(unpack),
             unpack_internal_real, unpack_internal_int,
-            body_eqs)
+            eqs)
   c("template<>",
     cpp_function("void", sprintf("update_device<%s>", name), args, body))
 }

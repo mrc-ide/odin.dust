@@ -1,15 +1,15 @@
 ## This most closely follows the js version
-generate_dust_sexp <- function(x, data, meta, supported) {
+generate_dust_sexp <- function(x, data, meta, supported, gpu) {
   if (is.recursive(x)) {
     fn <- x[[1L]]
     args <- x[-1L]
     n <- length(args)
-    values <- vcapply(args, generate_dust_sexp, data, meta, supported)
+    values <- vcapply(args, generate_dust_sexp, data, meta, supported, gpu)
 
     if (fn == "(") {
       ret <- sprintf("(%s)", values[[1]])
     } else if (fn == "[") {
-      pos <- dust_array_access(args[[1L]], args[-1], data, meta, supported)
+      pos <- dust_array_access(args[[1L]], args[-1], data, meta, supported, gpu)
       ret <- sprintf("%s[%s]", values[[1L]], pos)
     } else if (fn == "^") {
       ret <- sprintf("std::pow(%s, %s)", values[[1]], values[[2]])
@@ -30,17 +30,17 @@ generate_dust_sexp <- function(x, data, meta, supported) {
                      values[[1L]], values[[2L]], values[[3L]])
     } else if (fn == "length") {
       ret <- generate_dust_sexp(data$elements[[args[[1L]]]]$dimnames$length,
-                             data, meta, supported)
+                             data, meta, supported, gpu)
     } else if (fn == "dim") {
       dim <- data$elements[[args[[1L]]]]$dimnames$dim[[args[[2]]]]
-      ret <- generate_dust_sexp(dim, data, meta, supported)
+      ret <- generate_dust_sexp(dim, data, meta, supported, gpu)
     } else if (fn == "log" && length(values) == 2L) {
       ret <- sprintf("(std::log(%s) / std::log(%s))",
                      values[[1L]], values[[2L]])
     } else if (fn == "min" || fn == "max") {
       ret <- dust_fold_call(paste0("std::", fn), values)
     } else if (fn == "sum" || fn == "odin_sum") {
-      ret <- generate_dust_sexp_sum(args, data, meta, supported)
+      ret <- generate_dust_sexp_sum(args, data, meta, supported, gpu)
     } else if (any(FUNCTIONS_STOCHASTIC == fn)) {
       if (fn == "rbinom") {
         ## This is a little extreme but is useful in at least some
@@ -68,7 +68,11 @@ generate_dust_sexp <- function(x, data, meta, supported) {
     el <- data$elements[[x]]
     if (!is.null(el$location) && el$location == "internal") {
       if (el$stage == "time") {
-        sprintf("%s.%s", meta$internal, x)
+        if (gpu) {
+          x
+        } else {
+          sprintf("%s.%s", meta$internal, x)
+        }
       } else {
         sprintf("%s->%s", meta$dust$shared, x)
       }
@@ -81,8 +85,8 @@ generate_dust_sexp <- function(x, data, meta, supported) {
 }
 
 
-generate_dust_sexp_sum <- function(args, data, meta, supported) {
-  target <- generate_dust_sexp(args[[1]], data, meta, supported)
+generate_dust_sexp_sum <- function(args, data, meta, supported, gpu) {
+  target <- generate_dust_sexp(args[[1]], data, meta, supported, gpu)
   data_info <- data$elements[[args[[1]]]]
 
   if (data_info$location == "internal") {
@@ -90,16 +94,18 @@ generate_dust_sexp_sum <- function(args, data, meta, supported) {
   }
 
   if (length(args) == 1L) {
-    len <- generate_dust_sexp(data_info$dimnames$length, data, meta, supported)
+    len <- generate_dust_sexp(data_info$dimnames$length, data, meta,
+                              supported, gpu)
     sprintf("odin_sum1(%s, 0, %s)", target, len)
   } else {
     i <- seq(2, length(args), by = 2)
 
     all_args <- c(args, as.list(data_info$dimnames$mult[-1]))
     values <- character(length(all_args))
-    values[i] <- vcapply(all_args[i], dust_minus_1, FALSE, data, meta)
+    values[i] <- vcapply(all_args[i], dust_minus_1, FALSE, data, meta,
+                         supported, gpu)
     values[-i] <- vcapply(all_args[-i], generate_dust_sexp,
-                          data, meta, supported)
+                          data, meta, supported, gpu)
     values[[1]] <- target
     arg_str <- paste(values, collapse = ", ")
 

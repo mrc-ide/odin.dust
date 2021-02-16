@@ -1,5 +1,10 @@
-generate_dust_equations <- function(dat, rewrite) {
-  lapply(dat$equations, generate_dust_equation, dat, rewrite)
+generate_dust_equations <- function(dat, rewrite, which = NULL) {
+  if (is.null(which)) {
+    eqs <- dat$equations
+  } else {
+    eqs <- dat$equations[which]
+  }
+  lapply(eqs, generate_dust_equation, dat, rewrite)
 }
 
 
