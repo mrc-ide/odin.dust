@@ -5,9 +5,9 @@
 \alias{odin_dust_}
 \title{Create a dust odin model}
 \usage{
-odin_dust(x, verbose = NULL, real_t = NULL, workdir = NULL)
+odin_dust(x, verbose = NULL, real_t = NULL, workdir = NULL, gpu = FALSE)
 
-odin_dust_(x, verbose = NULL, real_t = NULL, workdir = NULL)
+odin_dust_(x, verbose = NULL, real_t = NULL, workdir = NULL, gpu = FALSE)
 }
 \arguments{
 \item{x}{Either the name of a file to read, a text string (if
@@ -25,6 +25,11 @@ numbers. Defaults to \code{double}.}
 default we use a new path within the temporary directory. Passed
 to \code{\link{dust}}; a mini package will be created at this
 path.}
+
+\item{gpu}{**Experimental!** Generate support code for dust's GPU
+support. This is currently incomplete and does not actually run
+on a GPU, but once it does, this argument will help. Currently
+not supported within package code.}
 }
 \description{
 Compile an odin model to work with dust.
