@@ -35,7 +35,7 @@ generate_dust <- function(ir, options, real_t = NULL, gpu = FALSE) {
   used <- unique(unlist(lapply(dat$equations, function(x)
     x$depends$functions), FALSE, FALSE))
   support <- NULL
-  if ("odin_sum" %in% used) {
+  if (any(c("sum", "odin_sum") %in% used)) {
     ranks <- sort(unique(viapply(dat$data$elements, "[[", "rank")))
     ranks <- ranks[ranks > 0]
     if (length(ranks) > 0L) {

@@ -465,3 +465,25 @@ test_that("modulo works", {
   expect_equal(yy$x, yy$z %% 4)
   expect_equal(yy$y, yy$z %% 5)
 })
+
+
+## See #63; if this compiles it's certainly correct as it was an error
+## in inclusion of the correct support function. However we check the
+## result anyway.
+test_that("Detect sum corner case", {
+  gen <- odin_dust({
+    len <- user(integer = TRUE)
+    mean <- user(0)
+    sd <- user(1)
+    x[] <- rnorm(mean, sd)
+    initial(z) <- 0
+    update(z) <- z + sum(x)
+    dim(x) <- len
+  }, verbose = FALSE)
+
+  mod <- gen$new(list(len = 10), 0, 1L, seed = 1L)
+  y <- mod$simulate(0:5)
+  rng <- dust::dust_rng$new(1, seed = 1L)
+  m <- matrix(rng$norm_rand(10 * 5), 10, 5)
+  expect_equal(drop(y), cumsum(c(0, colSums(m))))
+})
