@@ -88,15 +88,16 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
 generate_dust_sexp_sum <- function(args, data, meta, supported, gpu) {
   target <- generate_dust_sexp(args[[1]], data, meta, supported, gpu)
   data_info <- data$elements[[args[[1]]]]
+  type <- if (data_info$storage_type == "double") "real_t" else "int"
 
-  if (data_info$location == "internal") {
+  if (data_info$location == "internal" && !gpu) {
     target <- sprintf("%s.data()", target)
   }
 
   if (length(args) == 1L) {
     len <- generate_dust_sexp(data_info$dimnames$length, data, meta,
                               supported, gpu)
-    sprintf("odin_sum1(%s, 0, %s)", target, len)
+    sprintf("odin_sum1<%s>(%s, 0, %s)", type, target, len)
   } else {
     i <- seq(2, length(args), by = 2)
 
@@ -109,6 +110,6 @@ generate_dust_sexp_sum <- function(args, data, meta, supported, gpu) {
     values[[1]] <- target
     arg_str <- paste(values, collapse = ", ")
 
-    sprintf("odin_sum%d(%s)", length(i), arg_str)
+    sprintf("odin_sum%d<%s>(%s)", length(i), type, arg_str)
   }
 }

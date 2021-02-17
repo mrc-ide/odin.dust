@@ -103,15 +103,15 @@ generate_dust_support_sum <- function(rank) {
   if (rank == 1) {
     list(name = "odin_sum1",
          declaration = c(
-           "template <typename T>",
-           "T odin_sum1(const T * x, size_t from, size_t to);"),
+           "template <typename real_t, typename container>",
+           "real_t odin_sum1(const container x, size_t from, size_t to);"),
          definition = NULL)
   } else {
     ## There are a series of substitutions that need to be made here,
     ## all of which are literal
-    tr <- c("double*" = "const real_t *",
+    tr <- c("double*" = "const container",
             "double" = "real_t")
-    head <- "template <typename real_t>"
+    head <- "template <typename real_t, typename container>"
     ret <- lapply(odin:::generate_c_support_sum(rank), replace, tr)
     ret$declaration <- c(head, ret$declaration)
     ret$definition <- c(head, ret$definition)
