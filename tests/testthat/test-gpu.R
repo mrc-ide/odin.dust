@@ -88,3 +88,15 @@ test_that("Can run basic sums on device", {
   y2 <- mod1$transform_variables(drop(mod2$run(1, device = TRUE)))
   expect_identical(y1, y2)
 })
+
+
+## This is more strictly a dust check
+test_that("gpu and gpu-free versions do not interfere in cache", {
+  gen1 <- odin_dust_("examples/sir.R", verbose = TRUE)
+  gen2 <- odin_dust_("examples/sir.R", verbose = TRUE, gpu = TRUE)
+  expect_error(
+    gen1$new(list(I_ini = 1), 0, 1)$run(0, device = TRUE),
+    "GPU support not enabled for this object")
+  expect_silent(
+    gen2$new(list(I_ini = 1), 0, 1)$run(0, device = TRUE))
+})
