@@ -420,7 +420,7 @@ test_that("transform_variables works with all 3 state options", {
                list(x = array(rep(x0, 2), c(dim(x0), 2))))
 
   ## hard
-  y <- dust::dust_iterate(mod, c(0, 0, 0))
+  y <- mod$simulate(c(0, 0, 0))
   yy <- mod$transform_variables(y)
   expect_equal(yy$x[, , 1, 1], x0)
   expect_equal(yy$x, array(rep(x0, 6), c(dim(x0), 2, 3)))
@@ -460,7 +460,7 @@ test_that("modulo works", {
     update(z) <- step
   }, verbose = FALSE)
   mod <- gen$new(list(a = 4, b = 5), 0, 1)
-  y <- drop(dust::dust_iterate(mod, 0:10))
+  y <- mod$simulate(0:10)
   yy <- mod$transform_variables(y)
   expect_equal(yy$x, yy$z %% 4)
   expect_equal(yy$y, yy$z %% 5)
