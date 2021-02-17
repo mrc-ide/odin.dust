@@ -92,8 +92,8 @@ test_that("Can run basic sums on device", {
 
 ## This is more strictly a dust check
 test_that("gpu and gpu-free versions do not interfere in cache", {
-  gen1 <- odin_dust_("examples/sir.R", verbose = TRUE)
-  gen2 <- odin_dust_("examples/sir.R", verbose = TRUE, gpu = TRUE)
+  gen1 <- odin_dust_("examples/sir.R", verbose = FALSE)
+  gen2 <- odin_dust_("examples/sir.R", verbose = FALSE, gpu = TRUE)
   expect_error(
     gen1$new(list(I_ini = 1), 0, 1)$run(0, device = TRUE),
     "GPU support not enabled for this object")
