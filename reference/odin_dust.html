@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.14</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.15</span>
       </span>
     </div>
 
@@ -140,9 +140,9 @@
     <p>Compile an odin model to work with dust.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>odin_dust</span><span class='op'>(</span><span class='va'>x</span>, verbose <span class='op'>=</span> <span class='cn'>NULL</span>, real_t <span class='op'>=</span> <span class='cn'>NULL</span>, workdir <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span>
+    <pre class="usage"><span class='fu'>odin_dust</span><span class='op'>(</span><span class='va'>x</span>, verbose <span class='op'>=</span> <span class='cn'>NULL</span>, real_t <span class='op'>=</span> <span class='cn'>NULL</span>, workdir <span class='op'>=</span> <span class='cn'>NULL</span>, gpu <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
 
-<span class='fu'>odin_dust_</span><span class='op'>(</span><span class='va'>x</span>, verbose <span class='op'>=</span> <span class='cn'>NULL</span>, real_t <span class='op'>=</span> <span class='cn'>NULL</span>, workdir <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+<span class='fu'>odin_dust_</span><span class='op'>(</span><span class='va'>x</span>, verbose <span class='op'>=</span> <span class='cn'>NULL</span>, real_t <span class='op'>=</span> <span class='cn'>NULL</span>, workdir <span class='op'>=</span> <span class='cn'>NULL</span>, gpu <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -170,6 +170,13 @@ numbers. Defaults to <code>double</code>.</p></td>
 default we use a new path within the temporary directory. Passed
 to <code>dust</code>; a mini package will be created at this
 path.</p></td>
+    </tr>
+    <tr>
+      <th>gpu</th>
+      <td><p>**Experimental!** Generate support code for dust's GPU
+support. This is currently incomplete and does not actually run
+on a GPU, but once it does, this argument will help. Currently
+not supported within package code.</p></td>
     </tr>
     </table>
 
