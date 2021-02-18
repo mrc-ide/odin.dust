@@ -640,11 +640,28 @@ generate_dust_gpu <- function(eqs, dat, rewrite) {
   used <- unique(unlist(
     lapply(dat$equations[equations], function(x) x$depends$variables),
     FALSE, FALSE))
+
+  ## Hack to get special treatment of dimensions; if we use a
+  ## dimension of an array we should copy over all dimensions of that
+  ## array. This is needed for any loops and sums, but is not included
+  ## in the dependency tracking.
+  used_dims <- grep("^dim_", used, value = TRUE)
+  used_dims_sub <- lapply(paste0(used_dims, "_[0-9]+"), grep,
+                          names(dat$data$elements), value = TRUE)
+  ## Also need all offsets
+  used_offset <- grep("^offset_variable_", names(dat$data$elements),
+                      value = TRUE)
+  used <- union(used, c(unlist(used_dims_sub), used_offset))
+
   pos <- vlapply(dat$data$elements, function(x)
     x$location == "internal" && x$stage != "time")
   shared <- intersect(used, names_if(pos))
-  shared_type <- vcapply(dat$data$elements[shared], "[[", "storage_type")
   shared_rank <- viapply(dat$data$elements[shared], "[[", "rank")
+  ## Always sort scalars first; this is required later
+  i <- order(shared_rank)
+  shared <- shared[i]
+  shared_rank <- shared_rank[i]
+  shared_type <- vcapply(dat$data$elements[shared], "[[", "storage_type")
 
   dat$gpu <- list(
     internal = list(
@@ -737,7 +754,7 @@ dust_gpu_unpack <- function(name, internal, type, dat, rewrite) {
     type_vector <- sprintf("dust::interleaved<%s::%s>", dat$config$base, type)
   } else {
     storage <- if (type == "int") "shared_int" else "shared_real"
-    type_vector <- sprintf("%s *", type)
+    type_vector <- sprintf("const %s *", type)
   }
 
   len <- vcapply(dat$data$elements[name], function(x)
