@@ -641,17 +641,11 @@ generate_dust_gpu <- function(eqs, dat, rewrite) {
     lapply(dat$equations[equations], function(x) x$depends$variables),
     FALSE, FALSE))
 
-  ## Hack to get special treatment of dimensions; if we use a
-  ## dimension of an array we should copy over all dimensions of that
-  ## array. This is needed for any loops and sums, but is not included
-  ## in the dependency tracking.
-  used_dims <- grep("^dim_", used, value = TRUE)
-  used_dims_sub <- lapply(paste0(used_dims, "_[0-9]+"), grep,
-                          names(dat$data$elements), value = TRUE)
-  ## Also need all offsets
-  used_offset <- grep("^offset_variable_", names(dat$data$elements),
-                      value = TRUE)
-  used <- union(used, c(unlist(used_dims_sub), used_offset))
+  ## Also need all offsets and dimensions; could take a subset but
+  ## it's error prone.
+  used_extra <- grep("^(dim_|offset_variable_)", names(dat$data$elements),
+                     value = TRUE)
+  used <- union(used, used_extra)
 
   pos <- vlapply(dat$data$elements, function(x)
     x$location == "internal" && x$stage != "time")
@@ -765,16 +759,20 @@ dust_gpu_unpack <- function(name, internal, type, dat, rewrite) {
   is_vector <- !is_scalar
 
   storage <- dat$meta$dust[[storage]]
-  prev <- c(storage, name[-length(name)])
-  offset <- c(sum(is_scalar), len[-length(name)])
 
   ret <- character(length(name))
   ret[is_scalar] <- sprintf(
     "%s %s = %s[%s];",
     type, name[is_scalar], storage, seq_len(sum(is_scalar)) - 1L)
-  ret[is_vector] <- sprintf(
-    "%s %s = %s + %s;",
-    type_vector, name[is_vector], prev[is_vector], offset)
+
+  if (any(is_vector)) {
+    n <- sum(is_vector) + 1L
+    offset <- c(sum(is_scalar), len[is_vector])[-n]
+    prev <- c(storage, name[is_vector])[-n]
+    ret[is_vector] <- sprintf(
+      "%s %s = %s + %s;",
+      type_vector, name[is_vector], prev, offset)
+  }
 
   ret
 }

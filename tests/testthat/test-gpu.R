@@ -90,6 +90,26 @@ test_that("Can run basic sums on device", {
 })
 
 
+test_that("Generate correct code with scalars and vectors in shared", {
+  gen <- odin_dust({
+    a <- user()
+    b <- user()
+    x[] <- user()
+    dim(x) <- user()
+    y[] <- user()
+    dim(y) <- user()
+    initial(z) <- 0
+    update(z) <- a + b + sum(x) + sum(y)
+  }, gpu = TRUE, verbose = FALSE)
+
+  p <- list(a = runif(1), b = runif(1), x = runif(10), y = runif(5))
+  mod1 <- gen$new(p, 0, 1, seed = 1L)
+  mod2 <- gen$new(p, 0, 1, seed = 1L)
+  expect_identical(mod1$run(5),
+                   mod2$run(5, device = TRUE))
+})
+
+
 ## This is more strictly a dust check
 test_that("gpu and gpu-free versions do not interfere in cache", {
   gen1 <- odin_dust_("examples/sir.R", verbose = FALSE)
