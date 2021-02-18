@@ -64,7 +64,9 @@ generate_dust_meta <- function(real_t) {
        rng_state = "rng_state",
        real_t = real_t %||% "double",
        internal_int = "internal_int",
-       internal_real  = "internal_real")
+       internal_real  = "internal_real",
+       shared_int = "shared_int",
+       shared_real = "shared_real")
 }
 
 
@@ -624,20 +626,38 @@ generate_dust_gpu <- function(eqs, dat, rewrite) {
 
   ## We want to store all time varying things that have rank of at
   ## least 1.
-  i <- vlapply(dat$data$elements, function(x)
-    x$location == "internal" && x$stage == "time" && x$rank > 0)
-  internal <- dat$data$elements[i]
+  internal <- names_if(vlapply(dat$data$elements, function(x)
+    x$location == "internal" && x$stage == "time" && x$rank > 0))
 
   ## It's actually really hard to get integers here, so for now just
   ## assert that there aren't any!
-  stopifnot(vcapply(internal, "[[", "storage_type") == "double")
+  internal_type <- vcapply(dat$data$elements[internal], "[[", "storage_type")
 
-  len <- vcapply(internal, function(x) rewrite(x$dimnames$length))
-  dat$gpu <- list(internal = list(real = len))
+  ## Try and find the things that we actually need in the shared
+  ## object. It won't be all and a bit of efficiency here will go
+  ## a long way.
+  equations <- dat$components$rhs$equations
+  used <- unique(unlist(
+    lapply(dat$equations[equations], function(x) x$depends$variables),
+    FALSE, FALSE))
+  pos <- vlapply(dat$data$elements, function(x)
+    x$location == "internal" && x$stage != "time")
+  shared <- intersect(used, names_if(pos))
+  shared_type <- vcapply(dat$data$elements[shared], "[[", "storage_type")
+  shared_rank <- viapply(dat$data$elements[shared], "[[", "rank")
+
+  dat$gpu <- list(
+    internal = list(
+      int = intersect(internal, names_if(internal_type == "int")),
+      real = intersect(internal, names_if(internal_type == "double"))),
+    shared = list(
+      int = intersect(shared, names_if(shared_type == "int")),
+      real = intersect(shared, names_if(shared_type == "double"))))
 
   c(generate_dust_gpu_declaration(dat, rewrite),
-    generate_dust_gpu_update(eqs, dat, rewrite),
-    generate_dust_gpu_size(dat, rewrite))
+    generate_dust_gpu_size(dat, rewrite),
+    generate_dust_gpu_copy(dat, rewrite),
+    generate_dust_gpu_update(eqs, dat, rewrite))
 }
 
 
@@ -658,10 +678,11 @@ generate_dust_gpu_update <- function(eqs, dat, rewrite) {
     "const dust::interleaved<%s::real_t>" = dat$meta$state,
     "dust::interleaved<int>" = dat$meta$dust$internal_int,
     "dust::interleaved<%s::real_t>" = dat$meta$dust$internal_real,
-    "dust::shared_ptr<%s>" = dat$meta$dust$shared,
+    "const int *" = dat$meta$dust$shared_int,
+    "const %s::real_t *" = dat$meta$dust$shared_real,
     "dust::rng_state_t<%s::real_t>&" = dat$meta$dust$rng_state,
     "dust::interleaved<%s::real_t>" = dat$meta$result)
-  names(args)[-1] <- sprintf(names(args[-1]), name)
+  names(args) <- sub("%s", name, names(args), fixed = TRUE)
 
   body <- character()
 
@@ -673,19 +694,25 @@ generate_dust_gpu_update <- function(eqs, dat, rewrite) {
 
   ## Then we need to unpack things; not just the variables but also
   ## our internal data.
-  unpack <- lapply(variables, dust_unpack_variable,
-                   dat, dat$meta$state, rewrite, TRUE)
-  unpack_internal_real <- dust_gpu_unpack_internal(
-    dat$gpu$internal$real, dat$meta$dust$internal_real, name, "real_t")
-  unpack_internal_int <- dust_gpu_unpack_internal(
-    dat$gpu$internal$int, dat$meta$dust$internal_int, name, "int")
+  unpack_variable <- dust_flatten_eqs(
+    lapply(variables, dust_unpack_variable, dat, dat$meta$state, rewrite, TRUE))
 
-  ## Regenerate the equations, with tweaks for the device update function
+  unpack_shared_int <- dust_gpu_unpack(
+    dat$gpu$shared$int, FALSE, "int", dat, rewrite)
+  unpack_shared_real <- dust_gpu_unpack(
+    dat$gpu$shared$real, FALSE, "real_t", dat, rewrite)
+  unpack_internal_int <- dust_gpu_unpack(
+    dat$gpu$internal$int, TRUE, "int", dat, rewrite)
+  unpack_internal_real <- dust_gpu_unpack(
+    dat$gpu$internal$real, TRUE, "real_t", dat, rewrite)
+
   rewrite_gpu <- function(x) rewrite(x, TRUE)
   eqs <- dust_flatten_eqs(generate_dust_equations(dat, rewrite_gpu, equations))
 
-  body <- c(typedef_real, dust_flatten_eqs(unpack),
-            unpack_internal_real, unpack_internal_int,
+  body <- c(typedef_real,
+            unpack_variable,
+            unpack_shared_int, unpack_shared_real,
+            unpack_internal_int, unpack_internal_real,
             eqs)
   c("template<>",
     cpp_function("void", sprintf("update_device<%s>", name), args, body))
@@ -693,39 +720,92 @@ generate_dust_gpu_update <- function(eqs, dat, rewrite) {
 
 
 generate_dust_gpu_size <- function(dat, rewrite) {
-  c(dust_gpu_len_internal(dat, TRUE),
-    dust_gpu_len_internal(dat, FALSE))
+  c(dust_gpu_size(dat, FALSE, "int", rewrite),
+    dust_gpu_size(dat, FALSE, "real_t", rewrite),
+    dust_gpu_size(dat, TRUE, "int", rewrite),
+    dust_gpu_size(dat, TRUE, "real_t", rewrite))
 }
 
 
-dust_gpu_unpack_internal <- function(len, internal, name, type) {
-  if (length(len) == 0L) {
+dust_gpu_unpack <- function(name, internal, type, dat, rewrite) {
+  if (length(name) == 0L) {
     return(NULL)
   }
-  fmt <- "dust::interleaved<%s::%s> %s = %s;"
-  nms <- names(len)
-  n <- length(len)
-  rhs <- c(internal,
-           sprintf("%s + %s", nms[-n], len[-n]))
-  sprintf(fmt, name, type, nms, rhs)
+
+  if (internal) {
+    storage <- if (type == "int") "internal_int" else "internal_real"
+    type_vector <- sprintf("dust::interleaved<%s::%s>", dat$config$base, type)
+  } else {
+    storage <- if (type == "int") "shared_int" else "shared_real"
+    type_vector <- sprintf("%s *", type)
+  }
+
+  len <- vcapply(dat$data$elements[name], function(x)
+    rewrite(x$dimnames$length, TRUE) %||% NA_character_,
+    USE.NAMES = FALSE)
+
+  is_scalar <- is.na(len)
+  is_vector <- !is_scalar
+
+  storage <- dat$meta$dust[[storage]]
+  prev <- c(storage, name[-length(name)])
+  offset <- c(sum(is_scalar), len[-length(name)])
+
+  ret <- character(length(name))
+  ret[is_scalar] <- sprintf(
+    "%s %s = %s[%s];",
+    type, name[is_scalar], storage, seq_len(sum(is_scalar)) - 1L)
+  ret[is_vector] <- sprintf(
+    "%s %s = %s + %s;",
+    type_vector, name[is_vector], prev[is_vector], offset)
+
+  ret
 }
 
 
-dust_gpu_len_internal <- function(dat, integer) {
-  if (integer) {
-    name_type <- "int"
+dust_gpu_size <- function(dat, internal, type, rewrite) {
+  if (internal) {
+    loc <- "internal"
   } else {
-    name_type <- "real"
+    loc <- "shared"
   }
-  len <- dat$gpu$internal[[name_type]]
-  name <- sprintf("dust::device_work_size_%s<%s>", name_type, dat$config$base)
-  if (length(len) == 0) {
-    len_total <- "0"
-  } else {
-    len_total <- paste(len, collapse = " + ")
-  }
+  type_short <- if (type == "int") "int" else "real"
+  contents <- dat$gpu[[loc]][[type_short]]
+
+  len <- vcapply(dat$data$elements[contents], function(x)
+    rewrite(x$dimnames$length) %||% NA_character_,
+    USE.NAMES = FALSE)
+  is_scalar <- is.na(len)
+  is_vector <- !is_scalar
+  len_total <- paste(c(rewrite(sum(is_scalar)), len[is_vector]),
+                     collapse = " + ")
+
+  name <- sprintf("dust::device_%s_size_%s<%s>",
+                  loc, type_short, dat$config$base)
+
   args <- set_names(dat$meta$dust$shared,
                     sprintf("dust::shared_ptr<%s>", dat$config$base))
   c("template <>",
     cpp_function("size_t", name, args, sprintf("return %s;", len_total)))
+}
+
+
+generate_dust_gpu_copy <- function(dat, rewrite) {
+  name <- sprintf("dust::device_shared_copy<%s>", dat$config$base)
+  args <- c(
+    "dust::shared_ptr<%s>" = dat$meta$dust$shared,
+    "int *" = dat$meta$dust$shared_int,
+    "%s::real_t *" = dat$meta$dust$shared_real)
+  names(args) <- sub("%s", dat$config$base, names(args), fixed = TRUE)
+
+  copy1 <- function(name, shared) {
+    sprintf("%s = dust::shared_copy(%s, %s);",
+            shared, shared, vcapply(name, rewrite, USE.NAMES = FALSE))
+  }
+  body <- c(
+    copy1(dat$gpu$shared$int, dat$meta$dust$shared_int),
+    copy1(dat$gpu$shared$real, dat$meta$dust$shared_real))
+
+  c("template <>",
+    cpp_function("void", name, args, body))
 }
