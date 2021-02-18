@@ -123,7 +123,7 @@ test_that("Generate sum code", {
     "odin_sum1<real_t>(internal.m.data(), 0, shared->dim_m)")
   expect_equal(
     generate_dust_sexp(list("sum", "m"), data, meta, NULL, TRUE),
-    "odin_sum1<real_t>(m, 0, shared->dim_m)")
+    "odin_sum1<real_t>(m, 0, dim_m)")
 
   expr <- list("sum", "m",
                1L, list("dim", "m", 1),
