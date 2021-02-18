@@ -23,22 +23,29 @@
 ##'   to \code{\link{dust}}; a mini package will be created at this
 ##'   path.
 ##'
+##' @param gpu **Experimental!** Generate support code for dust's GPU
+##'   support. This is currently incomplete and does not actually run
+##'   on a GPU, but once it does, this argument will help. Currently
+##'   not supported within package code.
+##'
 ##' @export
 ##' @importFrom odin odin
-odin_dust <- function(x, verbose = NULL, real_t = NULL, workdir = NULL) {
+odin_dust <- function(x, verbose = NULL, real_t = NULL, workdir = NULL,
+                      gpu = FALSE) {
   xx <- substitute(x)
   if (is.symbol(xx)) {
     xx <- force(x)
   } else if (is_call(xx, quote(c)) && all(vlapply(xx[-1], is.character))) {
     xx <- force(x)
   }
-  odin_dust_(xx, verbose, real_t, workdir)
+  odin_dust_(xx, verbose, real_t, workdir, gpu)
 }
 
 
 ##' @export
 ##' @rdname odin_dust
-odin_dust_ <- function(x, verbose = NULL, real_t = NULL, workdir = NULL) {
+odin_dust_ <- function(x, verbose = NULL, real_t = NULL, workdir = NULL,
+                       gpu = FALSE) {
   options <- odin_dust_options(verbose, workdir)
   ir <- odin::odin_parse_(x, options)
   if (is.character(x) && length(x) == 1L && file.exists(x)) {
@@ -46,7 +53,7 @@ odin_dust_ <- function(x, verbose = NULL, real_t = NULL, workdir = NULL) {
   } else {
     srcdir <- "."
   }
-  odin_dust_wrapper(ir, options, real_t, srcdir)
+  odin_dust_wrapper(ir, options, real_t, gpu, srcdir)
 }
 
 
@@ -59,10 +66,10 @@ odin_dust_options <- function(verbose, workdir) {
 }
 
 
-odin_dust_wrapper <- function(ir, options, real_t, srcdir) {
+odin_dust_wrapper <- function(ir, options, real_t, gpu, srcdir) {
   dat <- with_dir(
     srcdir,
-    generate_dust(ir, options, real_t))
+    generate_dust(ir, options, real_t, gpu))
   code <- odin_dust_code(dat)
 
   path <- tempfile(fileext = ".cpp")
@@ -83,6 +90,7 @@ odin_dust_code <- function(dat) {
     dat$include,
     dat$compare$support,
     dat$class,
+    dat$gpu,
     dust_flatten_eqs(lapply(dat$support, "[[", "definition")),
     readLines(odin_dust_file("support.hpp")),
     dat$create,

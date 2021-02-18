@@ -1,4 +1,4 @@
-generate_dust <- function(ir, options, real_t = NULL) {
+generate_dust <- function(ir, options, real_t = NULL, gpu = FALSE) {
   dat <- odin::odin_ir_deserialise(ir)
 
   if (!dat$features$discrete) {
@@ -16,8 +16,8 @@ generate_dust <- function(ir, options, real_t = NULL) {
 
   dat$meta$dust <- generate_dust_meta(real_t)
 
-  rewrite <- function(x) {
-    generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names)
+  rewrite <- function(x, gpu = FALSE) {
+    generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, gpu)
   }
 
   dat$compare <- dust_compare_info(dat, rewrite)
@@ -35,7 +35,7 @@ generate_dust <- function(ir, options, real_t = NULL) {
   used <- unique(unlist(lapply(dat$equations, function(x)
     x$depends$functions), FALSE, FALSE))
   support <- NULL
-  if ("odin_sum" %in% used) {
+  if (any(c("sum", "odin_sum") %in% used)) {
     ranks <- sort(unique(viapply(dat$data$elements, "[[", "rank")))
     ranks <- ranks[ranks > 0]
     if (length(ranks) > 0L) {
@@ -43,7 +43,13 @@ generate_dust <- function(ir, options, real_t = NULL) {
     }
   }
 
-  list(class = class, create = create, info = info, data = data,
+  if (gpu) {
+    code_gpu <- generate_dust_gpu(eqs, dat, rewrite)
+  } else {
+    code_gpu <- NULL
+  }
+
+  list(class = class, create = create, info = info, data = data, gpu = code_gpu,
        support = support, include = include, name = dat$config$base)
 }
 
@@ -56,7 +62,9 @@ generate_dust_meta <- function(real_t) {
        data = "data",
        shared = "shared",
        rng_state = "rng_state",
-       real_t = real_t %||% "double")
+       real_t = real_t %||% "double",
+       internal_int = "internal_int",
+       internal_real  = "internal_real")
 }
 
 
@@ -187,10 +195,7 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
             "const real_t *" = dat$meta$state,
             "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state,
             "real_t *" = dat$meta$result)
-  c("#ifdef __NVCC__",
-    "__device__",
-    "#endif",
-    cpp_function("void", "update", args, body))
+  cpp_function("void", "update", args, body)
 }
 
 
@@ -355,12 +360,14 @@ generate_dust_core_attributes <- function(dat) {
 }
 
 
-dust_unpack_variable <- function(name, dat, state, rewrite) {
+dust_unpack_variable <- function(name, dat, state, rewrite, gpu = FALSE) {
   x <- dat$data$variable$contents[[name]]
   data_info <- dat$data$elements[[name]]
   rhs <- dust_extract_variable(x, dat$data$elements, state, rewrite)
   if (data_info$rank == 0L) {
     fmt <- "const %s %s = %s;"
+  } else if (gpu) {
+    fmt <- "const dust::interleaved<%s> %s = %s;"
   } else {
     fmt <- "const %s * %s = %s;"
   }
@@ -606,4 +613,119 @@ transform_compare_odin <- function(text, dat, rewrite) {
   }
 
   list(result = text, errors = names(err))
+}
+
+
+generate_dust_gpu <- function(eqs, dat, rewrite) {
+  ## We need to do a little extra work here to collect up our
+  ## information about gpu types. This will likely move elsewhere,
+  ## because typically we don't do much of this sort of interrogation
+  ## after the parse phase.
+
+  ## We want to store all time varying things that have rank of at
+  ## least 1.
+  i <- vlapply(dat$data$elements, function(x)
+    x$location == "internal" && x$stage == "time" && x$rank > 0)
+  internal <- dat$data$elements[i]
+
+  ## It's actually really hard to get integers here, so for now just
+  ## assert that there aren't any!
+  stopifnot(vcapply(internal, "[[", "storage_type") == "double")
+
+  len <- vcapply(internal, function(x) rewrite(x$dimnames$length))
+  dat$gpu <- list(internal = list(real = len))
+
+  c(generate_dust_gpu_declaration(dat, rewrite),
+    generate_dust_gpu_update(eqs, dat, rewrite),
+    generate_dust_gpu_size(dat, rewrite))
+}
+
+
+generate_dust_gpu_declaration <- function(dat, rewrite) {
+  c("namespace dust {",
+    "template <>",
+    sprintf("struct has_gpu_support<%s> : std::true_type {};",
+            dat$config$base),
+    "}")
+}
+
+
+generate_dust_gpu_update <- function(eqs, dat, rewrite) {
+  name <- dat$config$base
+
+  args <- c(
+    "size_t" = dat$meta$time,
+    "const dust::interleaved<%s::real_t>" = dat$meta$state,
+    "dust::interleaved<int>" = dat$meta$dust$internal_int,
+    "dust::interleaved<%s::real_t>" = dat$meta$dust$internal_real,
+    "dust::shared_ptr<%s>" = dat$meta$dust$shared,
+    "dust::rng_state_t<%s::real_t>&" = dat$meta$dust$rng_state,
+    "dust::interleaved<%s::real_t>" = dat$meta$result)
+  names(args)[-1] <- sprintf(names(args[-1]), name)
+
+  body <- character()
+
+  variables <- dat$components$rhs$variables
+  equations <- dat$components$rhs$equations
+
+  ## We'll use this shorthand everywhere
+  typedef_real <- sprintf("typedef %s::real_t real_t;", name)
+
+  ## Then we need to unpack things; not just the variables but also
+  ## our internal data.
+  unpack <- lapply(variables, dust_unpack_variable,
+                   dat, dat$meta$state, rewrite, TRUE)
+  unpack_internal_real <- dust_gpu_unpack_internal(
+    dat$gpu$internal$real, dat$meta$dust$internal_real, name, "real_t")
+  unpack_internal_int <- dust_gpu_unpack_internal(
+    dat$gpu$internal$int, dat$meta$dust$internal_int, name, "int")
+
+  ## Regenerate the equations, with tweaks for the device update function
+  rewrite_gpu <- function(x) rewrite(x, TRUE)
+  eqs <- dust_flatten_eqs(generate_dust_equations(dat, rewrite_gpu, equations))
+
+  body <- c(typedef_real, dust_flatten_eqs(unpack),
+            unpack_internal_real, unpack_internal_int,
+            eqs)
+  c("template<>",
+    cpp_function("void", sprintf("update_device<%s>", name), args, body))
+}
+
+
+generate_dust_gpu_size <- function(dat, rewrite) {
+  c(dust_gpu_len_internal(dat, TRUE),
+    dust_gpu_len_internal(dat, FALSE))
+}
+
+
+dust_gpu_unpack_internal <- function(len, internal, name, type) {
+  if (length(len) == 0L) {
+    return(NULL)
+  }
+  fmt <- "dust::interleaved<%s::%s> %s = %s;"
+  nms <- names(len)
+  n <- length(len)
+  rhs <- c(internal,
+           sprintf("%s + %s", nms[-n], len[-n]))
+  sprintf(fmt, name, type, nms, rhs)
+}
+
+
+dust_gpu_len_internal <- function(dat, integer) {
+  if (integer) {
+    name_type <- "int"
+  } else {
+    name_type <- "real"
+  }
+  len <- dat$gpu$internal[[name_type]]
+  name <- sprintf("dust::device_work_size_%s<%s>", name_type, dat$config$base)
+  if (length(len) == 0) {
+    len_total <- "0"
+  } else {
+    len_total <- paste(len, collapse = " + ")
+  }
+  args <- set_names(dat$meta$dust$shared,
+                    sprintf("dust::shared_ptr<%s>", dat$config$base))
+  c("template <>",
+    cpp_function("size_t", name, args, sprintf("return %s;", len_total)))
 }

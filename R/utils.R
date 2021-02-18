@@ -41,15 +41,15 @@ squote <- function(...) {
 }
 
 
-dust_array_access <- function(target, index, data, meta, supported) {
+dust_array_access <- function(target, index, data, meta, supported, gpu) {
   mult <- data$elements[[target]]$dimnames$mult
 
   f <- function(i) {
-    index_i <- dust_minus_1(index[[i]], i > 1, data, meta, supported)
+    index_i <- dust_minus_1(index[[i]], i > 1, data, meta, supported, gpu)
     if (i == 1) {
       index_i
     } else {
-      mult_i <- generate_dust_sexp(mult[[i]], data, meta, supported)
+      mult_i <- generate_dust_sexp(mult[[i]], data, meta, supported, gpu)
       sprintf("%s * %s", mult_i, index_i)
     }
   }
@@ -58,11 +58,11 @@ dust_array_access <- function(target, index, data, meta, supported) {
 }
 
 
-dust_minus_1 <- function(x, protect, data, meta, supported) {
+dust_minus_1 <- function(x, protect, data, meta, supported, gpu) {
   if (is.numeric(x)) {
-    generate_dust_sexp(x - 1L, data, meta, supported)
+    generate_dust_sexp(x - 1L, data, meta, supported, gpu)
   } else {
-    x_expr <- generate_dust_sexp(x, data, meta, supported)
+    x_expr <- generate_dust_sexp(x, data, meta, supported, gpu)
     sprintf(if (protect) "(%s - 1)" else "%s - 1", x_expr)
   }
 }
@@ -103,15 +103,15 @@ generate_dust_support_sum <- function(rank) {
   if (rank == 1) {
     list(name = "odin_sum1",
          declaration = c(
-           "template <typename T>",
-           "T odin_sum1(const T * x, size_t from, size_t to);"),
+           "template <typename real_t, typename container>",
+           "real_t odin_sum1(const container x, size_t from, size_t to);"),
          definition = NULL)
   } else {
     ## There are a series of substitutions that need to be made here,
     ## all of which are literal
-    tr <- c("double*" = "const real_t *",
+    tr <- c("double*" = "const container",
             "double" = "real_t")
-    head <- "template <typename real_t>"
+    head <- "template <typename real_t, typename container>"
     ret <- lapply(odin:::generate_c_support_sum(rank), replace, tr)
     ret$declaration <- c(head, ret$declaration)
     ret$definition <- c(head, ret$definition)
@@ -157,4 +157,10 @@ with_dir <- function(path, code) {
   owd <- setwd(path)
   on.exit(setwd(owd))
   force(code)
+}
+
+
+set_names <- function(x, nms) {
+  names(x) <- nms
+  x
 }

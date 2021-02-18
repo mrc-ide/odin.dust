@@ -119,24 +119,27 @@ test_that("Generate sum code", {
                                dim_m_1 = scalar_int("dim_m_1"),
                                dim_m_2 = scalar_int("dim_m_2")))
   expect_equal(
-    generate_dust_sexp(list("sum", "m"), data, meta),
-    "odin_sum1(internal.m.data(), 0, shared->dim_m)")
+    generate_dust_sexp(list("sum", "m"), data, meta, NULL, FALSE),
+    "odin_sum1<real_t>(internal.m.data(), 0, shared->dim_m)")
+  expect_equal(
+    generate_dust_sexp(list("sum", "m"), data, meta, NULL, TRUE),
+    "odin_sum1<real_t>(m, 0, shared->dim_m)")
 
   expr <- list("sum", "m",
                1L, list("dim", "m", 1),
                2L, list("dim", "m", 2))
   expect_equal(
-    generate_dust_sexp(expr, data, meta),
-    paste("odin_sum2(internal.m.data(), 0, shared->dim_m_1,",
+    generate_dust_sexp(expr, data, meta, NULL, FALSE),
+    paste("odin_sum2<real_t>(internal.m.data(), 0, shared->dim_m_1,",
           "1, shared->dim_m_2, shared->dim_m_1)"))
 
   data$elements$m$location <- "variable"
   expect_equal(
-    generate_dust_sexp(list("sum", "m"), data, meta),
-    "odin_sum1(m, 0, shared->dim_m)")
+    generate_dust_sexp(list("sum", "m"), data, meta, NULL, FALSE),
+    "odin_sum1<real_t>(m, 0, shared->dim_m)")
   expect_equal(
-    generate_dust_sexp(expr, data, meta),
-    paste("odin_sum2(m, 0, shared->dim_m_1,",
+    generate_dust_sexp(expr, data, meta, NULL, FALSE),
+    paste("odin_sum2<real_t>(m, 0, shared->dim_m_1,",
           "1, shared->dim_m_2, shared->dim_m_1)"))
 })
 

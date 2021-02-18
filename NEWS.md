@@ -1,3 +1,7 @@
+# odin.dust 0.1.15
+
+* Start implementing dust gpu support by generating interleaved update function, optionally (#37)
+
 # odin.dust 0.1.11
 
 * Support for dust `compare` functions (#51)
