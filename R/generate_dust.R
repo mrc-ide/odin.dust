@@ -699,15 +699,13 @@ generate_dust_gpu_update <- function(eqs, dat, rewrite) {
 
   variables <- dat$components$rhs$variables
   equations <- dat$components$rhs$equations
+  rewrite_gpu <- function(x) rewrite(x, TRUE)
 
   ## We'll use this shorthand everywhere
   typedef_real <- sprintf("typedef %s::real_t real_t;", name)
 
   ## Then we need to unpack things; not just the variables but also
   ## our internal data.
-  unpack_variable <- dust_flatten_eqs(
-    lapply(variables, dust_unpack_variable, dat, dat$meta$state, rewrite, TRUE))
-
   unpack_shared_int <- dust_gpu_unpack(
     dat$gpu$shared$int, FALSE, "int", dat, rewrite)
   unpack_shared_real <- dust_gpu_unpack(
@@ -716,15 +714,18 @@ generate_dust_gpu_update <- function(eqs, dat, rewrite) {
     dat$gpu$internal$int, TRUE, "int", dat, rewrite)
   unpack_internal_real <- dust_gpu_unpack(
     dat$gpu$internal$real, TRUE, "real_t", dat, rewrite)
+  unpack_variable <- dust_flatten_eqs(
+    lapply(variables, dust_unpack_variable, dat, dat$meta$state, rewrite_gpu,
+           TRUE))
 
-  rewrite_gpu <- function(x) rewrite(x, TRUE)
   eqs <- dust_flatten_eqs(generate_dust_equations(dat, rewrite_gpu, equations))
 
   body <- c(typedef_real,
-            unpack_variable,
             unpack_shared_int, unpack_shared_real,
             unpack_internal_int, unpack_internal_real,
+            unpack_variable,
             eqs)
+
   c("template<>",
     cpp_function("void", sprintf("update_device<%s>", name), args, body))
 }

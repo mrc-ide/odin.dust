@@ -110,6 +110,27 @@ test_that("Generate correct code with scalars and vectors in shared", {
 })
 
 
+test_that("Use offsets correctly", {
+  gen <- odin_dust({
+    n <- 10
+    initial(x[]) <- 0
+    initial(y[]) <- 0
+    initial(z[]) <- 0
+    update(x[]) <- rnorm(x[i], 1)
+    update(y[]) <- rnorm(y[i], 2)
+    update(z[]) <- rnorm(z[i], 3)
+    dim(x) <- n
+    dim(y) <- n
+    dim(z) <- n
+  }, gpu = TRUE, verbose = FALSE)
+
+  mod1 <- gen$new(list(), 0, 13, seed = 1L)
+  mod2 <- gen$new(list(), 0, 13, seed = 1L)
+  expect_identical(mod1$run(5),
+                   mod2$run(5, device = TRUE))
+})
+
+
 ## This is more strictly a dust check
 test_that("gpu and gpu-free versions do not interfere in cache", {
   gen1 <- odin_dust_("examples/sir.R", verbose = FALSE)
