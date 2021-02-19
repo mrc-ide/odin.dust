@@ -164,3 +164,8 @@ set_names <- function(x, nms) {
   names(x) <- nms
   x
 }
+
+
+names_if <- function(x) {
+  names(x)[x]
+}

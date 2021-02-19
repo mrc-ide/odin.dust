@@ -66,13 +66,9 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
     ret
   } else if (is.character(x)) {
     el <- data$elements[[x]]
-    if (!is.null(el$location) && el$location == "internal") {
+    if (!is.null(el$location) && el$location == "internal" && !gpu) {
       if (el$stage == "time") {
-        if (gpu) {
-          x
-        } else {
-          sprintf("%s.%s", meta$internal, x)
-        }
+        sprintf("%s.%s", meta$internal, x)
       } else {
         sprintf("%s->%s", meta$dust$shared, x)
       }
