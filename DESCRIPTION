@@ -36,5 +36,5 @@ Suggests:
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 Remotes:
-    mrc-ide/dust@i116-shared-gpu,
+    mrc-ide/dust,
     mrc-ide/odin
