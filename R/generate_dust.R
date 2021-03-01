@@ -197,7 +197,8 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
             "const real_t *" = dat$meta$state,
             "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state,
             "real_t *" = dat$meta$result)
-  cpp_function("void", "update", args, body)
+
+  cpp_function("HOST void", "update", args, body)
 }
 
 
@@ -727,7 +728,8 @@ generate_dust_gpu_update <- function(eqs, dat, rewrite) {
             eqs)
 
   c("template<>",
-    cpp_function("void", sprintf("update_device<%s>", name), args, body))
+    cpp_function("HOSTDEVICE void", sprintf("update_device<%s>", name),
+                 args, body))
 }
 
 

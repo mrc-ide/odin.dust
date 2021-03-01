@@ -18,3 +18,10 @@ FUNCTIONS_STDLIB <- c( # nolint
 FUNCTIONS_STOCHASTIC <- c( # nolint
   "runif", "rnorm",
   "rpois", "rbinom")
+
+
+gpu_mode <- function(generate, compile) {
+  list(
+    generate = generate || compile,
+    compile = compile)
+}
