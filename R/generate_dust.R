@@ -728,7 +728,7 @@ generate_dust_gpu_update <- function(eqs, dat, rewrite) {
             eqs)
 
   c("template<>",
-    cpp_function("HOSTDEVICE void", sprintf("update_device<%s>", name),
+    cpp_function("DEVICE void", sprintf("update_device<%s>", name),
                  args, body))
 }
 
