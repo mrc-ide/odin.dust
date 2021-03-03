@@ -211,13 +211,3 @@ inline cpp11::writable::integers integer_sequence(size_t from, size_t len) {
   }
   return ret;
 }
-
-// As done in odin
-template <typename real_t>
-HOSTDEVICE real_t fmodr(real_t x, real_t y) {
-  real_t tmp = fmod(x, y);
-  if (tmp * y < 0) {
-    tmp += y;
-  }
-  return tmp;
-}

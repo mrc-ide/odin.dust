@@ -43,6 +43,13 @@ generate_dust <- function(ir, options, real_t = NULL, gpu = FALSE) {
     }
   }
 
+  if (any("%%" %in% used)) {
+    lib <- list(name = "library",
+                declaration = readLines(odin_dust_file("library.hpp")),
+                definition = NULL)
+    support <- c(support, list(lib))
+  }
+
   if (gpu) {
     code_gpu <- generate_dust_gpu(eqs, dat, rewrite)
   } else {
