@@ -65,14 +65,24 @@ test_that("2-arg round is not supported", {
 
 test_that("fold min", {
   expect_equal(
-    generate_dust_sexp(list("min", "a"), NULL, NULL, NULL),
+    generate_dust_sexp(list("min", "a"), NULL, NULL, NULL, FALSE),
     "a")
   expect_equal(
-    generate_dust_sexp(list("min", "a", "b"), NULL, NULL, NULL),
+    generate_dust_sexp(list("min", "a", "b"), NULL, NULL, NULL, FALSE),
     "std::min(a, b)")
   expect_equal(
-    generate_dust_sexp(list("min", "a", "b", "c"), NULL, NULL, NULL),
+    generate_dust_sexp(list("min", "a", "b", "c"), NULL, NULL, NULL, FALSE),
     "std::min(a, std::min(b, c))")
+
+  expect_equal(
+    generate_dust_sexp(list("min", "a"), NULL, NULL, NULL, TRUE),
+    "a")
+  expect_equal(
+    generate_dust_sexp(list("min", "a", "b"), NULL, NULL, NULL, TRUE),
+    "odin_min(a, b)")
+  expect_equal(
+    generate_dust_sexp(list("min", "a", "b", "c"), NULL, NULL, NULL, TRUE),
+    "odin_min(a, odin_min(b, c))")
 })
 
 
@@ -159,17 +169,5 @@ test_that("renames", {
     "static_cast<int>(x)")
   expect_equal(
     generate_dust_sexp(list("%%", "x", "y"), NULL, NULL, NULL),
-    "fmod<real_t>(x, y)")
-  expect_equal(
-    generate_dust_sexp(list("min", "x", "y"), NULL, NULL, NULL, FALSE),
-    "std::min(x, y)")
-  expect_equal(
-    generate_dust_sexp(list("min", "x", "y", "z"), NULL, NULL, NULL, FALSE),
-    "std::min(x, std::min(y, z))")
-  expect_equal(
-    generate_dust_sexp(list("min", "x", "y"), NULL, NULL, NULL, TRUE),
-    "odin_min(x, y)")
-  expect_equal(
-    generate_dust_sexp(list("min", "x", "y", "z"), NULL, NULL, NULL, TRUE),
-    "odin_min(x, std::min(y, z))")
+    "fmodr<real_t>(x, y)")
 })
