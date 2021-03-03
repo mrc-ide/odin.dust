@@ -159,5 +159,17 @@ test_that("renames", {
     "static_cast<int>(x)")
   expect_equal(
     generate_dust_sexp(list("%%", "x", "y"), NULL, NULL, NULL),
-    "std::fmod(x, y)")
+    "fmod<real_t>(x, y)")
+  expect_equal(
+    generate_dust_sexp(list("min", "x", "y"), NULL, NULL, NULL, FALSE),
+    "std::min(x, y)")
+  expect_equal(
+    generate_dust_sexp(list("min", "x", "y", "z"), NULL, NULL, NULL, FALSE),
+    "std::min(x, std::min(y, z))")
+  expect_equal(
+    generate_dust_sexp(list("min", "x", "y"), NULL, NULL, NULL, TRUE),
+    "odin_min(x, y)")
+  expect_equal(
+    generate_dust_sexp(list("min", "x", "y", "z"), NULL, NULL, NULL, TRUE),
+    "odin_min(x, std::min(y, z))")
 })
