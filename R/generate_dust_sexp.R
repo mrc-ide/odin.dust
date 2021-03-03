@@ -38,7 +38,8 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
       ret <- sprintf("(std::log(%s) / std::log(%s))",
                      values[[1L]], values[[2L]])
     } else if (fn == "min" || fn == "max") {
-      ret <- dust_fold_call(paste0("std::", fn), values)
+      fn <- paste0(if (gpu) "odin_" else "std::", fn)
+      ret <- dust_fold_call(fn, values)
     } else if (fn == "sum" || fn == "odin_sum") {
       ret <- generate_dust_sexp_sum(args, data, meta, supported, gpu)
     } else if (any(FUNCTIONS_STOCHASTIC == fn)) {
