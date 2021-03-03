@@ -7,6 +7,7 @@ user_wrapper <- function() {
     env <- new.env(parent = topenv())
     path <- tempfile(fileext = ".cpp")
     code <- c("#include <cpp11/as.hpp>",
+              "#define HOSTDEVICE",
               readLines(odin_dust_file("support.hpp")),
               readLines("wrapper-user.cpp"))
     writeLines(code, path)
