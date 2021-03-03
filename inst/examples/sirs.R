@@ -1,4 +1,3 @@
-### nolint start
 ## Definition of the time-step and output as "time"
 dt <- user(1)
 initial(time) <- 0
@@ -52,4 +51,3 @@ dim(p_SI) <- N_age
 dim(m) <- c(N_age, N_age)
 dim(s_ij) <- c(N_age, N_age)
 dim(lambda) <- N_age
-### nolint end
