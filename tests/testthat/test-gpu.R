@@ -164,3 +164,24 @@ test_that("ask for gpu compilation if wanted", {
   expect_true(mockery::mock_args(mock_dust)[[1]]$gpu)
   expect_false(mockery::mock_args(mock_dust)[[2]]$gpu)
 })
+
+
+test_that("control gpu compilation and use", {
+  cfg_false <- structure(list(has_cuda = FALSE), class = "cuda_options")
+  cfg_true <- structure(list(has_cuda = TRUE), class = "cuda_options")
+  expect_equal(
+    gpu_mode(FALSE, FALSE),
+    list(generate = FALSE, compile = FALSE))
+  expect_equal(
+    gpu_mode(TRUE, FALSE),
+    list(generate = TRUE, compile = FALSE))
+  expect_equal(
+    gpu_mode(FALSE, cfg_false),
+    list(generate = FALSE, compile = cfg_false))
+  expect_equal(
+    gpu_mode(FALSE, TRUE),
+    list(generate = TRUE, compile = TRUE))
+  expect_equal(
+    gpu_mode(FALSE, cfg_true),
+    list(generate = TRUE, compile = cfg_true))
+})

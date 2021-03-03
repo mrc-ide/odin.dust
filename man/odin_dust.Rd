@@ -42,7 +42,10 @@ path.}
 
 \item{gpu}{**Experimental!** Generate support for running models
 on a GPU. This implies `gpu_generate` but *does* require a gpu
-and nvcc toolchain. Currently not supported within package code.}
+and nvcc toolchain. Currently not supported within package code.
+This argument will be passed through to [dust::dust()] and so to
+enable compilation for a gpu, pass either `TRUE` or the results
+of [dust::dust_cuda_options])}
 
 \item{gpu_generate}{**Experimental** Generate gpu support
 code. This does not require a gpu or nvcc toolchain, but creates

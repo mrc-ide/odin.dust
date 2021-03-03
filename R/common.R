@@ -21,7 +21,9 @@ FUNCTIONS_STOCHASTIC <- c( # nolint
 
 
 gpu_mode <- function(generate, compile) {
+  use_cuda <-
+    isTRUE(compile) || (inherits(compile, "cuda_options") && compile$has_cuda)
   list(
-    generate = generate || compile,
+    generate = generate || use_cuda,
     compile = compile)
 }
