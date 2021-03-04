@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -140,9 +140,23 @@
     <p>Compile an odin model to work with dust.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>odin_dust</span><span class='op'>(</span><span class='va'>x</span>, verbose <span class='op'>=</span> <span class='cn'>NULL</span>, real_t <span class='op'>=</span> <span class='cn'>NULL</span>, workdir <span class='op'>=</span> <span class='cn'>NULL</span>, gpu <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
+    <pre class="usage"><span class='fu'>odin_dust</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  verbose <span class='op'>=</span> <span class='cn'>NULL</span>,
+  real_t <span class='op'>=</span> <span class='cn'>NULL</span>,
+  workdir <span class='op'>=</span> <span class='cn'>NULL</span>,
+  gpu <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  gpu_generate <span class='op'>=</span> <span class='cn'>FALSE</span>
+<span class='op'>)</span>
 
-<span class='fu'>odin_dust_</span><span class='op'>(</span><span class='va'>x</span>, verbose <span class='op'>=</span> <span class='cn'>NULL</span>, real_t <span class='op'>=</span> <span class='cn'>NULL</span>, workdir <span class='op'>=</span> <span class='cn'>NULL</span>, gpu <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre>
+<span class='fu'>odin_dust_</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  verbose <span class='op'>=</span> <span class='cn'>NULL</span>,
+  real_t <span class='op'>=</span> <span class='cn'>NULL</span>,
+  workdir <span class='op'>=</span> <span class='cn'>NULL</span>,
+  gpu <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  gpu_generate <span class='op'>=</span> <span class='cn'>FALSE</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -173,10 +187,22 @@ path.</p></td>
     </tr>
     <tr>
       <th>gpu</th>
-      <td><p>**Experimental!** Generate support code for dust's GPU
-support. This is currently incomplete and does not actually run
-on a GPU, but once it does, this argument will help. Currently
-not supported within package code.</p></td>
+      <td><p>**Experimental!** Generate support for running models
+on a GPU. This implies `gpu_generate` but *does* require a gpu
+and nvcc toolchain. Currently not supported within package code.
+This argument will be passed through to [dust::dust()] and so to
+enable compilation for a gpu, pass either `TRUE` or the results
+of [dust::dust_cuda_options])</p></td>
+    </tr>
+    <tr>
+      <th>gpu_generate</th>
+      <td><p>**Experimental** Generate gpu support
+code. This does not require a gpu or nvcc toolchain, but creates
+code that could be compiled for a gpu. This is primarily
+intended for testing and development as the generated code will
+be slower than the normal cpu version, and the compilation time
+will be considerably slower. Currently not supported within
+package code.</p></td>
     </tr>
     </table>
 
