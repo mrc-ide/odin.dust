@@ -563,7 +563,8 @@ generate_dust_core_data <- function(dat) {
                       unname(dat$compare$data),
                       names(dat$compare$data),
                       rep(c(",", ""), c(length(dat$compare$data) - 1, 1)))
-  body <- c(sprintf("return %s::data_t{", dat$config$base),
+  body <- c(sprintf("typedef %s::real_t real_t;", dat$config$base),
+            sprintf("return %s::data_t{", dat$config$base),
             contents,
             "  };")
   c("template <>",
