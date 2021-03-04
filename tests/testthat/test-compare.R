@@ -5,7 +5,7 @@ read_compare_dust("examples/compare_simple.cpp")
 test_that("Can parse compare metadata", {
   res <- read_compare_dust("examples/compare_simple.cpp")
   expect_equal(res$function_name, "compare")
-  expect_equal(res$data, c(observed = "double", another = "int"))
+  expect_equal(res$data, c(observed = "real_t", another = "int"))
 })
 
 
@@ -41,32 +41,32 @@ test_that("Can error if correct metadata not found", {
     "Expected at least one decoration '[[odin.dust::compare_data(...)]]'",
     fixed = TRUE)
 
-  writeLines(c("// [[odin.dust::compare_data(double)]]", fn), path)
+  writeLines(c("// [[odin.dust::compare_data(real_t)]]", fn), path)
   expect_error(
     read_compare_dust(path),
     "All [[odin.dust::compare_data()]] arguments must be named",
     fixed = TRUE)
-  writeLines(c("// [[odin.dust::compare_data(a = double, int)]]", fn), path)
+  writeLines(c("// [[odin.dust::compare_data(a = real_t, int)]]", fn), path)
   expect_error(
     read_compare_dust(path),
     "All [[odin.dust::compare_data()]] arguments must be named",
     fixed = TRUE)
 
-  writeLines(c("// [[odin.dust::compare_data(a = double, a = int)]]", fn),
+  writeLines(c("// [[odin.dust::compare_data(a = real_t, a = int)]]", fn),
              path)
   expect_error(
     read_compare_dust(path),
     "Duplicated arguments in [[odin.dust::compare_data()]]: 'a'",
     fixed = TRUE)
 
-  writeLines(c("// [[odin.dust::compare_data(a = double, b = 2)]]", fn),
+  writeLines(c("// [[odin.dust::compare_data(a = real_t, b = 2)]]", fn),
              path)
   expect_error(
     read_compare_dust(path),
     "All arguments to [[odin.dust::compare_data()]] must be symbols: 'b'",
     fixed = TRUE)
 
-  writeLines(c(fn[[1]], "// [[odin.dust::compare_data(a = double)]]", fn[[2]]),
+  writeLines(c(fn[[1]], "// [[odin.dust::compare_data(a = real_t)]]", fn[[2]]),
              path)
   expect_error(
     read_compare_dust(path),
