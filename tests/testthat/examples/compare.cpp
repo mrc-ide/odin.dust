@@ -3,7 +3,7 @@ real_t ldpois(real_t x, real_t lambda) {
   return x * std::log(lambda) - lambda - std::lgamma(x + 1);
 }
 
-// [[odin.dust::compare_data(incidence = double)]]
+// [[odin.dust::compare_data(incidence = real_t)]]
 // [[odin.dust::compare_function]]
 template <typename T>
 typename T::real_t compare(const typename T::real_t * state,

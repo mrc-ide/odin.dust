@@ -1,4 +1,4 @@
-// [[odin.dust::compare_data(observed = double)]]
+// [[odin.dust::compare_data(observed = real_t)]]
 // [[odin.dust::compare_data(another = int)]]
 // [[odin.dust::compare_function]]
 template <typename T>
