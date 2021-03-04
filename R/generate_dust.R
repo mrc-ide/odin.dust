@@ -43,6 +43,13 @@ generate_dust <- function(ir, options, real_t = NULL, gpu = FALSE) {
     }
   }
 
+  if (any(c("%%", "min", "max") %in% used)) {
+    lib <- list(name = "library",
+                declaration = readLines(odin_dust_file("library.hpp")),
+                definition = NULL)
+    support <- c(support, list(lib))
+  }
+
   if (gpu) {
     code_gpu <- generate_dust_gpu(eqs, dat, rewrite)
   } else {
@@ -197,7 +204,8 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
             "const real_t *" = dat$meta$state,
             "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state,
             "real_t *" = dat$meta$result)
-  cpp_function("void", "update", args, body)
+
+  cpp_function("HOST void", "update", args, body)
 }
 
 
@@ -727,7 +735,8 @@ generate_dust_gpu_update <- function(eqs, dat, rewrite) {
             eqs)
 
   c("template<>",
-    cpp_function("void", sprintf("update_device<%s>", name), args, body))
+    cpp_function("DEVICE void", sprintf("update_device<%s>", name),
+                 args, body))
 }
 
 

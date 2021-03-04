@@ -3,7 +3,7 @@ FUNCTIONS_RENAME <- c( # nolint
   lgamma = "std::lgamma",
   ceiling = "std::ceil",
   as.integer = "static_cast<int>",
-  "%%" = "std::fmod")
+  "%%" = "fmodr<real_t>")
 
 ## Basically odin's FUNCTIONS_MATH:
 FUNCTIONS_STDLIB <- c( # nolint
@@ -18,3 +18,12 @@ FUNCTIONS_STDLIB <- c( # nolint
 FUNCTIONS_STOCHASTIC <- c( # nolint
   "runif", "rnorm",
   "rpois", "rbinom")
+
+
+gpu_mode <- function(generate, compile) {
+  use_cuda <-
+    isTRUE(compile) || (inherits(compile, "cuda_options") && compile$has_cuda)
+  list(
+    generate = generate || use_cuda,
+    compile = compile)
+}

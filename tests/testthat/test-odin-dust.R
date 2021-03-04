@@ -302,7 +302,7 @@ test_that("NSE interface can accept a symbol and resolve to value", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(path, NULL, NULL, NULL, FALSE))
+    list(path, NULL, NULL, NULL, FALSE, FALSE))
 })
 
 
@@ -315,7 +315,7 @@ test_that("NSE interface can accept a character vector", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(c("a", "b", "c"), NULL, NULL, NULL, FALSE))
+    list(c("a", "b", "c"), NULL, NULL, NULL, FALSE, FALSE))
 })
 
 

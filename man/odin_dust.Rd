@@ -5,9 +5,23 @@
 \alias{odin_dust_}
 \title{Create a dust odin model}
 \usage{
-odin_dust(x, verbose = NULL, real_t = NULL, workdir = NULL, gpu = FALSE)
+odin_dust(
+  x,
+  verbose = NULL,
+  real_t = NULL,
+  workdir = NULL,
+  gpu = FALSE,
+  gpu_generate = FALSE
+)
 
-odin_dust_(x, verbose = NULL, real_t = NULL, workdir = NULL, gpu = FALSE)
+odin_dust_(
+  x,
+  verbose = NULL,
+  real_t = NULL,
+  workdir = NULL,
+  gpu = FALSE,
+  gpu_generate = FALSE
+)
 }
 \arguments{
 \item{x}{Either the name of a file to read, a text string (if
@@ -26,10 +40,20 @@ default we use a new path within the temporary directory. Passed
 to \code{\link{dust}}; a mini package will be created at this
 path.}
 
-\item{gpu}{**Experimental!** Generate support code for dust's GPU
-support. This is currently incomplete and does not actually run
-on a GPU, but once it does, this argument will help. Currently
-not supported within package code.}
+\item{gpu}{**Experimental!** Generate support for running models
+on a GPU. This implies `gpu_generate` but *does* require a gpu
+and nvcc toolchain. Currently not supported within package code.
+This argument will be passed through to [dust::dust()] and so to
+enable compilation for a gpu, pass either `TRUE` or the results
+of [dust::dust_cuda_options])}
+
+\item{gpu_generate}{**Experimental** Generate gpu support
+code. This does not require a gpu or nvcc toolchain, but creates
+code that could be compiled for a gpu. This is primarily
+intended for testing and development as the generated code will
+be slower than the normal cpu version, and the compilation time
+will be considerably slower. Currently not supported within
+package code.}
 }
 \description{
 Compile an odin model to work with dust.

@@ -23,29 +23,39 @@
 ##'   to \code{\link{dust}}; a mini package will be created at this
 ##'   path.
 ##'
-##' @param gpu **Experimental!** Generate support code for dust's GPU
-##'   support. This is currently incomplete and does not actually run
-##'   on a GPU, but once it does, this argument will help. Currently
-##'   not supported within package code.
+##' @param gpu **Experimental!** Generate support for running models
+##'   on a GPU. This implies `gpu_generate` but *does* require a gpu
+##'   and nvcc toolchain. Currently not supported within package code.
+##'   This argument will be passed through to [dust::dust()] and so to
+##'   enable compilation for a gpu, pass either `TRUE` or the results
+##'   of [dust::dust_cuda_options])
+##'
+##' @param gpu_generate **Experimental** Generate gpu support
+##'   code. This does not require a gpu or nvcc toolchain, but creates
+##'   code that could be compiled for a gpu. This is primarily
+##'   intended for testing and development as the generated code will
+##'   be slower than the normal cpu version, and the compilation time
+##'   will be considerably slower. Currently not supported within
+##'   package code.
 ##'
 ##' @export
 ##' @importFrom odin odin
 odin_dust <- function(x, verbose = NULL, real_t = NULL, workdir = NULL,
-                      gpu = FALSE) {
+                      gpu = FALSE, gpu_generate = FALSE) {
   xx <- substitute(x)
   if (is.symbol(xx)) {
     xx <- force(x)
   } else if (is_call(xx, quote(c)) && all(vlapply(xx[-1], is.character))) {
     xx <- force(x)
   }
-  odin_dust_(xx, verbose, real_t, workdir, gpu)
+  odin_dust_(xx, verbose, real_t, workdir, gpu, gpu_generate)
 }
 
 
 ##' @export
 ##' @rdname odin_dust
 odin_dust_ <- function(x, verbose = NULL, real_t = NULL, workdir = NULL,
-                       gpu = FALSE) {
+                       gpu = FALSE, gpu_generate = FALSE) {
   options <- odin_dust_options(verbose, workdir)
   ir <- odin::odin_parse_(x, options)
   if (is.character(x) && length(x) == 1L && file.exists(x)) {
@@ -53,6 +63,8 @@ odin_dust_ <- function(x, verbose = NULL, real_t = NULL, workdir = NULL,
   } else {
     srcdir <- "."
   }
+  gpu <- gpu_mode(gpu_generate, gpu)
+
   odin_dust_wrapper(ir, options, real_t, gpu, srcdir)
 }
 
@@ -69,14 +81,15 @@ odin_dust_options <- function(verbose, workdir) {
 odin_dust_wrapper <- function(ir, options, real_t, gpu, srcdir) {
   dat <- with_dir(
     srcdir,
-    generate_dust(ir, options, real_t, gpu))
+    generate_dust(ir, options, real_t, gpu$generate))
   code <- odin_dust_code(dat)
 
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
   generator <- dust::dust(path, quiet = !options$verbose,
-                          workdir = options$workdir)
+                          workdir = options$workdir,
+                          gpu = gpu$compile)
   if (!("transform_variables" %in% names(generator$public_methods))) {
     generator$set("public", "transform_variables",
                   odin_dust_transform_variables)
