@@ -63,7 +63,7 @@ test_that("2-arg round is not supported", {
 })
 
 
-test_that("fold min", {
+test_that("fold min/max", {
   expect_equal(
     generate_dust_sexp(list("min", "a"), NULL, NULL, NULL, FALSE),
     "a")
@@ -83,6 +83,13 @@ test_that("fold min", {
   expect_equal(
     generate_dust_sexp(list("min", "a", "b", "c"), NULL, NULL, NULL, TRUE),
     "odin_min(a, odin_min(b, c))")
+
+  expect_equal(
+    generate_dust_sexp(list("max", "a", "b", "c"), NULL, NULL, NULL, FALSE),
+    "std::max(a, std::max(b, c))")
+  expect_equal(
+    generate_dust_sexp(list("max", "a", "b", "c"), NULL, NULL, NULL, TRUE),
+    "odin_max(a, odin_max(b, c))")
 })
 
 
