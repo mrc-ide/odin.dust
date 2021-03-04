@@ -1,3 +1,7 @@
+# odin.dust 0.2.1
+
+* `data_t` declarations can use `real_t` rather than `double` (#57)
+
 # odin.dust 0.2.0
 
 * GPU support (#66)
