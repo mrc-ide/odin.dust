@@ -16,5 +16,5 @@ HOSTDEVICE T odin_min(T x, T y) {
 
 template <typename T>
 HOSTDEVICE T odin_max(T x, T y) {
-  return x < y ? x : y;
+  return x > y ? x : y;
 }
