@@ -32,8 +32,7 @@ generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite) {
     lhs <- rewrite(eq$lhs)
   } else {
     offset <- dat$data[[location]]$contents[[data_info$name]]$offset
-    storage <- if (location == "variable") dat$meta$result else dat$meta$output
-    lhs <- sprintf("%s[%s]", storage, rewrite(offset))
+    lhs <- sprintf("%s[%s]", dat$meta$result, rewrite(offset))
   }
   rhs <- rewrite(eq$rhs$value)
   sprintf("%s = %s;", lhs, rhs)
@@ -118,8 +117,7 @@ generate_dust_equation_array_lhs <- function(eq, data_info, dat, rewrite) {
     lhs <- sprintf("%s[%s]", rewrite(data_info$name), pos)
   } else {
     offset <- rewrite(dat$data[[location]]$contents[[data_info$name]]$offset)
-    storage <- if (location == "variable") dat$meta$result else dat$meta$output
-    lhs <- sprintf("%s[%s + %s]", storage, offset, pos)
+    lhs <- sprintf("%s[%s + %s]", dat$meta$result, offset, pos)
   }
 
   lhs

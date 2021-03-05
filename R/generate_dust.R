@@ -191,10 +191,8 @@ generate_dust_core_initial <- function(dat, rewrite) {
 
 
 generate_dust_core_update <- function(eqs, dat, rewrite) {
-  variables <- union(dat$components$rhs$variables,
-                     dat$components$output$variables)
-  equations <- union(dat$components$rhs$equations,
-                     dat$components$output$equations)
+  variables <- dat$components$rhs$variables
+  equations <- dat$components$rhs$equations
 
   unpack <- lapply(variables, dust_unpack_variable,
                    dat, dat$meta$state, rewrite)

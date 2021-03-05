@@ -487,3 +487,14 @@ test_that("Detect sum corner case", {
   m <- matrix(rng$norm_rand(10 * 5), 10, 5)
   expect_equal(drop(y), cumsum(c(0, colSums(m))))
 })
+
+
+test_that("disallow output()", {
+  expect_error(
+    odin_dust({
+      initial(x) <- 1
+      update(x) <- 1
+      output(y) <- x * 2
+    }),
+    "Using unsupported features: 'has_output'")
+})
