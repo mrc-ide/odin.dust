@@ -11,32 +11,11 @@
 ##'   length is greater than 1 elements will be joined with newlines)
 ##'   or an expression.
 ##'
-##' @param verbose Logical scalar indicating if the compilation should
-##'   be verbose.  Defaults to the value of the option
-##'   \code{odin.verbose} or \code{FALSE} otherwise.
+##' @inheritParams odin_dust_options
 ##'
-##' @param real_t C++ type to use for real (floating point)
-##'   numbers. Defaults to \code{double}.
-##'
-##' @param workdir Working directory to use for the compilation. By
-##'   default we use a new path within the temporary directory. Passed
-##'   to \code{\link{dust}}; a mini package will be created at this
-##'   path.
-##'
-##' @param gpu **Experimental!** Generate support for running models
-##'   on a GPU. This implies `gpu_generate` but *does* require a gpu
-##'   and nvcc toolchain. Currently not supported within package code.
-##'   This argument will be passed through to [dust::dust()] and so to
-##'   enable compilation for a gpu, pass either `TRUE` or the results
-##'   of [dust::dust_cuda_options])
-##'
-##' @param gpu_generate **Experimental** Generate gpu support
-##'   code. This does not require a gpu or nvcc toolchain, but creates
-##'   code that could be compiled for a gpu. This is primarily
-##'   intended for testing and development as the generated code will
-##'   be slower than the normal cpu version, and the compilation time
-##'   will be considerably slower. Currently not supported within
-##'   package code.
+##' @param ... Arguments passed to [odin::odin_dust_options],
+##'   including `real_t`, `gpu`, `verbose`, `workdir`,
+##'   `no_check_unused_equations` and `rewrite_dims`.
 ##'
 ##' @export
 ##' @importFrom odin odin

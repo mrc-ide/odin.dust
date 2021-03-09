@@ -9,6 +9,13 @@ odin_dust_package(path, options = NULL)
 \arguments{
 \item{path}{Path to the package root (the directory that
 contains \code{DESCRIPTION})}
+
+\item{options}{An [odin::odin_options] or `odin_dust_options`
+object. If given it overrides arguments; if it already
+`odin_dust_options` it is returned unmodified. Otherwise it is
+passed through to [odin::odin_options] where it will override
+arguments in `...` but respond to the `odin_dust` specific
+options (`real_t`, etc)}
 }
 \value{
 The path to the package
