@@ -22,7 +22,7 @@ Imports:
     cpp11,
     decor,
     dust (>= 0.8.0),
-    odin (>= 1.1.9),
+    odin (>= 1.1.7),
     tibble,
     vctrs
 Suggests:
