@@ -164,3 +164,23 @@ test_that("use compiled compare function in package", {
     mod$compare_data(),
     drop(y) - d[[2]][[2]]$observed)
 })
+
+
+test_that("Can't compile gpu into package", {
+  path <- tempfile()
+  dir.create(path)
+  dir.create(file.path(path, "inst/odin"), FALSE, TRUE)
+
+  name <- "pkg"
+  data <- list(name = name)
+  writeLines(sub_package_name(readLines("examples/pkg/DESCRIPTION"), name),
+             file.path(path, "DESCRIPTION"))
+  writeLines(sub_package_name(readLines("examples/pkg/NAMESPACE"), name),
+             file.path(path, "NAMESPACE"))
+  file.copy("examples/array.R", file.path(path, "inst/odin"))
+  file.copy("examples/sir.R", file.path(path, "inst/odin"))
+
+  expect_error(
+    odin_dust_package(path, options = odin_dust_options(gpu = TRUE)),
+    "Can't compile gpu models into a package")
+})

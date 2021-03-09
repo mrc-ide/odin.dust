@@ -4,18 +4,11 @@
 \alias{odin_dust_package}
 \title{Update package code}
 \usage{
-odin_dust_package(path, verbose = NULL, real_t = NULL)
+odin_dust_package(path, options = NULL)
 }
 \arguments{
 \item{path}{Path to the package root (the directory that
 contains \code{DESCRIPTION})}
-
-\item{verbose}{Logical scalar indicating if the compilation should
-be verbose.  Defaults to the value of the option
-\code{odin.verbose} or \code{FALSE} otherwise.}
-
-\item{real_t}{C++ type to use for real (floating point)
-numbers. Defaults to \code{double}.}
 }
 \value{
 The path to the package

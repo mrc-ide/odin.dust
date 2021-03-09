@@ -1,3 +1,7 @@
+# odin.dust 0.2.3
+
+* Can pass more options to `odin::odin_options` with better support in `odin.dust::odin_dust_options`, including odin's new `rewrite_dims` argument (#73)
+
 # odin.dust 0.2.1
 
 * `data_t` declarations can use `real_t` rather than `double` (#57)

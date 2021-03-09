@@ -2,8 +2,8 @@ context("odin.dust")
 
 test_that("sir model smoke test", {
   skip_if_not_installed("dde")
-  gen <- odin_dust_("examples/sir.R", verbose = FALSE)
-  gen_odin <- odin::odin_("examples/sir.R", verbose = FALSE)
+  gen <- odin_dust_("examples/sir.R")
+  gen_odin <- odin::odin_("examples/sir.R")
 
   n <- 10000
   y0 <- c(1000, 10, 0)
@@ -42,7 +42,7 @@ test_that("sir model smoke test", {
 
 
 test_that("vector handling test", {
-  gen <- odin_dust_("examples/walk.R", verbose = FALSE)
+  gen <- odin_dust_("examples/walk.R")
 
   ns <- 3
   np <- 100
@@ -69,7 +69,7 @@ test_that("vector handling test", {
 ## This model is deterministic, but tests basic array behaviour,
 ## including argument handling.
 test_that("user-vector handling test", {
-  gen <- odin_dust_("examples/array.R", verbose = FALSE)
+  gen <- odin_dust_("examples/array.R")
 
   r <- matrix(runif(10), 2, 5)
   x0 <- matrix(runif(10), 2, 5)
@@ -94,7 +94,7 @@ test_that("can pass in a fixed sized vector", {
     y[] <- user()
     dim(y) <- 10
     tot <- sum(y)
-  }, verbose = FALSE)
+  })
 
   y <- runif(10)
   mod <- gen$new(list(y = y), 0, 1)
@@ -114,7 +114,7 @@ test_that("multiline array expression", {
     update(y) <- x0[10]
     dim(x0) <- 10
     dim(x) <- length(x0)
-  }, verbose = FALSE)
+  })
   mod <- gen$new(list(), 0, 1)
   expect_equal(mod$info(), list(dim = list(y = 1L, x = 10L),
                                 len = 11L,
@@ -129,7 +129,7 @@ test_that("Accept integers", {
     update(x) <- rbinom(n, p)
     n <- user(integer = TRUE, min = 0)
     p <- user(min = 0, max = 1)
-  }, verbose = FALSE)
+  })
 
   mod <- gen$new(list(n = 10, p = 0.5), 0, 100, seed = 1L)
   expect_equal(mod$state(), matrix(0, 1, 100))
@@ -153,7 +153,7 @@ test_that("Do startup calculation", {
     update(x) <- x
     update(y) <- y
     a <- step + 1
-  }, verbose = FALSE)
+  })
   expect_equal(gen$new(list(), 0, 1)$state(),
                matrix(c(1, 2)))
   expect_equal(gen$new(list(), 10, 1)$state(),
@@ -162,7 +162,7 @@ test_that("Do startup calculation", {
 
 
 test_that("Implement sum", {
-  gen <- odin_dust_("examples/sum.R", verbose = FALSE)
+  gen <- odin_dust_("examples/sum.R")
   nr <- 5
   nc <- 7
   m <- matrix(runif(nr * nc), nr, nc)
@@ -172,7 +172,7 @@ test_that("Implement sum", {
   y <- mod$state()
   yy <- mod$transform_variables(drop(y))
 
-  cmp <- odin::odin_("examples/sum.R", target = "r", verbose = FALSE)
+  cmp <- odin::odin_("examples/sum.R", target = "r")
   expect_equal(yy, cmp(m = m)$transform_variables(drop(y))[-1])
 
   expect_identical(
@@ -198,14 +198,14 @@ test_that("Implement sum", {
 
 
 test_that("sum over variables", {
-  gen <- odin_dust_("examples/sum2.R", verbose = FALSE)
+  gen <- odin_dust_("examples/sum2.R")
 
   nr <- 5
   nc <- 7
   nz <- 9
   a <- array(runif(nr * nc * nz), c(nr, nc, nz))
   mod <- gen$new(list(y0 = a), 0, 1)
-  cmp <- odin::odin_("examples/sum2.R", verbose = FALSE)(y0 = a)
+  cmp <- odin::odin_("examples/sum2.R")(y0 = a)
 
   y0 <- mod$transform_variables(drop(mod$state()))
   expect_equal(y0, cmp$transform_variables(drop(mod$state()))[-1])
@@ -302,7 +302,7 @@ test_that("NSE interface can accept a symbol and resolve to value", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(path, NULL, NULL, NULL, FALSE, FALSE))
+    list(path, options = NULL))
 })
 
 
@@ -315,12 +315,12 @@ test_that("NSE interface can accept a character vector", {
   mockery::expect_called(mock_target, 1)
   expect_equal(
     mockery::mock_args(mock_target)[[1]],
-    list(c("a", "b", "c"), NULL, NULL, NULL, FALSE, FALSE))
+    list(c("a", "b", "c"), options = NULL))
 })
 
 
 test_that("don't encode specific types in generated code", {
-  options <- odin::odin_options(target = "dust")
+  options <- odin_dust_options()
   ir <- odin::odin_parse_("examples/sir.R", options)
   res <- generate_dust(ir, options)
 
@@ -332,21 +332,23 @@ test_that("don't encode specific types in generated code", {
 
 
 test_that("Generate code with different types", {
-  options <- odin::odin_options(target = "dust")
+  options <- odin_dust_options(real_t = "DOUBLE")
   ir <- odin::odin_parse_("examples/sir.R", options)
-  res <- generate_dust(ir, options, "DOUBLE")
+  res <- generate_dust(ir, options)
 
   expect_true(any(grepl("typedef DOUBLE real_t;", res$class)))
 
-  cmp <- generate_dust(ir, options)
-  expect_equal(replace(res$class, c(DOUBLE = "double", INT = "int")),
+  cmp <- generate_dust(ir, odin_dust_options())
+  expect_equal(replace(res$class, c(DOUBLE = "double")),
                cmp$class)
 })
 
 
 test_that("sir model float test", {
-  gen_f <- odin_dust_("examples/sir.R", real_t = "float", verbose = FALSE)
-  gen_d <- odin_dust_("examples/sir.R", real_t = "double", verbose = FALSE)
+  gen_f <- odin_dust_("examples/sir.R",
+                      options = odin_dust_options(real_t = "float"))
+  gen_d <- odin_dust_("examples/sir.R",
+                      options = odin_dust_options(real_t = "double"))
 
   n <- 10000
   y0 <- c(1000, 10, 0)
@@ -369,8 +371,10 @@ test_that("sir model float test", {
 
 
 test_that("array model float test", {
-  gen_f <- odin_dust_("examples/array.R", real_t = "float", verbose = FALSE)
-  gen_d <- odin_dust_("examples/array.R", real_t = "double", verbose = FALSE)
+  gen_f <- odin_dust_("examples/array.R",
+                      options = odin_dust_options(real_t = "float"))
+  gen_d <- odin_dust_("examples/array.R",
+                      options = odin_dust_options(real_t = "double"))
 
   r <- matrix(runif(10), 2, 5)
   x0 <- matrix(runif(10), 2, 5)
@@ -395,7 +399,7 @@ test_that("specify workdir", {
   gen <- odin_dust({
     initial(x) <- 0
     update(x) <- runif(x, 1)
-  }, verbose = FALSE, workdir = path)
+  }, workdir = path)
   expect_true(file.exists(path))
   expect_true(file.exists(file.path(path, "DESCRIPTION")))
   expect_true(file.exists(file.path(path, "src", "dust.cpp")))
@@ -403,7 +407,7 @@ test_that("specify workdir", {
 
 
 test_that("transform_variables works with all 3 state options", {
-  gen <- odin_dust_("examples/array.R", verbose = FALSE)
+  gen <- odin_dust_("examples/array.R")
   r <- matrix(runif(10), 2, 5)
   x0 <- matrix(runif(10), 2, 5)
 
@@ -436,7 +440,7 @@ test_that("allow custom C++ code", {
     update(y[]) <- cumulative_to_i(i, x)
     dim(x) <- n
     dim(y) <- n
-  }, verbose = FALSE)
+  })
 
   x <- runif(5)
   mod <- gen$new(list(x = x), 0, 1)
@@ -458,7 +462,7 @@ test_that("modulo works", {
     update(y) <- step %% b
     initial(z) <- 0
     update(z) <- step
-  }, verbose = FALSE)
+  })
   mod <- gen$new(list(a = 4, b = 5), 0, 1)
   y <- mod$simulate(0:10)
   yy <- mod$transform_variables(y)
@@ -479,7 +483,7 @@ test_that("Detect sum corner case", {
     initial(z) <- 0
     update(z) <- z + sum(x)
     dim(x) <- len
-  }, verbose = FALSE)
+  })
 
   mod <- gen$new(list(len = 10), 0, 1L, seed = 1L)
   y <- mod$simulate(0:5)

@@ -2,5 +2,6 @@
 
 export(odin_dust)
 export(odin_dust_)
+export(odin_dust_options)
 export(odin_dust_package)
 importFrom(odin,odin)

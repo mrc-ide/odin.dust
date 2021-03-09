@@ -1,4 +1,4 @@
-generate_dust <- function(ir, options, real_t = NULL, gpu = FALSE) {
+generate_dust <- function(ir, options) {
   dat <- odin::odin_ir_deserialise(ir)
 
   if (!dat$features$discrete) {
@@ -14,7 +14,7 @@ generate_dust <- function(ir, options, real_t = NULL, gpu = FALSE) {
          paste(squote(unsupported), collapse = ", "))
   }
 
-  dat$meta$dust <- generate_dust_meta(real_t)
+  dat$meta$dust <- generate_dust_meta(options$real_t)
 
   rewrite <- function(x, gpu = FALSE) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, gpu)
@@ -50,7 +50,7 @@ generate_dust <- function(ir, options, real_t = NULL, gpu = FALSE) {
     support <- c(support, list(lib))
   }
 
-  if (gpu) {
+  if (options$gpu$generate) {
     code_gpu <- generate_dust_gpu(eqs, dat, rewrite)
   } else {
     code_gpu <- NULL
