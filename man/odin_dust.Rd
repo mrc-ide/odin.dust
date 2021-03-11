@@ -19,11 +19,11 @@ including `real_t`, `gpu`, `verbose`, `workdir`,
 `no_check_unused_equations` and `rewrite_dims`.}
 
 \item{options}{An [odin::odin_options] or `odin_dust_options`
-object. If given it overrides arguments; if it already
-`odin_dust_options` it is returned unmodified. Otherwise it is
-passed through to [odin::odin_options] where it will override
-arguments in `...` but respond to the `odin_dust` specific
-options (`real_t`, etc)}
+object. If given it overrides arguments; if it is already a
+`odin_dust_options` object it is returned unmodified. Otherwise
+it is passed through to [odin::odin_options] where it will
+override arguments in `...` but respond to the `odin_dust`
+specific options (`real_t`, etc)}
 }
 \description{
 Compile an odin model to work with dust.
