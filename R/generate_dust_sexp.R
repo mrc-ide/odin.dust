@@ -2,6 +2,9 @@
 generate_dust_sexp <- function(x, data, meta, supported, gpu) {
   if (is.recursive(x)) {
     fn <- x[[1L]]
+    if (is.name(fn)) {
+      fn <- as.character(fn)
+    }
     args <- x[-1L]
     n <- length(args)
     values <- vcapply(args, generate_dust_sexp, data, meta, supported, gpu)
@@ -65,7 +68,10 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
       ret <- sprintf("%s(%s)", fn, paste(values, collapse = ", "))
     }
     ret
-  } else if (is.character(x)) {
+  } else if (is.character(x) || is.name(x)) {
+    if (is.name(x)) {
+      x <- as.character(x)
+    }
     el <- data$elements[[x]]
     if (!is.null(el$location) && el$location == "internal" && !gpu) {
       if (el$stage == "time") {
@@ -78,6 +84,8 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
     }
   } else if (is.numeric(x)) {
     deparse(x, control = "digits17")
+  } else {
+    stop("Can't get here")
   }
 }
 

@@ -24,6 +24,11 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu) {
 
   if (gpu) {
     req <- intersect(eq$depends$variables, names(dat$data$elements))
+    ## TODO: we might need to setdiff eq$name from access. This is
+    ## easy but no point doing it if it's never going to happen.
+    if (eq$name %in% req) {
+      stop("need a little rewrite here")
+    }
     access <- sprintf("const %s", dat$gpu$access[req])
 
     if (any(is.na(access))) {
@@ -36,8 +41,7 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu) {
     }
 
     if (!identical(data_info$location, "variable")) {
-      message("Do we need to consider where we're writing to here?")
-      browser()
+      access <- c(access, dat$gpu$access[[eq$name]])
     }
 
     ret <- cpp_block(c(access, ret))

@@ -769,6 +769,10 @@ generate_dust_gpu_copy <- function(dat, rewrite) {
 
 
 generate_dust_gpu_storage <- function(used, dat, rewrite) {
+  ## TODO: We might want to make all dim_ variables available to
+  ## shared memory, even if they're never referenced. That will
+  ## simplify access considerably. But I am not sure it'll be needed
+
   ## We need to make sure that these offsets also get into the
   ## shared_int memory.
   i <- vlapply(dat$data$variable$contents, function(x) is.language(x$offset))
@@ -782,22 +786,53 @@ generate_dust_gpu_storage <- function(used, dat, rewrite) {
     if (scalar) {
       sprintf("real_t %s = state[%s];", x$name, x$offset)
     } else {
+      ## TODO: we could do this with static_eval with a little work,
+      ## or at least notice when x$offset is zero
       sprintf("dust::interleaved<real_t> %s = state + %s;", x$name, x$offset)
     }
   }
   variables <- vcapply(dat$data$variable$contents, f)
+
+  ## TODO: Here, when we unpack the internals we might generate some
+  ## additional offsets that we need to write in. These we can look up
+  ## directly though.
 
   info <- list(
     shared_int = dust_gpu_storage_pack(used, "shared", "int", dat),
     shared_real = dust_gpu_storage_pack(used, "shared", "double", dat),
     internal_int = dust_gpu_storage_pack(used, "internal", "int", dat),
     internal_real = dust_gpu_storage_pack(used, "internal", "double", dat))
+
+  ## Then look in our unpacks:
+  used <- unlist(unname(lapply(info, function(x) x$unpack)), FALSE)
+  ## For each offset that is a symbol, replace it with its value so
+  ## that: dim_x becomes internal_int[<i>] where '<i>' is a literal
+  ## integer (guaranteed by our scheme)
+  resolve_offset <- function(x) {
+    if (is.numeric(x)) {
+      as.character(x)
+    } else if (is.name(x)) {
+      d <- used[[as.character(x)]]
+      stopifnot(!is.null(d))
+      sprintf("shared_int[%d]", d$offset)
+    } else {
+      stopifnot(identical(x[[1]], as.name("+")))
+      sprintf("%s + %s", resolve_offset(x[[2]]), resolve_offset(x[[3]]))
+    }
+  }
+
+  resolve_access <- function(x) {
+    fmt <- if (x$rank == 0) "%s %s = %s[%s];" else "%s %s = %s + %s;"
+    sprintf(fmt, x$type, x$name, x$location, resolve_offset(x$offset))
+  }
+
   len <- lapply(info, function(x) x[c("length", "type", "location")])
   shared <- list(int = info$shared_int$contents,
                  real = info$shared_real$contents)
   access <- c(
     variables,
-    unlist(unname(lapply(info, function(x) x$unpack)), FALSE))
+    vcapply(used, resolve_access))
+
 
   list(
     shared = shared,
@@ -808,6 +843,11 @@ generate_dust_gpu_storage <- function(used, dat, rewrite) {
 
 ## Somewhat replicates odin:::ir_parse_packing_internal but that is
 ## done on the data before it gets serialised
+##
+## This function is the biggest pain point for the gpu version and the
+## thing that once this settles down we will want to refactor. There's
+## a lot of things here that are a bit shared in spirit with how we do
+## the underlying processing in odin.
 dust_gpu_storage_pack <- function(used, location, type, dat) {
   if (location == "internal") {
     include <- function(x) {
@@ -848,38 +888,32 @@ dust_gpu_storage_pack <- function(used, location, type, dat) {
     if (!is_array[[i]]) {
       offset[[i + 1L]] <- i
     } else {
-      if (is.character(len[[i]])) {
-        stop("writeme")
-      }
       len_i <- if (is.numeric(len[[i]])) len[[i]] else as.name(len[[i]])
-      offset[[i + 1L]] <- odin:::static_eval(call("+", offset[[i]], len_i))
+      offset[[i + 1L]] <- static_eval(call("+", offset[[i]], len_i))
     }
   }
 
   ## Split those back apart
   length <- offset[[length(names) + 1L]]
   offset <- set_names(offset[seq_along(names)], names)
-
-  offset_str <- vcapply(offset, function(x)
-    if (is.language(x)) deparse_str(x) else as.character(x))
   type_dust <- if (type == "int") "int" else "real_t"
-
   ## TODO: this feels needlessly hard:
   location_dust <- sprintf("%s_%s", location,
                            if (type == "int") "int" else "real")
-
   if (location == "internal") {
     type_array <- "dust::interleaved<real_t>"
   } else {
     type_array <- "real_t *"
   }
 
-  i <- rank == 0
-  unpack <- set_names(character(length(names)), names)
-  unpack[i] <- sprintf("%s %s = %s[%s];",
-                       type_dust, names[i], location_dust, offset_str[i])
-  unpack[!i] <- sprintf("%s %s = %s + %s;",
-                        type_array, names[!i], location_dust, offset_str[!i])
+  ## We don't do the final write here because we will need to
+  ## substitute these expressions a little.
+  unpack1 <- function(name, rank, offset) {
+    type <- if (rank == 0) type_dust else type_array
+    list(type = type, rank = rank, name = name, location = location_dust,
+         offset = offset)
+  }
+  unpack <- Map(unpack1, names, rank, offset)
 
   list(contents = names,
        offset = offset, rank = rank, length = length,

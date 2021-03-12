@@ -41,6 +41,11 @@ squote <- function(...) {
 }
 
 
+static_eval <- function(...) {
+  odin:::static_eval(...)
+}
+
+
 dust_array_access <- function(target, index, data, meta, supported, gpu) {
   mult <- data$elements[[target]]$dimnames$mult
 
