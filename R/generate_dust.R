@@ -16,6 +16,7 @@ generate_dust <- function(ir, options) {
 
   dat$meta$dust <- generate_dust_meta(options$real_t)
 
+  ## TODO: aim to remove this arg
   rewrite <- function(x, gpu = FALSE) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, gpu)
   }
@@ -51,7 +52,7 @@ generate_dust <- function(ir, options) {
   }
 
   if (options$gpu$generate) {
-    code_gpu <- generate_dust_gpu(eqs, dat, rewrite)
+    code_gpu <- generate_dust_gpu(dat, rewrite)
   } else {
     code_gpu <- NULL
   }
@@ -625,52 +626,19 @@ transform_compare_odin <- function(text, dat, rewrite) {
 }
 
 
-generate_dust_gpu <- function(eqs, dat, rewrite) {
+generate_dust_gpu <- function(dat, rewrite) {
   ## We need to do a little extra work here to collect up our
   ## information about gpu types. This will likely move elsewhere,
   ## because typically we don't do much of this sort of interrogation
   ## after the parse phase.
 
-  ## We want to store all time varying things that have rank of at
-  ## least 1.
-  internal <- names_if(vlapply(dat$data$elements, function(x)
-    x$location == "internal" && x$stage == "time" && x$rank > 0))
-
-  ## It's actually really hard to get integers here, so for now just
-  ## assert that there aren't any!
-  internal_type <- vcapply(dat$data$elements[internal], "[[", "storage_type")
-
-  ## Try and find the things that we actually need in the shared
-  ## object. It won't be all and a bit of efficiency here will go
-  ## a long way.
+  ## This will likely miss a few things, but I don't know what yet!
+  eqs <- dat$equations
   equations <- dat$components$rhs$equations
   used <- unique(unlist(
-    lapply(dat$equations[equations], function(x) x$depends$variables),
-    FALSE, FALSE))
+    lapply(eqs[equations], function(x) x$depends$variables), FALSE, FALSE))
 
-  ## Also need all offsets and dimensions; could take a subset but
-  ## it's error prone.
-  used_extra <- grep("^(dim_|offset_variable_)", names(dat$data$elements),
-                     value = TRUE)
-  used <- union(used, used_extra)
-
-  pos <- vlapply(dat$data$elements, function(x)
-    x$location == "internal" && x$stage != "time")
-  shared <- intersect(used, names_if(pos))
-  shared_rank <- viapply(dat$data$elements[shared], "[[", "rank")
-  ## Always sort scalars first; this is required later
-  i <- order(shared_rank)
-  shared <- shared[i]
-  shared_rank <- shared_rank[i]
-  shared_type <- vcapply(dat$data$elements[shared], "[[", "storage_type")
-
-  dat$gpu <- list(
-    internal = list(
-      int = intersect(internal, names_if(internal_type == "int")),
-      real = intersect(internal, names_if(internal_type == "double"))),
-    shared = list(
-      int = intersect(shared, names_if(shared_type == "int")),
-      real = intersect(shared, names_if(shared_type == "double"))))
+  dat$gpu <- generate_dust_gpu_storage(used, dat, rewrite)
 
   c(generate_dust_gpu_declaration(dat, rewrite),
     generate_dust_gpu_size(dat, rewrite),
@@ -689,7 +657,7 @@ generate_dust_gpu_declaration <- function(dat, rewrite) {
 
 
 generate_dust_gpu_update <- function(eqs, dat, rewrite) {
-  name <- dat$config$base
+  name <- sprintf("update_device<%s>", dat$config$base)
 
   args <- c(
     "size_t" = dat$meta$time,
@@ -700,50 +668,41 @@ generate_dust_gpu_update <- function(eqs, dat, rewrite) {
     "const %s::real_t *" = dat$meta$dust$shared_real,
     "dust::rng_state_t<%s::real_t>&" = dat$meta$dust$rng_state,
     "dust::interleaved<%s::real_t>" = dat$meta$result)
-  names(args) <- sub("%s", name, names(args), fixed = TRUE)
+  names(args) <- sub("%s", dat$config$base, names(args), fixed = TRUE)
 
-  body <- character()
+  ## We will need to add in some additional bits for any new scalars
+  ## we want to store. For now don't worry though.
+  rewrite_gpu <- function(x) {
+    generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, TRUE)
+  }
+  eqs <- generate_dust_equations(dat, rewrite_gpu,
+                                 dat$components$rhs$equations, TRUE)
 
-  variables <- dat$components$rhs$variables
-  equations <- dat$components$rhs$equations
-  rewrite_gpu <- function(x) rewrite(x, TRUE)
-
-  ## We'll use this shorthand everywhere
-  typedef_real <- sprintf("typedef %s::real_t real_t;", name)
-
-  ## Then we need to unpack things; not just the variables but also
-  ## our internal data.
-  unpack_shared_int <- dust_gpu_unpack(
-    dat$gpu$shared$int, FALSE, "int", dat, rewrite)
-  unpack_shared_real <- dust_gpu_unpack(
-    dat$gpu$shared$real, FALSE, "real_t", dat, rewrite)
-  unpack_internal_int <- dust_gpu_unpack(
-    dat$gpu$internal$int, TRUE, "int", dat, rewrite)
-  unpack_internal_real <- dust_gpu_unpack(
-    dat$gpu$internal$real, TRUE, "real_t", dat, rewrite)
-  unpack_variable <- dust_flatten_eqs(
-    lapply(variables, dust_unpack_variable, dat, dat$meta$state, rewrite_gpu,
-           TRUE))
-
-  eqs <- dust_flatten_eqs(generate_dust_equations(dat, rewrite_gpu, equations))
-
-  body <- c(typedef_real,
-            unpack_shared_int, unpack_shared_real,
-            unpack_internal_int, unpack_internal_real,
-            unpack_variable,
-            eqs)
+  body <- c(sprintf("typedef %s::real_t real_t;", dat$config$base),
+            dust_flatten_eqs(eqs))
 
   c("template<>",
-    cpp_function("DEVICE void", sprintf("update_device<%s>", name),
-                 args, body))
+    cpp_function("DEVICE void", name, args, body))
 }
 
 
 generate_dust_gpu_size <- function(dat, rewrite) {
-  c(dust_gpu_size(dat, FALSE, "int", rewrite),
-    dust_gpu_size(dat, FALSE, "real_t", rewrite),
-    dust_gpu_size(dat, TRUE, "int", rewrite),
-    dust_gpu_size(dat, TRUE, "real_t", rewrite))
+  dust_gpu_size <- function(x) {
+    ## TODO: This is all really ick and we'll refactor later.
+    name <- sprintf("dust::device_%s_size_%s<%s>",
+                    sub("_.+", "", x$location),
+                    if (x$type == "int") "int" else "real",
+                    dat$config$base)
+    args <- set_names(dat$meta$dust$shared,
+                      sprintf("dust::shared_ptr<%s>", dat$config$base))
+    body <- sprintf("return %s;", rewrite(x$length))
+    c("template <>",
+      cpp_function("size_t", name, args, body))
+  }
+
+  ## TODO: it would be better if we renamed these in dust so that they
+  ## are device_size_<location>_<type>
+  dust_flatten_eqs(lapply(dat$gpu$length, dust_gpu_size))
 }
 
 
@@ -787,33 +746,6 @@ dust_gpu_unpack <- function(name, internal, type, dat, rewrite) {
 }
 
 
-dust_gpu_size <- function(dat, internal, type, rewrite) {
-  if (internal) {
-    loc <- "internal"
-  } else {
-    loc <- "shared"
-  }
-  type_short <- if (type == "int") "int" else "real"
-  contents <- dat$gpu[[loc]][[type_short]]
-
-  len <- vcapply(dat$data$elements[contents], function(x)
-    rewrite(x$dimnames$length) %||% NA_character_,
-    USE.NAMES = FALSE)
-  is_scalar <- is.na(len)
-  is_vector <- !is_scalar
-  len_total <- paste(c(rewrite(sum(is_scalar)), len[is_vector]),
-                     collapse = " + ")
-
-  name <- sprintf("dust::device_%s_size_%s<%s>",
-                  loc, type_short, dat$config$base)
-
-  args <- set_names(dat$meta$dust$shared,
-                    sprintf("dust::shared_ptr<%s>", dat$config$base))
-  c("template <>",
-    cpp_function("size_t", name, args, sprintf("return %s;", len_total)))
-}
-
-
 generate_dust_gpu_copy <- function(dat, rewrite) {
   name <- sprintf("dust::device_shared_copy<%s>", dat$config$base)
   args <- c(
@@ -826,10 +758,130 @@ generate_dust_gpu_copy <- function(dat, rewrite) {
     sprintf("%s = dust::shared_copy(%s, %s);",
             shared, shared, vcapply(name, rewrite, USE.NAMES = FALSE))
   }
+
   body <- c(
     copy1(dat$gpu$shared$int, dat$meta$dust$shared_int),
     copy1(dat$gpu$shared$real, dat$meta$dust$shared_real))
 
   c("template <>",
     cpp_function("void", name, args, body))
+}
+
+
+generate_dust_gpu_storage <- function(used, dat, rewrite) {
+  ## We need to make sure that these offsets also get into the
+  ## shared_int memory.
+  i <- vlapply(dat$data$variable$contents, function(x) is.language(x$offset))
+  if (any(i)) {
+    message("Add variable offsets into shared_int")
+    browser()
+  }
+
+  f <- function(x) {
+    scalar <- dat$data$elements[[x$name]]$rank == 0
+    if (scalar) {
+      sprintf("real_t %s = state[%s];", x$name, x$offset)
+    } else {
+      sprintf("dust::interleaved<real_t> %s = state + %s;", x$name, x$offset)
+    }
+  }
+  variables <- vcapply(dat$data$variable$contents, f)
+
+  info <- list(
+    shared_int = dust_gpu_storage_pack(used, "shared", "int", dat),
+    shared_real = dust_gpu_storage_pack(used, "shared", "double", dat),
+    internal_int = dust_gpu_storage_pack(used, "internal", "int", dat),
+    internal_real = dust_gpu_storage_pack(used, "internal", "double", dat))
+  len <- lapply(info, function(x) x[c("length", "type", "location")])
+  shared <- list(int = info$shared_int$contents,
+                 real = info$shared_real$contents)
+  access <- c(
+    variables,
+    unlist(unname(lapply(info, function(x) x$unpack)), FALSE))
+
+  list(
+    shared = shared,
+    access = access,
+    length = len[!vlapply(len, is.null)])
+}
+
+
+## Somewhat replicates odin:::ir_parse_packing_internal but that is
+## done on the data before it gets serialised
+dust_gpu_storage_pack <- function(used, location, type, dat) {
+  if (location == "internal") {
+    include <- function(x) {
+      x$stage == "time" && x$location %in% c("internal", "transient") &&
+        x$storage_type == type
+    }
+  } else {
+    include <- function(x) {
+      x$stage != "time" && x$location == "internal" &&
+        x$storage_type == type
+    }
+  }
+
+  names <- intersect(names_if(vlapply(dat$data$elements, include)), used)
+
+  if (length(names) == 0) {
+    return(NULL)
+  }
+
+  rank <- viapply(dat$data$elements[names], "[[", "rank")
+  len <- lapply(dat$data$elements[names], function(x)
+    x$dimnames$length %||% 1L)
+
+  ## We'll pack from least to most complex and everything with a fixed
+  ## offset first. This puts all scalars first, then all arrays that
+  ## have compile-time size next (in order of rank), then all arrays
+  ## with user-time size (in order of rank).
+  i <- order(!vlapply(len, is.numeric), rank)
+  names <- names[i]
+  rank <- rank[i]
+  len <- len[i]
+
+  is_array <- rank > 0L
+  ## Accumulate offset and also total:
+  offset <- vector("list", length(names) + 1L)
+  offset[[1L]] <- 0L
+  for (i in seq_along(names)) {
+    if (!is_array[[i]]) {
+      offset[[i + 1L]] <- i
+    } else {
+      if (is.character(len[[i]])) {
+        stop("writeme")
+      }
+      len_i <- if (is.numeric(len[[i]])) len[[i]] else as.name(len[[i]])
+      offset[[i + 1L]] <- odin:::static_eval(call("+", offset[[i]], len_i))
+    }
+  }
+
+  ## Split those back apart
+  length <- offset[[length(names) + 1L]]
+  offset <- set_names(offset[seq_along(names)], names)
+
+  offset_str <- vcapply(offset, function(x)
+    if (is.language(x)) deparse_str(x) else as.character(x))
+  type_dust <- if (type == "int") "int" else "real_t"
+
+  ## TODO: this feels needlessly hard:
+  location_dust <- sprintf("%s_%s", location,
+                           if (type == "int") "int" else "real")
+
+  if (location == "internal") {
+    type_array <- "dust::interleaved<real_t>"
+  } else {
+    type_array <- "real_t *"
+  }
+
+  i <- rank == 0
+  unpack <- set_names(character(length(names)), names)
+  unpack[i] <- sprintf("%s %s = %s[%s];",
+                       type_dust, names[i], location_dust, offset_str[i])
+  unpack[!i] <- sprintf("%s %s = %s + %s;",
+                        type_array, names[!i], location_dust, offset_str[!i])
+
+  list(contents = names,
+       offset = offset, rank = rank, length = length,
+       location = location_dust, type = type_dust, unpack = unpack)
 }

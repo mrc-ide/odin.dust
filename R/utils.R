@@ -89,6 +89,11 @@ cpp_args <- function(return_type, name, args) {
 }
 
 
+cpp_block <- function(body) {
+  c("{", paste0("  ", body), "}")
+}
+
+
 odin_dust_file <- function(path) {
   system.file(path, package = "odin.dust", mustWork = TRUE)
 }

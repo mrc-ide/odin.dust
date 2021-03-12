@@ -1,14 +1,14 @@
-generate_dust_equations <- function(dat, rewrite, which = NULL) {
+generate_dust_equations <- function(dat, rewrite, which = NULL, gpu = FALSE) {
   if (is.null(which)) {
     eqs <- dat$equations
   } else {
     eqs <- dat$equations[which]
   }
-  lapply(eqs, generate_dust_equation, dat, rewrite)
+  lapply(eqs, generate_dust_equation, dat, rewrite, gpu)
 }
 
 
-generate_dust_equation <- function(eq, dat, rewrite) {
+generate_dust_equation <- function(eq, dat, rewrite, gpu) {
   f <- switch(
     eq$type,
     expression_scalar = generate_dust_equation_scalar,
@@ -20,11 +20,38 @@ generate_dust_equation <- function(eq, dat, rewrite) {
   data_info <- dat$data$elements[[eq$lhs]]
   stopifnot(!is.null(data_info))
 
-  f(eq, data_info, dat, rewrite)
+  ret <- f(eq, data_info, dat, rewrite, gpu)
+
+  if (gpu) {
+    req <- intersect(eq$depends$variables, names(dat$data$elements))
+    access <- sprintf("const %s", dat$gpu$access[req])
+
+    if (any(is.na(access))) {
+      stop("this should never happen")
+    }
+
+    if (data_info$rank > 1) {
+      message("Do we need more dimensions etc?")
+      browser()
+    }
+
+    if (!identical(data_info$location, "variable")) {
+      message("Do we need to consider where we're writing to here?")
+      browser()
+    }
+
+    ret <- cpp_block(c(access, ret))
+    if (eq$type == "expression_scalar" && data_info$location != "variable") {
+      pre <- sprintf("%s %s;", data_info$storage_type, data_info$name)
+      ret <- c(pre, ret)
+    }
+  }
+
+  ret
 }
 
 
-generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite) {
+generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite, gpu) {
   location <- data_info$location
   if (location == "transient") {
     lhs <- sprintf("%s %s", dust_type(data_info$storage_type), eq$lhs)
@@ -39,14 +66,14 @@ generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite) {
 }
 
 
-generate_dust_equation_array <- function(eq, data_info, dat, rewrite) {
+generate_dust_equation_array <- function(eq, data_info, dat, rewrite, gpu) {
   lhs <- generate_dust_equation_array_lhs(eq, data_info, dat, rewrite)
   dust_flatten_eqs(lapply(eq$rhs, function(x)
     generate_dust_equation_array_rhs(x$value, x$index, lhs, rewrite)))
 }
 
 
-generate_dust_equation_alloc <- function(eq, data_info, dat, rewrite) {
+generate_dust_equation_alloc <- function(eq, data_info, dat, rewrite, gpu) {
   lhs <- rewrite(eq$lhs)
   ctype <- dust_type(data_info$storage_type)
   len <- rewrite(data_info$dimnames$length)
@@ -54,7 +81,7 @@ generate_dust_equation_alloc <- function(eq, data_info, dat, rewrite) {
 }
 
 
-generate_dust_equation_user <- function(eq, data_info, dat, rewrite) {
+generate_dust_equation_user <- function(eq, data_info, dat, rewrite, gpu) {
   user <- dat$meta$user
   rank <- data_info$rank
 
