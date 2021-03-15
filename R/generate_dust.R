@@ -899,14 +899,14 @@ dust_gpu_storage_pack <- function(used, location, type, dat) {
   ## Split those back apart
   length <- offset[[length(names) + 1L]]
   offset <- set_names(offset[seq_along(names)], names)
-  type_dust <- if (type == "int") "int" else "real_t" # dust_type(type)
+  type_dust <- dust_type(type)
   ## TODO: this feels needlessly hard:
   location_dust <- sprintf("%s_%s", location,
                            if (type == "int") "int" else "real")
   if (location == "internal") {
-    type_array <- "dust::interleaved<real_t>"
+    type_array <- sprintf("dust::interleaved<%s>", type_dust)
   } else {
-    type_array <- "real_t *"
+    type_array <- sprintf("%s *", type_dust)
   }
 
   ## We don't do the final write here because we will need to
