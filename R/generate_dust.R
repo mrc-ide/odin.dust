@@ -16,9 +16,8 @@ generate_dust <- function(ir, options) {
 
   dat$meta$dust <- generate_dust_meta(options$real_t)
 
-  ## TODO: aim to remove this arg
-  rewrite <- function(x, gpu = FALSE) {
-    generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, gpu)
+  rewrite <- function(x) {
+    generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
   }
 
   dat$compare <- dust_compare_info(dat, rewrite)
