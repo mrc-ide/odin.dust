@@ -72,6 +72,9 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
     if (is.name(x)) {
       x <- as.character(x)
     }
+    if (gpu) {
+      data$gpu$add(x)
+    }
     el <- data$elements[[x]]
     if (!is.null(el$location) && el$location == "internal" && !gpu) {
       if (el$stage == "time") {

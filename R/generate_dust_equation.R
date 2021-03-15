@@ -20,35 +20,28 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu) {
   data_info <- dat$data$elements[[eq$lhs]]
   stopifnot(!is.null(data_info))
 
+  ## TODO: this requires refactoring to use some stateful rewriter
+  ## really. But we're still trying to find out if this approach is
+  ## faster so there's no point trying that yet.
+  if (!is.null(dat$gpu)) {
+    dat$data$gpu <- collector()
+    rewrite <- function(x, gpu = FALSE) {
+      generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, TRUE)
+    }
+  }
+
   ret <- f(eq, data_info, dat, rewrite, gpu)
 
   if (gpu) {
-    req <- intersect(eq$depends$variables, names(dat$data$elements))
-    ## TODO: we might need to setdiff eq$name from access. This is
-    ## easy but no point doing it if it's never going to happen.
-    if (eq$name %in% req) {
-      stop("need a little rewrite here")
+    req <- setdiff(unique(dat$data$gpu$get()),
+                   c(odin:::INDEX, dat$meta$time, eq$name))
+    if (eq$lhs != eq$name && !(eq$lhs %in% eq$depends$variables)) {
+      req <- setdiff(req, eq$lhs)
     }
+    stopifnot(all(req %in% names(dat$gpu$access)))
     access <- sprintf("const %s", dat$gpu$access[req])
-
-    if (any(is.na(access))) {
-      stop("this should never happen")
-    }
-
-    if (data_info$rank > 1) {
-      message("Do we need more dimensions etc?")
-      browser()
-    }
-
-    if (!identical(data_info$location, "variable")) {
-      access <- c(access, dat$gpu$access[[eq$name]])
-    }
-
-    ret <- cpp_block(c(access, ret))
-    if (eq$type == "expression_scalar" && data_info$location != "variable") {
-      pre <- sprintf("%s %s;", data_info$storage_type, data_info$name)
-      ret <- c(pre, ret)
-    }
+    self <- if (data_info$rank == 0) NULL else dat$gpu$access[[eq$name]]
+    ret <- cpp_block(c(access, self, ret))
   }
 
   ret
@@ -57,8 +50,13 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu) {
 
 generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite, gpu) {
   location <- data_info$location
+
   if (location == "transient") {
-    lhs <- sprintf("%s %s", dust_type(data_info$storage_type), eq$lhs)
+    if (is.null(dat$gpu)) {
+      lhs <- sprintf("%s %s", dust_type(data_info$storage_type), eq$lhs)
+    } else {
+      lhs <- dat$gpu$write[[eq$name]]
+    }
   } else if (location == "internal") {
     lhs <- rewrite(eq$lhs)
   } else {
@@ -146,6 +144,8 @@ generate_dust_equation_array_lhs <- function(eq, data_info, dat, rewrite) {
   pos <- paste(vcapply(seq_along(index), f), collapse = " + ")
   if (location == "internal") {
     lhs <- sprintf("%s[%s]", rewrite(data_info$name), pos)
+  } else if (!is.null(dat$gpu)) {
+    lhs <- sprintf("%s[%s]", eq$name, pos)
   } else {
     offset <- rewrite(dat$data[[location]]$contents[[data_info$name]]$offset)
     lhs <- sprintf("%s[%s + %s]", dat$meta$result, offset, pos)

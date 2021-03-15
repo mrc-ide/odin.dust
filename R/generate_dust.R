@@ -631,19 +631,12 @@ generate_dust_gpu <- function(dat, rewrite) {
   ## information about gpu types. This will likely move elsewhere,
   ## because typically we don't do much of this sort of interrogation
   ## after the parse phase.
-
-  ## This will likely miss a few things, but I don't know what yet!
-  eqs <- dat$equations
-  equations <- dat$components$rhs$equations
-  used <- unique(unlist(
-    lapply(eqs[equations], function(x) x$depends$variables), FALSE, FALSE))
-
-  dat$gpu <- generate_dust_gpu_storage(used, dat, rewrite)
+  dat$gpu <- generate_dust_gpu_storage(dat, rewrite)
 
   c(generate_dust_gpu_declaration(dat, rewrite),
     generate_dust_gpu_size(dat, rewrite),
     generate_dust_gpu_copy(dat, rewrite),
-    generate_dust_gpu_update(eqs, dat, rewrite))
+    generate_dust_gpu_update(dat, rewrite))
 }
 
 
@@ -656,7 +649,7 @@ generate_dust_gpu_declaration <- function(dat, rewrite) {
 }
 
 
-generate_dust_gpu_update <- function(eqs, dat, rewrite) {
+generate_dust_gpu_update <- function(dat, rewrite) {
   name <- sprintf("update_device<%s>", dat$config$base)
 
   args <- c(
@@ -768,7 +761,23 @@ generate_dust_gpu_copy <- function(dat, rewrite) {
 }
 
 
-generate_dust_gpu_storage <- function(used, dat, rewrite) {
+generate_dust_gpu_storage <- function(dat, rewrite) {
+  ## The issue here is that 'sum' does not correctly declare
+  ## dependencies on its dimensions. However, we should probably just
+  ## add these all as we need them here.
+  equations <- dat$components$rhs$equations
+  used <- unique(unlist(
+    lapply(dat$equations[equations], function(x) x$depends$variables),
+    FALSE, FALSE))
+
+  ## Make sure we have all dimension information available for these
+  ## variables:
+  dims <- unlist(
+    lapply(dat$data$elements[used], function(x) x$dimnames),
+    TRUE, FALSE)
+  offsets <- grep("^offset_", names(dat$data$elements), value = TRUE)
+  used <- union(used, c(dims, offsets))
+
   ## TODO: We might want to make all dim_ variables available to
   ## shared memory, even if they're never referenced. That will
   ## simplify access considerably. But I am not sure it'll be needed
@@ -781,18 +790,6 @@ generate_dust_gpu_storage <- function(used, dat, rewrite) {
     browser()
   }
 
-  f <- function(x) {
-    scalar <- dat$data$elements[[x$name]]$rank == 0
-    if (scalar) {
-      sprintf("real_t %s = state[%s];", x$name, x$offset)
-    } else {
-      ## TODO: we could do this with static_eval with a little work,
-      ## or at least notice when x$offset is zero
-      sprintf("dust::interleaved<real_t> %s = state + %s;", x$name, x$offset)
-    }
-  }
-  variables <- vcapply(dat$data$variable$contents, f)
-
   ## TODO: Here, when we unpack the internals we might generate some
   ## additional offsets that we need to write in. These we can look up
   ## directly though.
@@ -804,39 +801,45 @@ generate_dust_gpu_storage <- function(used, dat, rewrite) {
     internal_real = dust_gpu_storage_pack(used, "internal", "double", dat))
 
   ## Then look in our unpacks:
-  used <- unlist(unname(lapply(info, function(x) x$unpack)), FALSE)
-  ## For each offset that is a symbol, replace it with its value so
-  ## that: dim_x becomes internal_int[<i>] where '<i>' is a literal
-  ## integer (guaranteed by our scheme)
-  resolve_offset <- function(x) {
-    if (is.numeric(x)) {
-      as.character(x)
-    } else if (is.name(x)) {
-      d <- used[[as.character(x)]]
-      stopifnot(!is.null(d))
-      sprintf("shared_int[%d]", d$offset)
+  used_info <- unlist(unname(lapply(info, function(x) x$unpack)), FALSE)
+
+  ## TODO: This should be added back up in the prep section, and the
+  ## ick with rewriting the variable version needs dealing with.
+  f <- function(x, update) {
+    rank <- dat$data$elements[[x$name]]$rank
+    if (update) {
+      ## TODO: not happy with this name prefix here
+      x$name <- sprintf("update_%s", x$name)
+      location <- dat$meta$result
     } else {
-      stopifnot(identical(x[[1]], as.name("+")))
-      sprintf("%s + %s", resolve_offset(x[[2]]), resolve_offset(x[[3]]))
+      location <- dat$meta$state
     }
+    type <- if (rank == 0) "real_t" else "dust::interleaved<real_t>"
+    c(x, list(type = type, rank = rank, location = location))
   }
 
-  resolve_access <- function(x) {
-    fmt <- if (x$rank == 0) "%s %s = %s[%s];" else "%s %s = %s + %s;"
-    sprintf(fmt, x$type, x$name, x$location, resolve_offset(x$offset))
-  }
+  used_update <- lapply(dat$data$variable$contents, f, TRUE)
+  names(used_update) <- vcapply(used_update, "[[", "name")
+
+  used_info <- c(used_info,
+                 lapply(dat$data$variable$contents, f, FALSE),
+                 used_update)
 
   len <- lapply(info, function(x) x[c("length", "type", "location")])
   shared <- list(int = info$shared_int$contents,
                  real = info$shared_real$contents)
-  access <- c(
-    variables,
-    vcapply(used, resolve_access))
 
+  access_info <- vapply(used_info, dust_gpu_access, character(2), used_info)
+
+  access <- set_names(
+    sprintf("%s = %s;", access_info[1, ], access_info[2, ]),
+    colnames(access_info))
+  write <- access_info[2, ]
 
   list(
     shared = shared,
     access = access,
+    write = write,
     length = len[!vlapply(len, is.null)])
 }
 
@@ -896,7 +899,7 @@ dust_gpu_storage_pack <- function(used, location, type, dat) {
   ## Split those back apart
   length <- offset[[length(names) + 1L]]
   offset <- set_names(offset[seq_along(names)], names)
-  type_dust <- if (type == "int") "int" else "real_t"
+  type_dust <- if (type == "int") "int" else "real_t" # dust_type(type)
   ## TODO: this feels needlessly hard:
   location_dust <- sprintf("%s_%s", location,
                            if (type == "int") "int" else "real")
@@ -918,4 +921,31 @@ dust_gpu_storage_pack <- function(used, location, type, dat) {
   list(contents = names,
        offset = offset, rank = rank, length = length,
        location = location_dust, type = type_dust, unpack = unpack)
+}
+
+
+## The info arg is a list with each element containing list:
+## type (dust type), rank (0, 1, ...), name (char), location (shared_int, etc),
+## offset (int or expression)
+##
+## For each offset that is a symbol, replace it with its value so
+## that: dim_x becomes internal_int[<i>] where '<i>' is a literal
+## integer (guaranteed by our scheme)
+dust_gpu_access <- function(x, info) {
+  resolve_offset <- function(x) {
+    if (is.numeric(x)) {
+      as.character(x)
+    } else if (is.name(x) || is.character(x)) {
+      d <- info[[as.character(x)]]
+      stopifnot(!is.null(d))
+      sprintf("shared_int[%d]", d$offset)
+    } else {
+      stopifnot(identical(x[[1]], as.name("+")))
+      sprintf("%s + %s", resolve_offset(x[[2]]), resolve_offset(x[[3]]))
+    }
+  }
+
+  fmt <- if (x$rank == 0) "%s[%s]" else "%s + %s"
+  c(paste(x$type, x$name),
+    sprintf(fmt, x$location, resolve_offset(x$offset)))
 }
