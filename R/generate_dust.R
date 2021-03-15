@@ -899,7 +899,7 @@ dust_gpu_access <- function(x, info) {
       stopifnot(!is.null(d))
       sprintf("shared_int[%d]", d$offset)
     } else {
-      stopifnot(identical(x[[1]], as.name("+")))
+      stopifnot(as.character(x[[1]]) %in% c("+", "*"))
       sprintf("%s + %s", resolve_offset(x[[2]]), resolve_offset(x[[3]]))
     }
   }
