@@ -699,46 +699,6 @@ generate_dust_gpu_size <- function(dat, rewrite) {
 }
 
 
-dust_gpu_unpack <- function(name, internal, type, dat, rewrite) {
-  if (length(name) == 0L) {
-    return(NULL)
-  }
-
-  if (internal) {
-    storage <- if (type == "int") "internal_int" else "internal_real"
-    type_vector <- sprintf("dust::interleaved<%s::%s>", dat$config$base, type)
-  } else {
-    storage <- if (type == "int") "shared_int" else "shared_real"
-    type_vector <- sprintf("const %s *", type)
-  }
-
-  len <- vcapply(dat$data$elements[name], function(x)
-    rewrite(x$dimnames$length, TRUE) %||% NA_character_,
-    USE.NAMES = FALSE)
-
-  is_scalar <- is.na(len)
-  is_vector <- !is_scalar
-
-  storage <- dat$meta$dust[[storage]]
-
-  ret <- character(length(name))
-  ret[is_scalar] <- sprintf(
-    "%s %s = %s[%s];",
-    type, name[is_scalar], storage, seq_len(sum(is_scalar)) - 1L)
-
-  if (any(is_vector)) {
-    n <- sum(is_vector) + 1L
-    offset <- c(sum(is_scalar), len[is_vector])[-n]
-    prev <- c(storage, name[is_vector])[-n]
-    ret[is_vector] <- sprintf(
-      "%s %s = %s + %s;",
-      type_vector, name[is_vector], prev, offset)
-  }
-
-  ret
-}
-
-
 generate_dust_gpu_copy <- function(dat, rewrite) {
   name <- sprintf("dust::device_shared_copy<%s>", dat$config$base)
   args <- c(
