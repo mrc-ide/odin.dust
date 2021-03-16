@@ -723,10 +723,12 @@ generate_dust_gpu_copy <- function(dat, rewrite) {
 generate_dust_gpu_storage <- function(dat, rewrite) {
   ## The issue here is that 'sum' does not correctly declare
   ## dependencies on its dimensions. However, we should probably just
-  ## add these all as we need them here.
+  ## add these all as we need them here. If we like this approach we
+  ## can build the list up from what is really used.
   equations <- dat$components$rhs$equations
   used <- unique(unlist(
-    lapply(dat$equations[equations], function(x) x$depends$variables),
+    lapply(dat$equations[equations], function(x)
+      c(x$depends$variables, x$lhs)),
     FALSE, FALSE))
 
   ## Make sure we have all dimension information available for these
@@ -735,7 +737,7 @@ generate_dust_gpu_storage <- function(dat, rewrite) {
     lapply(dat$data$elements[used], function(x) x$dimnames),
     TRUE, FALSE)
   offsets <- grep("^offset_", names(dat$data$elements), value = TRUE)
-  used <- union(used, c(dims, offsets))
+  used <- union(used, c(setdiff(dims, ""), offsets))
 
   ## TODO: We might want to make all dim_ variables available to
   ## shared memory, even if they're never referenced. That will
@@ -746,12 +748,11 @@ generate_dust_gpu_storage <- function(dat, rewrite) {
   i <- vlapply(dat$data$variable$contents, function(x) is.language(x$offset))
   if (any(i)) {
     message("Add variable offsets into shared_int")
-    browser()
+    ## browser()
   }
 
-  ## TODO: Here, when we unpack the internals we might generate some
-  ## additional offsets that we need to write in. These we can look up
-  ## directly though.
+  ## We might consider chucking in these different offsets too here:
+  ## currently we create them.
 
   info <- list(
     shared_int = dust_gpu_storage_pack(used, "shared", "int", dat),
