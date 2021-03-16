@@ -899,8 +899,12 @@ dust_gpu_access <- function(x, info) {
       stopifnot(!is.null(d))
       sprintf("shared_int[%d]", d$offset)
     } else {
-      stopifnot(as.character(x[[1]]) %in% c("+", "*"))
-      sprintf("%s + %s", resolve_offset(x[[2]]), resolve_offset(x[[3]]))
+      ## A test case to cover this would be anything with at least 3
+      ## internal arrays the same size, giving offsets
+      ## 0, n, 2 * n (vs 2 + n)
+      fn <- as.character(x[[1]])
+      stopifnot(fn %in% c("+", "*"))
+      sprintf("%s %s %s", resolve_offset(x[[2]]), fn, resolve_offset(x[[3]]))
     }
   }
 
