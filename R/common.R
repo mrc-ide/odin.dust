@@ -3,6 +3,7 @@ FUNCTIONS_RENAME <- c( # nolint
   lgamma = "std::lgamma",
   ceiling = "std::ceil",
   as.integer = "static_cast<int>",
+  as.numeric = "static_cast<real_t>",
   "%%" = "fmodr<real_t>")
 
 ## Basically odin's FUNCTIONS_MATH:
