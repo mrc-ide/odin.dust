@@ -1,6 +1,6 @@
 # odin.dust 0.2.4
 
-* Support `as.numeric()` in odin code (since odin 1.0.7) (#43)
+* Support `as.numeric()` in odin code (since odin 1.1.10) (#43)
 
 # odin.dust 0.2.3
 
