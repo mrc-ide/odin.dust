@@ -1,3 +1,7 @@
+# odin.dust 0.2.4
+
+* Support `as.numeric()` in odin code (since odin 1.1.10) (#43)
+
 # odin.dust 0.2.3
 
 * Can pass more options to `odin::odin_options` with better support in `odin.dust::odin_dust_options`, including odin's new `rewrite_dims` argument (#73)
