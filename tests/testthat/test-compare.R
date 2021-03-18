@@ -79,8 +79,7 @@ test_that("Basic compare", {
     c("initial(y) <- 0",
       "update(y) <- y + rnorm(0, 1)",
       "scale <- user(1) # ignore.unused",
-      'config(compare) <- "examples/compare_simple.cpp"'),
-    verbose = FALSE)
+      'config(compare) <- "examples/compare_simple.cpp"'))
 
   np <- 10
   mod <- gen$new(list(), 0, np, seed = 1L)
@@ -186,8 +185,7 @@ test_that("Only one compare block allowed", {
         "update(y) <- y + rnorm(0, 1)",
         "scale <- user(1) # ignore.unused",
         'config(compare) <- "examples/compare_simple.cpp"',
-        'config(compare) <- "examples/compare_simple.cpp"'),
-      verbose = FALSE),
+        'config(compare) <- "examples/compare_simple.cpp"')),
     "Only one 'config(compare)' statement is allowed",
     fixed = TRUE)
 })
@@ -198,8 +196,7 @@ test_that("Find correct compare file", {
       c("initial(y) <- 0",
         "update(y) <- y + rnorm(0, 1)",
         "scale <- user(1) # ignore.unused",
-        'config(compare) <- "examples/compare-simple.cpp"'),
-      verbose = FALSE),
+        'config(compare) <- "examples/compare-simple.cpp"')),
     "Did not find a file 'examples/compare-simple.cpp' (relative to odin",
     fixed = TRUE)
 })
@@ -214,8 +211,7 @@ test_that("Sensible error messages on substitution failure", {
       c("initial(y) <- 0",
         "update(y) <- y + rnorm(0, 1)",
         "s <- user(1) # ignore.unused",
-        'config(compare) <- "examples/compare_simple.cpp"'),
-      verbose = FALSE),
+        'config(compare) <- "examples/compare_simple.cpp"')),
     "Did not find odin variables when reading 'examples/compare_simple.cpp'")
   expect_match(
     err$message,

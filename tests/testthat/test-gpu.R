@@ -10,7 +10,7 @@ test_that("Can generate interleaved interface for basic model", {
     initial(x[]) <- i
     update(x[]) <- rnorm(x[i] + mean, sd)
     dim(x) <- len
-  }, gpu_generate = TRUE, verbose = FALSE)
+  }, options = odin_dust_options(gpu_generate = TRUE))
 
   mod1 <- gen$new(list(len = 10), 0, 10, seed = 1L)
   mod2 <- gen$new(list(len = 10), 0, 10, seed = 1L, device_id = 0L)
@@ -32,7 +32,7 @@ test_that("Can generate gpu code with internal storage", {
     dim(x) <- len
     dim(y) <- len
     dim(z) <- len
-  }, gpu_generate = TRUE, verbose = FALSE)
+  }, options = odin_dust_options(gpu_generate = TRUE))
 
   mod1 <- gen$new(list(len = 10), 0, 10, seed = 1L)
   mod2 <- gen$new(list(len = 10), 0, 10, seed = 1L, device_id = 0L)
@@ -76,7 +76,7 @@ test_that("Can run basic sums on device", {
     initial(tot2) <- 0
     initial(tot3) <- 0
     initial(tot4) <- 0
-  }, gpu_generate = TRUE, verbose = FALSE)
+  }, options = odin_dust_options(gpu_generate = TRUE))
 
   nr <- 5
   nc <- 7
@@ -100,7 +100,7 @@ test_that("Generate correct code with scalars and vectors in shared", {
     dim(y) <- user()
     initial(z) <- 0
     update(z) <- a + b + sum(x) + sum(y)
-  }, gpu_generate = TRUE, verbose = FALSE)
+  }, options = odin_dust_options(gpu_generate = TRUE))
 
   p <- list(a = runif(1), b = runif(1), x = runif(10), y = runif(5))
   mod1 <- gen$new(p, 0, 1, seed = 1L)
@@ -122,7 +122,7 @@ test_that("Use offsets correctly", {
     dim(x) <- n
     dim(y) <- n
     dim(z) <- n
-  }, gpu_generate = TRUE, verbose = FALSE)
+  }, options = odin_dust_options(gpu_generate = TRUE))
 
   mod1 <- gen$new(list(), 0, 13, seed = 1L)
   mod2 <- gen$new(list(), 0, 13, seed = 1L, device_id = 0L)
@@ -133,8 +133,9 @@ test_that("Use offsets correctly", {
 
 ## This is more strictly a dust check
 test_that("gpu and gpu-free versions do not interfere in cache", {
-  gen1 <- odin_dust_("examples/sir.R", verbose = FALSE)
-  gen2 <- odin_dust_("examples/sir.R", verbose = FALSE, gpu_generate = TRUE)
+  gen1 <- odin_dust_("examples/sir.R")
+  gen2 <- odin_dust_("examples/sir.R",
+                     options = odin_dust_options(gpu_generate = TRUE))
   expect_error(
     gen1$new(list(I_ini = 1), 0, 1)$run(0, device = TRUE),
     "GPU support not enabled for this object")
@@ -147,15 +148,17 @@ test_that("ask for gpu compilation if wanted", {
   testthat::skip_if_not_installed("mockery")
 
   path <- "examples/array.R"
-  gen <- odin_dust(path, verbose = FALSE)
+  gen <- odin_dust_(path)
 
   mock_dust <- mockery::mock(gen, cycle = TRUE)
   res1 <- with_mock(
     "dust::dust" = mock_dust,
-    odin_dust_(path, gpu = TRUE))
+    odin_dust_(path,
+               options = odin_dust_options(gpu = TRUE)))
   res2 <- with_mock(
     "dust::dust" = mock_dust,
-    odin_dust_(path, gpu = FALSE, gpu_generate = TRUE))
+    odin_dust_(path,
+               options = odin_dust_options(gpu = FALSE, gpu_generate = TRUE)))
 
   expect_identical(res1, gen)
   expect_identical(res2, gen)

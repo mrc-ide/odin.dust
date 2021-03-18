@@ -14,7 +14,7 @@
 ##' @export
 ##'
 ##' @return The path to the package
-odin_dust_package <- function(path, verbose = NULL, real_t = NULL) {
+odin_dust_package <- function(path, options = NULL) {
   re_r <- "\\.R$"
   header_cpp <- odin_dust_header("//")
   header_r <- odin_dust_header("##")
@@ -28,14 +28,17 @@ odin_dust_package <- function(path, verbose = NULL, real_t = NULL) {
   ## NOTE: that mixing odin and odin.dust models together is unlikely
   ## to go well, and we assume here that all models are compilable to
   ## dust.
-  options <- odin_dust_options(verbose, NULL)
+  options <- odin_dust_options(options = options)
+  if (!identical(options$gpu$compile, FALSE)) {
+    stop("Can't compile gpu models into a package")
+  }
   nms <- character()
 
   for (f in filenames) {
     ir <- odin::odin_parse_(f, options)
     dat <- with_dir(
       dirname(f),
-      generate_dust(ir, options, real_t))
+      generate_dust(ir, options))
     code <- odin_dust_code(dat)
     dest <- file.path(path, "inst", "dust", sub(re_r, ".cpp", basename(f)))
     if (file.exists(dest)) {
@@ -47,7 +50,7 @@ odin_dust_package <- function(path, verbose = NULL, real_t = NULL) {
     nms <- c(nms, dat$name)
   }
 
-  dust::dust_package(path)
+  dust::dust_package(path, quiet = !options$verbose)
 
   path_dust_r <- file.path(path, "R", "dust.R")
   code_r <- readLines(path_dust_r)

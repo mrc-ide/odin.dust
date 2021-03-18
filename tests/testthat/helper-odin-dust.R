@@ -1,5 +1,7 @@
 test_cache <- new.env(parent = emptyenv())
 
+options(odin.verbose = FALSE)
+
 user_wrapper <- function() {
   testthat::skip_on_cran()
   testthat::skip_if_not_installed("cpp11")

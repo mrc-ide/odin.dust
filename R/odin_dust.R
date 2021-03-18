@@ -11,17 +11,51 @@
 ##'   length is greater than 1 elements will be joined with newlines)
 ##'   or an expression.
 ##'
-##' @param verbose Logical scalar indicating if the compilation should
-##'   be verbose.  Defaults to the value of the option
-##'   \code{odin.verbose} or \code{FALSE} otherwise.
+##' @inheritParams odin_dust_options
+##'
+##' @param ... Arguments passed to [odin::odin_dust_options],
+##'   including `real_t`, `gpu`, `verbose`, `workdir`,
+##'   `no_check_unused_equations` and `rewrite_dims`.
+##'
+##' @export
+##' @importFrom odin odin
+odin_dust <- function(x, ..., options = NULL) {
+  xx <- substitute(x)
+  if (is.symbol(xx)) {
+    xx <- force(x)
+  } else if (is_call(xx, quote(c)) && all(vlapply(xx[-1], is.character))) {
+    xx <- force(x)
+  }
+  odin_dust_(xx, ..., options = options)
+}
+
+
+##' @export
+##' @rdname odin_dust
+odin_dust_ <- function(x, ..., options = NULL) {
+  options <- odin_dust_options(..., options = options)
+  ir <- odin::odin_parse_(x, options)
+  if (is.character(x) && length(x) == 1L && file.exists(x)) {
+    srcdir <- dirname(x)
+  } else {
+    srcdir <- "."
+  }
+
+  odin_dust_wrapper(ir, srcdir, options)
+}
+
+
+##' Options for controlling [odin_dust]; this is a superset of
+##' [odin::odin_options]
+##'
+##' @title Options for odin_dust
+##'
+##' @param ... Arguments passed to [odin::odin_options], including
+##'   `verbose`, `workdir`, `no_check_unused_equations` and
+##'   `rewrite_dims`.
 ##'
 ##' @param real_t C++ type to use for real (floating point)
 ##'   numbers. Defaults to \code{double}.
-##'
-##' @param workdir Working directory to use for the compilation. By
-##'   default we use a new path within the temporary directory. Passed
-##'   to \code{\link{dust}}; a mini package will be created at this
-##'   path.
 ##'
 ##' @param gpu **Experimental!** Generate support for running models
 ##'   on a GPU. This implies `gpu_generate` but *does* require a gpu
@@ -38,50 +72,44 @@
 ##'   will be considerably slower. Currently not supported within
 ##'   package code.
 ##'
+##' @param options An [odin::odin_options] or `odin_dust_options`
+##'   object. If given it overrides arguments; if it is already a
+##'   `odin_dust_options` object it is returned unmodified. Otherwise
+##'   it is passed through to [odin::odin_options] where it will
+##'   override arguments in `...` but respond to the `odin_dust`
+##'   specific options (`real_t`, etc)
+##'
+##' @return A list of options (class `odin_options`) to
+##'   pass to `odin.dust::odin_dust`
+##'
 ##' @export
-##' @importFrom odin odin
-odin_dust <- function(x, verbose = NULL, real_t = NULL, workdir = NULL,
-                      gpu = FALSE, gpu_generate = FALSE) {
-  xx <- substitute(x)
-  if (is.symbol(xx)) {
-    xx <- force(x)
-  } else if (is_call(xx, quote(c)) && all(vlapply(xx[-1], is.character))) {
-    xx <- force(x)
+##' @examples
+##' odin.dust::odin_dust_options()
+odin_dust_options <- function(..., real_t = NULL,
+                              gpu = NULL, gpu_generate = NULL,
+                              options = NULL) {
+  if (inherits(options, "odin_dust_options")) {
+    return(options)
   }
-  odin_dust_(xx, verbose, real_t, workdir, gpu, gpu_generate)
-}
 
-
-##' @export
-##' @rdname odin_dust
-odin_dust_ <- function(x, verbose = NULL, real_t = NULL, workdir = NULL,
-                       gpu = FALSE, gpu_generate = FALSE) {
-  options <- odin_dust_options(verbose, workdir)
-  ir <- odin::odin_parse_(x, options)
-  if (is.character(x) && length(x) == 1L && file.exists(x)) {
-    srcdir <- dirname(x)
-  } else {
-    srcdir <- "."
+  if (...length() > 0 && inherits(..1, "odin_options")) {
+    stop("'odin_options' object passed as unnamed argument")
   }
-  gpu <- gpu_mode(gpu_generate, gpu)
 
-  odin_dust_wrapper(ir, options, real_t, gpu, srcdir)
-}
-
-
-odin_dust_options <- function(verbose, workdir) {
-  options <- odin::odin_options(target = "dust", verbose = verbose,
-                                workdir = workdir)
+  options <- odin::odin_options(target = "dust", ...)
+  options$gpu <- gpu_mode(gpu_generate %||% FALSE, gpu %||% FALSE)
+  options$real_t <- real_t %||% "double"
   options$read_include <- read_include_dust
   options$config_custom <- "compare"
+  class(options) <- c("odin_dust_options", class(options))
   options
 }
 
 
-odin_dust_wrapper <- function(ir, options, real_t, gpu, srcdir) {
+odin_dust_wrapper <- function(ir, srcdir, options) {
   dat <- with_dir(
     srcdir,
-    generate_dust(ir, options, real_t, gpu$generate))
+    generate_dust(ir, options))
   code <- odin_dust_code(dat)
 
   path <- tempfile(fileext = ".cpp")
@@ -89,7 +117,7 @@ odin_dust_wrapper <- function(ir, options, real_t, gpu, srcdir) {
 
   generator <- dust::dust(path, quiet = !options$verbose,
                           workdir = options$workdir,
-                          gpu = gpu$compile)
+                          gpu = options$gpu$compile)
   if (!("transform_variables" %in% names(generator$public_methods))) {
     generator$set("public", "transform_variables",
                   odin_dust_transform_variables)

@@ -5,55 +5,25 @@
 \alias{odin_dust_}
 \title{Create a dust odin model}
 \usage{
-odin_dust(
-  x,
-  verbose = NULL,
-  real_t = NULL,
-  workdir = NULL,
-  gpu = FALSE,
-  gpu_generate = FALSE
-)
+odin_dust(x, ..., options = NULL)
 
-odin_dust_(
-  x,
-  verbose = NULL,
-  real_t = NULL,
-  workdir = NULL,
-  gpu = FALSE,
-  gpu_generate = FALSE
-)
+odin_dust_(x, ..., options = NULL)
 }
 \arguments{
 \item{x}{Either the name of a file to read, a text string (if
 length is greater than 1 elements will be joined with newlines)
 or an expression.}
 
-\item{verbose}{Logical scalar indicating if the compilation should
-be verbose.  Defaults to the value of the option
-\code{odin.verbose} or \code{FALSE} otherwise.}
+\item{...}{Arguments passed to [odin::odin_dust_options],
+including `real_t`, `gpu`, `verbose`, `workdir`,
+`no_check_unused_equations` and `rewrite_dims`.}
 
-\item{real_t}{C++ type to use for real (floating point)
-numbers. Defaults to \code{double}.}
-
-\item{workdir}{Working directory to use for the compilation. By
-default we use a new path within the temporary directory. Passed
-to \code{\link{dust}}; a mini package will be created at this
-path.}
-
-\item{gpu}{**Experimental!** Generate support for running models
-on a GPU. This implies `gpu_generate` but *does* require a gpu
-and nvcc toolchain. Currently not supported within package code.
-This argument will be passed through to [dust::dust()] and so to
-enable compilation for a gpu, pass either `TRUE` or the results
-of [dust::dust_cuda_options])}
-
-\item{gpu_generate}{**Experimental** Generate gpu support
-code. This does not require a gpu or nvcc toolchain, but creates
-code that could be compiled for a gpu. This is primarily
-intended for testing and development as the generated code will
-be slower than the normal cpu version, and the compilation time
-will be considerably slower. Currently not supported within
-package code.}
+\item{options}{An [odin::odin_options] or `odin_dust_options`
+object. If given it overrides arguments; if it is already a
+`odin_dust_options` object it is returned unmodified. Otherwise
+it is passed through to [odin::odin_options] where it will
+override arguments in `...` but respond to the `odin_dust`
+specific options (`real_t`, etc)}
 }
 \description{
 Compile an odin model to work with dust.
