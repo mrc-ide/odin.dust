@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Articles • odin.dust</title>
+<title>Options for odin_dust — odin_dust_options • odin.dust</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,7 +46,9 @@
 
 
 
-<meta property="og:title" content="Articles" />
+<meta property="og:title" content="Options for odin_dust — odin_dust_options" />
+<meta property="og:description" content="Options for controlling [odin_dust]; this is a superset of
+[odin::odin_options]" />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -66,7 +68,7 @@
   </head>
 
   <body data-spy="scroll" data-target="#toc">
-    <div class="container template-article-index">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -130,18 +132,138 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Articles</h1>
+    <h1>Options for odin_dust</h1>
+    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/odin.dust/blob/master/R/odin_dust.R'><code>R/odin_dust.R</code></a></small>
+    <div class="hidden name"><code>odin_dust_options.Rd</code></div>
     </div>
 
-    <div class="section ">
-      <h3>All vignettes</h3>
-      <p class="section-desc"></p>
-
-      <dl>
-        <dt><a href="sir_models.html">SIR models</a></dt>
-        <dd></dt>
-      </dl>
+    <div class="ref-description">
+    <p>Options for controlling [odin_dust]; this is a superset of
+[odin::odin_options]</p>
     </div>
+
+    <pre class="usage"><span class='fu'>odin_dust_options</span><span class='op'>(</span>
+  <span class='va'>...</span>,
+  real_t <span class='op'>=</span> <span class='cn'>NULL</span>,
+  gpu <span class='op'>=</span> <span class='cn'>NULL</span>,
+  gpu_generate <span class='op'>=</span> <span class='cn'>NULL</span>,
+  options <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
+
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>...</th>
+      <td><p>Arguments passed to [odin::odin_options], including
+`verbose`, `workdir`, `no_check_unused_equations` and
+`rewrite_dims`.</p></td>
+    </tr>
+    <tr>
+      <th>real_t</th>
+      <td><p>C++ type to use for real (floating point)
+numbers. Defaults to <code>double</code>.</p></td>
+    </tr>
+    <tr>
+      <th>gpu</th>
+      <td><p>**Experimental!** Generate support for running models
+on a GPU. This implies `gpu_generate` but *does* require a gpu
+and nvcc toolchain. Currently not supported within package code.
+This argument will be passed through to [dust::dust()] and so to
+enable compilation for a gpu, pass either `TRUE` or the results
+of [dust::dust_cuda_options])</p></td>
+    </tr>
+    <tr>
+      <th>gpu_generate</th>
+      <td><p>**Experimental** Generate gpu support
+code. This does not require a gpu or nvcc toolchain, but creates
+code that could be compiled for a gpu. This is primarily
+intended for testing and development as the generated code will
+be slower than the normal cpu version, and the compilation time
+will be considerably slower. Currently not supported within
+package code.</p></td>
+    </tr>
+    <tr>
+      <th>options</th>
+      <td><p>An [odin::odin_options] or `odin_dust_options`
+object. If given it overrides arguments; if it is already a
+`odin_dust_options` object it is returned unmodified. Otherwise
+it is passed through to [odin::odin_options] where it will
+override arguments in `...` but respond to the `odin_dust`
+specific options (`real_t`, etc)</p></td>
+    </tr>
+    </table>
+
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>A list of options (class `odin_options`) to
+  pass to `odin.dust::odin_dust`</p>
+
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'>odin.dust</span><span class='fu'>::</span><span class='fu'>odin_dust_options</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; $validate
+#&gt; [1] FALSE
+#&gt; 
+#&gt; $verbose
+#&gt; [1] TRUE
+#&gt; 
+#&gt; $target
+#&gt; [1] "dust"
+#&gt; 
+#&gt; $pretty
+#&gt; [1] FALSE
+#&gt; 
+#&gt; $workdir
+#&gt; [1] "/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//Rtmp45EaAd/filec517b40d0f8"
+#&gt; 
+#&gt; $skip_cache
+#&gt; [1] FALSE
+#&gt; 
+#&gt; $rewrite_dims
+#&gt; [1] FALSE
+#&gt; 
+#&gt; $no_check_unused_equations
+#&gt; [1] FALSE
+#&gt; 
+#&gt; $compiler_warnings
+#&gt; [1] FALSE
+#&gt; 
+#&gt; $read_include
+#&gt; function (filename) 
+#&gt; {
+#&gt;     dat &lt;- decor::cpp_decorations(files = filename)
+#&gt;     code &lt;- dat$context[dat$decoration == "odin.dust::register"]
+#&gt;     names &lt;- vcapply(code, function(x) decor::parse_cpp_function(x)$name)
+#&gt;     if (length(names) == 0) {
+#&gt;         stop("Did not find any functions decorated with '[[odin.dust::register]]'")
+#&gt;     }
+#&gt;     list(names = names, data = list(source = paste(readLines(filename), 
+#&gt;         collapse = "\n")))
+#&gt; }
+#&gt; &lt;bytecode: 0x7fad16082d50&gt;
+#&gt; &lt;environment: namespace:odin.dust&gt;
+#&gt; 
+#&gt; $gpu
+#&gt; $gpu$generate
+#&gt; [1] FALSE
+#&gt; 
+#&gt; $gpu$compile
+#&gt; [1] FALSE
+#&gt; 
+#&gt; 
+#&gt; $real_t
+#&gt; [1] "double"
+#&gt; 
+#&gt; $config_custom
+#&gt; [1] "compare"
+#&gt; 
+#&gt; attr(,"class")
+#&gt; [1] "odin_dust_options" "odin_options"     </div></pre>
+  </div>
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 

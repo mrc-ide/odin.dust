@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.3</span>
       </span>
     </div>
 
@@ -140,23 +140,9 @@
     <p>Compile an odin model to work with dust.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>odin_dust</span><span class='op'>(</span>
-  <span class='va'>x</span>,
-  verbose <span class='op'>=</span> <span class='cn'>NULL</span>,
-  real_t <span class='op'>=</span> <span class='cn'>NULL</span>,
-  workdir <span class='op'>=</span> <span class='cn'>NULL</span>,
-  gpu <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  gpu_generate <span class='op'>=</span> <span class='cn'>FALSE</span>
-<span class='op'>)</span>
+    <pre class="usage"><span class='fu'>odin_dust</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span>, options <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span>
 
-<span class='fu'>odin_dust_</span><span class='op'>(</span>
-  <span class='va'>x</span>,
-  verbose <span class='op'>=</span> <span class='cn'>NULL</span>,
-  real_t <span class='op'>=</span> <span class='cn'>NULL</span>,
-  workdir <span class='op'>=</span> <span class='cn'>NULL</span>,
-  gpu <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  gpu_generate <span class='op'>=</span> <span class='cn'>FALSE</span>
-<span class='op'>)</span></pre>
+<span class='fu'>odin_dust_</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span>, options <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -168,41 +154,19 @@ length is greater than 1 elements will be joined with newlines)
 or an expression.</p></td>
     </tr>
     <tr>
-      <th>verbose</th>
-      <td><p>Logical scalar indicating if the compilation should
-be verbose.  Defaults to the value of the option
-<code>odin.verbose</code> or <code>FALSE</code> otherwise.</p></td>
+      <th>...</th>
+      <td><p>Arguments passed to [odin::odin_dust_options],
+including `real_t`, `gpu`, `verbose`, `workdir`,
+`no_check_unused_equations` and `rewrite_dims`.</p></td>
     </tr>
     <tr>
-      <th>real_t</th>
-      <td><p>C++ type to use for real (floating point)
-numbers. Defaults to <code>double</code>.</p></td>
-    </tr>
-    <tr>
-      <th>workdir</th>
-      <td><p>Working directory to use for the compilation. By
-default we use a new path within the temporary directory. Passed
-to <code>dust</code>; a mini package will be created at this
-path.</p></td>
-    </tr>
-    <tr>
-      <th>gpu</th>
-      <td><p>**Experimental!** Generate support for running models
-on a GPU. This implies `gpu_generate` but *does* require a gpu
-and nvcc toolchain. Currently not supported within package code.
-This argument will be passed through to [dust::dust()] and so to
-enable compilation for a gpu, pass either `TRUE` or the results
-of [dust::dust_cuda_options])</p></td>
-    </tr>
-    <tr>
-      <th>gpu_generate</th>
-      <td><p>**Experimental** Generate gpu support
-code. This does not require a gpu or nvcc toolchain, but creates
-code that could be compiled for a gpu. This is primarily
-intended for testing and development as the generated code will
-be slower than the normal cpu version, and the compilation time
-will be considerably slower. Currently not supported within
-package code.</p></td>
+      <th>options</th>
+      <td><p>An [odin::odin_options] or `odin_dust_options`
+object. If given it overrides arguments; if it is already a
+`odin_dust_options` object it is returned unmodified. Otherwise
+it is passed through to [odin::odin_options] where it will
+override arguments in `...` but respond to the `odin_dust`
+specific options (`real_t`, etc)</p></td>
     </tr>
     </table>
 

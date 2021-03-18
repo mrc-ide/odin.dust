@@ -84,7 +84,7 @@ use the model." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.3</span>
       </span>
     </div>
 
@@ -148,7 +148,7 @@ in `R/dust.R`, along with the cpp11 attributes that are needed to
 use the model.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>odin_dust_package</span><span class='op'>(</span><span class='va'>path</span>, verbose <span class='op'>=</span> <span class='cn'>NULL</span>, real_t <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>odin_dust_package</span><span class='op'>(</span><span class='va'>path</span>, options <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -159,15 +159,13 @@ use the model.</p>
 contains <code>DESCRIPTION</code>)</p></td>
     </tr>
     <tr>
-      <th>verbose</th>
-      <td><p>Logical scalar indicating if the compilation should
-be verbose.  Defaults to the value of the option
-<code>odin.verbose</code> or <code>FALSE</code> otherwise.</p></td>
-    </tr>
-    <tr>
-      <th>real_t</th>
-      <td><p>C++ type to use for real (floating point)
-numbers. Defaults to <code>double</code>.</p></td>
+      <th>options</th>
+      <td><p>An [odin::odin_options] or `odin_dust_options`
+object. If given it overrides arguments; if it is already a
+`odin_dust_options` object it is returned unmodified. Otherwise
+it is passed through to [odin::odin_options] where it will
+override arguments in `...` but respond to the `odin_dust`
+specific options (`real_t`, etc)</p></td>
     </tr>
     </table>
 
