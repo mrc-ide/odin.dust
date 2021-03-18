@@ -680,11 +680,8 @@ generate_dust_gpu_update <- function(dat, rewrite) {
 
 generate_dust_gpu_size <- function(dat, rewrite) {
   dust_gpu_size <- function(x) {
-    ## TODO: This is all really ick and we'll refactor later.
-    name <- sprintf("dust::device_%s_size_%s<%s>",
-                    sub("_.+", "", x$location),
-                    if (x$type == "int") "int" else "real",
-                    dat$config$base)
+    name <- sprintf("dust::device_%s_size<%s>",
+                    x$location, dat$config$base)
     args <- set_names(dat$meta$dust$shared,
                       sprintf("dust::shared_ptr<%s>", dat$config$base))
     body <- sprintf("return %s;", rewrite(x$length))
@@ -692,8 +689,6 @@ generate_dust_gpu_size <- function(dat, rewrite) {
       cpp_function("size_t", name, args, body))
   }
 
-  ## TODO: it would be better if we renamed these in dust so that they
-  ## are device_size_<location>_<type>
   dust_flatten_eqs(lapply(dat$gpu$length, dust_gpu_size))
 }
 
