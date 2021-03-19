@@ -368,14 +368,12 @@ generate_dust_core_attributes <- function(dat) {
 }
 
 
-dust_unpack_variable <- function(name, dat, state, rewrite, gpu = FALSE) {
+dust_unpack_variable <- function(name, dat, state, rewrite) {
   x <- dat$data$variable$contents[[name]]
   data_info <- dat$data$elements[[name]]
   rhs <- dust_extract_variable(x, dat$data$elements, state, rewrite)
   if (data_info$rank == 0L) {
     fmt <- "const %s %s = %s;"
-  } else if (gpu) {
-    fmt <- "const dust::interleaved<%s> %s = %s;"
   } else {
     fmt <- "const %s * %s = %s;"
   }
@@ -923,17 +921,11 @@ dust_gpu_access <- function(x, info) {
   resolve_offset <- function(x) {
     if (is.numeric(x)) {
       as.character(x)
-    } else if (is.name(x) || is.character(x)) {
+    } else {
+      stopifnot(is.name(x) || is.character(x))
       d <- info[[as.character(x)]]
       stopifnot(!is.null(d))
       sprintf("shared_int[%d]", d$offset)
-    } else {
-      ## A test case to cover this would be anything with at least 3
-      ## internal arrays the same size, giving offsets
-      ## 0, n, 2 * n (vs 2 + n)
-      fn <- as.character(x[[1]])
-      stopifnot(fn %in% c("+", "*"))
-      sprintf("%s %s %s", resolve_offset(x[[2]]), fn, resolve_offset(x[[3]]))
     }
   }
 
