@@ -662,13 +662,8 @@ generate_dust_gpu_update <- function(dat, rewrite) {
     "dust::interleaved<%s::real_t>" = dat$meta$result)
   names(args) <- sub("%s", dat$config$base, names(args), fixed = TRUE)
 
-  ## We will need to add in some additional bits for any new scalars
-  ## we want to store. For now don't worry though.
-  rewrite_gpu <- function(x) {
-    generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, TRUE)
-  }
-  eqs <- generate_dust_equations(dat, rewrite_gpu,
-                                 dat$components$rhs$equations, TRUE)
+  eqs <- generate_dust_equations(dat, rewrite, dat$components$rhs$equations,
+                                 TRUE)
 
   body <- c(sprintf("typedef %s::real_t real_t;", dat$config$base),
             dust_flatten_eqs(eqs))
