@@ -702,11 +702,19 @@ generate_dust_gpu_copy <- function(dat, rewrite) {
   names(args) <- sub("%s", dat$config$base, names(args), fixed = TRUE)
 
   copy1 <- function(name, shared) {
-    sprintf("%s = dust::shared_copy(%s, %s);",
-            shared, shared, vcapply(name, rewrite, USE.NAMES = FALSE))
+    sprintf("%s = dust::shared_copy(%s, %s);", shared, shared,
+            vcapply(name, rewrite, USE.NAMES = FALSE))
+  }
+
+  gpu_offsets <- NULL
+  if (length(dat$gpu$shared$gpu_offsets) > 0) {
+    gpu_offsets <- sprintf("const int %s = %s;",
+                           names(dat$gpu$shared$gpu_offsets),
+                           vcapply(dat$gpu$shared$gpu_offsets, rewrite))
   }
 
   body <- c(
+    gpu_offsets,
     copy1(dat$gpu$shared$int, dat$meta$dust$shared_int),
     copy1(dat$gpu$shared$real, dat$meta$dust$shared_real))
 
@@ -734,32 +742,56 @@ generate_dust_gpu_storage <- function(dat, rewrite) {
   offsets <- grep("^offset_", names(dat$data$elements), value = TRUE)
   used <- union(used, c(setdiff(dims, ""), offsets))
 
-  ## TODO: We might want to make all dim_ variables available to
-  ## shared memory, even if they're never referenced. That will
-  ## simplify access considerably. But I am not sure it'll be needed
-
-  ## We need to make sure that these offsets also get into the
-  ## shared_int memory.
-  i <- vlapply(dat$data$variable$contents, function(x) is.language(x$offset))
-  if (any(i)) {
-    message("Add variable offsets into shared_int")
-    ## browser()
-  }
-
-  ## We might consider chucking in these different offsets too here:
-  ## currently we create them.
-
+  ## At this point we need to compute some extra offsets so that we
+  ## can pop them into shared_int. This is weird to do really
   info <- list(
     shared_int = dust_gpu_storage_pack(used, "shared", "int", dat),
     shared_real = dust_gpu_storage_pack(used, "shared", "double", dat),
     internal_int = dust_gpu_storage_pack(used, "internal", "int", dat),
     internal_real = dust_gpu_storage_pack(used, "internal", "double", dat))
 
+  ## We could use is.recursive (compound expressions) or is.language
+  ## (any lookup) here. I think that the latter will involve the
+  ## fewest reads at a small increase in memory usage.
+  extra <- lapply(info, function(el)
+    which(vlapply(el$unpack, function(x) is.language(x$offset))))
+
+  ## What we have to do here is write these out to new offset
+  ## variables, replace the value in info with the symbol *and* ensure
+  ## that these are created somewhere! This is fiddly but not
+  ## fundamentally that nasty.
+  if (any(lengths(extra) > 0)) {
+    ## This is what we need to compute and add into the internal structure
+    fmt <- "offset_%s"
+    extra_offsets <- sprintf(fmt, unlist(lapply(unname(extra), names)))
+
+    extra_exprs <- unlist(lapply(seq_along(extra), function(i)
+      lapply(info[[i]]$unpack[extra[[i]]], "[[", "offset")), FALSE)
+    names(extra_exprs) <- extra_offsets
+
+    ## Then we need to go and replace these elements within the
+    ## lookups above; this is pretty tedious
+    f <- function(el) {
+      el$offset <- as.name(sprintf(fmt, el$name))
+      el
+    }
+    for (i in which(lengths(extra) > 0)) {
+      info[[i]]$unpack[extra[[i]]] <- lapply(info[[i]]$unpack[extra[[i]]], f)
+    }
+
+    ## The easiest way to do this is just recompute our shared int
+    ## structure again, with these in, rather than shunting things
+    ## along.
+    info$shared_int <-
+      dust_gpu_storage_pack(used, "shared", "int", dat, extra_offsets)
+  } else {
+    ## simplifies later
+    extra_exprs <- NULL
+  }
+
   ## Then look in our unpacks:
   used_info <- unlist(unname(lapply(info, function(x) x$unpack)), FALSE)
 
-  ## TODO: This should be added back up in the prep section, and the
-  ## ick with rewriting the variable version needs dealing with.
   f <- function(x, update) {
     rank <- dat$data$elements[[x$name]]$rank
     if (update) {
@@ -782,7 +814,8 @@ generate_dust_gpu_storage <- function(dat, rewrite) {
 
   len <- lapply(info, function(x) x[c("length", "type", "location")])
   shared <- list(int = info$shared_int$contents,
-                 real = info$shared_real$contents)
+                 real = info$shared_real$contents,
+                 gpu_offsets = extra_exprs)
 
   access_info <- vapply(used_info, dust_gpu_access, character(2), used_info)
 
@@ -806,7 +839,7 @@ generate_dust_gpu_storage <- function(dat, rewrite) {
 ## thing that once this settles down we will want to refactor. There's
 ## a lot of things here that are a bit shared in spirit with how we do
 ## the underlying processing in odin.
-dust_gpu_storage_pack <- function(used, location, type, dat) {
+dust_gpu_storage_pack <- function(used, location, type, dat, extra = NULL) {
   if (location == "internal") {
     include <- function(x) {
       x$stage == "time" && x$location %in% c("internal", "transient") &&
@@ -820,14 +853,19 @@ dust_gpu_storage_pack <- function(used, location, type, dat) {
   }
 
   names <- intersect(names_if(vlapply(dat$data$elements, include)), used)
+  rank <- viapply(dat$data$elements[names], "[[", "rank")
+  len <- lapply(dat$data$elements[names], function(x)
+    x$dimnames$length %||% 1L)
+
+  if (length(extra) > 0) {
+    names <- c(names, extra)
+    rank <- c(rank, rep(0, length(extra)))
+    len <- c(len, rep(1L, length(extra)))
+  }
 
   if (length(names) == 0) {
     return(NULL)
   }
-
-  rank <- viapply(dat$data$elements[names], "[[", "rank")
-  len <- lapply(dat$data$elements[names], function(x)
-    x$dimnames$length %||% 1L)
 
   ## We'll pack from least to most complex and everything with a fixed
   ## offset first. This puts all scalars first, then all arrays that
