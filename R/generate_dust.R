@@ -873,7 +873,7 @@ dust_gpu_storage_pack <- function(used, location, type, dat, extra = NULL) {
     if (!is_array[[i]]) {
       offset[[i + 1L]] <- i
     } else {
-      stopifnot(is.numeric(len[[i]]) || is.name(len[[i]]))
+      stopifnot(is.numeric(len[[i]]) || is.character(len[[i]]))
       len_i <- if (is.numeric(len[[i]])) len[[i]] else as.name(len[[i]])
       offset[[i + 1L]] <- call("+", offset[[i]], len_i)
     }
