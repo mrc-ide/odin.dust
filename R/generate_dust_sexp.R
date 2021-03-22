@@ -85,8 +85,7 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
     } else {
       x
     }
-  } else {
-    ## numeric here
+  } else if (is.numeric(x)) {
     deparse(x, control = "digits17")
   }
 }

@@ -20,9 +20,11 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu) {
   data_info <- dat$data$elements[[eq$lhs]]
   stopifnot(!is.null(data_info))
 
-  ## TODO: this requires refactoring to use some stateful rewriter
-  ## really. But we're still trying to find out if this approach is
-  ## faster so there's no point trying that yet.
+  ## NOTE: there's a little dance here to work out *exactly* what is
+  ## referenced in a GPU equation so that we can later on unpack
+  ## exactly those elements right before the equation. We can't rely
+  ## on "depends" etc because that is not specific enough about which
+  ## dimensions are referenced (for example).
   if (!is.null(dat$gpu)) {
     dat$data$gpu <- collector()
     rewrite <- function(x, gpu = FALSE) {

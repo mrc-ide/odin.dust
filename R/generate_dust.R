@@ -628,12 +628,12 @@ generate_dust_gpu <- function(dat, rewrite) {
   ## information about gpu types. This will likely move elsewhere,
   ## because typically we don't do much of this sort of interrogation
   ## after the parse phase.
-  dat$gpu <- generate_dust_gpu_storage(dat, rewrite)
+  dat$gpu <- generate_dust_gpu_storage(dat)
 
-  c(generate_dust_gpu_declaration(dat, rewrite),
+  c(generate_dust_gpu_declaration(dat),
     generate_dust_gpu_size(dat, rewrite),
     generate_dust_gpu_copy(dat, rewrite),
-    generate_dust_gpu_update(dat, rewrite))
+    generate_dust_gpu_update(dat))
 }
 
 
@@ -646,7 +646,7 @@ generate_dust_gpu_declaration <- function(dat, rewrite) {
 }
 
 
-generate_dust_gpu_update <- function(dat, rewrite) {
+generate_dust_gpu_update <- function(dat) {
   name <- sprintf("update_device<%s>", dat$config$base)
 
   args <- c(
@@ -660,7 +660,7 @@ generate_dust_gpu_update <- function(dat, rewrite) {
     "dust::interleaved<%s::real_t>" = dat$meta$result)
   names(args) <- sub("%s", dat$config$base, names(args), fixed = TRUE)
 
-  eqs <- generate_dust_equations(dat, rewrite, dat$components$rhs$equations,
+  eqs <- generate_dust_equations(dat, NULL, dat$components$rhs$equations,
                                  TRUE)
 
   body <- c(sprintf("typedef %s::real_t real_t;", dat$config$base),
@@ -699,6 +699,8 @@ generate_dust_gpu_copy <- function(dat, rewrite) {
             vcapply(name, rewrite, USE.NAMES = FALSE))
   }
 
+  ## The offsets will be computed beforehand, then copied into the
+  ## shared memory
   gpu_offsets <- NULL
   if (length(dat$gpu$shared$gpu_offsets) > 0) {
     gpu_offsets <- sprintf("const int %s = %s;",
@@ -716,19 +718,15 @@ generate_dust_gpu_copy <- function(dat, rewrite) {
 }
 
 
-generate_dust_gpu_storage <- function(dat, rewrite) {
-  ## The issue here is that 'sum' does not correctly declare
-  ## dependencies on its dimensions. However, we should probably just
-  ## add these all as we need them here. If we like this approach we
-  ## can build the list up from what is really used.
+generate_dust_gpu_storage <- function(dat) {
   equations <- dat$components$rhs$equations
   used <- unique(unlist(
     lapply(dat$equations[equations], function(x)
       c(x$depends$variables, x$lhs)),
     FALSE, FALSE))
 
-  ## Make sure we have all dimension information available for these
-  ## variables:
+  ## Make sure we have all dimension and variable offset information
+  ## available for included variables.
   dims <- unlist(
     lapply(dat$data$elements[used], function(x) x$dimnames),
     TRUE, FALSE)
@@ -788,7 +786,6 @@ generate_dust_gpu_storage <- function(dat, rewrite) {
   f <- function(x, update) {
     rank <- dat$data$elements[[x$name]]$rank
     if (update) {
-      ## TODO: not happy with this name prefix here
       x$name <- sprintf("update_%s", x$name)
       location <- dat$meta$result
     } else {
@@ -825,13 +822,12 @@ generate_dust_gpu_storage <- function(dat, rewrite) {
 }
 
 
-## Somewhat replicates odin:::ir_parse_packing_internal but that is
-## done on the data before it gets serialised
+## Somewhat based on odin:::ir_parse_packing_internal but that is done
+## on the data before it gets serialised.
 ##
-## This function is the biggest pain point for the gpu version and the
-## thing that once this settles down we will want to refactor. There's
-## a lot of things here that are a bit shared in spirit with how we do
-## the underlying processing in odin.
+## For shared_int, this function will likely be called a second time
+## with additional values in 'extra' corresponding to additional
+## offsets that we need for indexing into shared/internal.
 dust_gpu_storage_pack <- function(used, location, type, dat, extra = NULL) {
   if (location == "internal") {
     include <- function(x) {
@@ -877,8 +873,9 @@ dust_gpu_storage_pack <- function(used, location, type, dat, extra = NULL) {
     if (!is_array[[i]]) {
       offset[[i + 1L]] <- i
     } else {
+      stopifnot(is.numeric(len[[i]]) || is.name(len[[i]]))
       len_i <- if (is.numeric(len[[i]])) len[[i]] else as.name(len[[i]])
-      offset[[i + 1L]] <- static_eval(call("+", offset[[i]], len_i))
+      offset[[i + 1L]] <- call("+", offset[[i]], len_i)
     }
   }
 
@@ -886,9 +883,8 @@ dust_gpu_storage_pack <- function(used, location, type, dat, extra = NULL) {
   length <- offset[[length(names) + 1L]]
   offset <- set_names(offset[seq_along(names)], names)
   type_dust <- dust_type(type)
-  ## TODO: this feels needlessly hard:
-  location_dust <- sprintf("%s_%s", location,
-                           if (type == "int") "int" else "real")
+  location_dust <- sprintf("%s_%s",
+                           location, if (type == "int") "int" else "real")
   if (location == "internal") {
     type_array <- sprintf("dust::interleaved<%s>", type_dust)
   } else {
@@ -904,8 +900,7 @@ dust_gpu_storage_pack <- function(used, location, type, dat, extra = NULL) {
   }
   unpack <- Map(unpack1, names, rank, offset)
 
-  list(contents = names,
-       offset = offset, rank = rank, length = length,
+  list(contents = names, offset = offset, rank = rank, length = length,
        location = location_dust, type = type_dust, unpack = unpack)
 }
 
