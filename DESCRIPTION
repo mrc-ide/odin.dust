@@ -21,7 +21,7 @@ Imports:
     brio,
     cpp11,
     decor,
-    dust (>= 0.8.9),
+    dust (>= 0.8.13),
     odin (>= 1.1.10),
     tibble,
     vctrs
