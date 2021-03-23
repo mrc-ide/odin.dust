@@ -630,19 +630,18 @@ generate_dust_gpu <- function(dat, rewrite) {
   ## after the parse phase.
   dat$gpu <- generate_dust_gpu_storage(dat)
 
-  c(generate_dust_gpu_declaration(dat),
-    generate_dust_gpu_size(dat, rewrite),
-    generate_dust_gpu_copy(dat, rewrite),
-    generate_dust_gpu_update(dat))
+  cpp_namespace("dust",
+                c(generate_dust_gpu_declaration(dat),
+                  generate_dust_gpu_size(dat, rewrite),
+                  generate_dust_gpu_copy(dat, rewrite),
+                  generate_dust_gpu_update(dat)))
 }
 
 
 generate_dust_gpu_declaration <- function(dat, rewrite) {
-  c("namespace dust {",
-    "template <>",
+  c("template <>",
     sprintf("struct has_gpu_support<%s> : std::true_type {};",
-            dat$config$base),
-    "}")
+            dat$config$base))
 }
 
 
