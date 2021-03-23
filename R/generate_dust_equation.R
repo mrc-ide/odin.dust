@@ -1,14 +1,14 @@
-generate_dust_equations <- function(dat, rewrite, which = NULL) {
+generate_dust_equations <- function(dat, rewrite, which = NULL, gpu = FALSE) {
   if (is.null(which)) {
     eqs <- dat$equations
   } else {
     eqs <- dat$equations[which]
   }
-  lapply(eqs, generate_dust_equation, dat, rewrite)
+  lapply(eqs, generate_dust_equation, dat, rewrite, gpu)
 }
 
 
-generate_dust_equation <- function(eq, dat, rewrite) {
+generate_dust_equation <- function(eq, dat, rewrite, gpu) {
   f <- switch(
     eq$type,
     expression_scalar = generate_dust_equation_scalar,
@@ -20,14 +20,45 @@ generate_dust_equation <- function(eq, dat, rewrite) {
   data_info <- dat$data$elements[[eq$lhs]]
   stopifnot(!is.null(data_info))
 
-  f(eq, data_info, dat, rewrite)
+  ## NOTE: there's a little dance here to work out *exactly* what is
+  ## referenced in a GPU equation so that we can later on unpack
+  ## exactly those elements right before the equation. We can't rely
+  ## on "depends" etc because that is not specific enough about which
+  ## dimensions are referenced (for example).
+  if (!is.null(dat$gpu)) {
+    dat$data$gpu <- collector()
+    rewrite <- function(x, gpu = FALSE) {
+      generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, TRUE)
+    }
+  }
+
+  ret <- f(eq, data_info, dat, rewrite, gpu)
+
+  if (gpu) {
+    req <- setdiff(unique(dat$data$gpu$get()),
+                   c(odin:::INDEX, dat$meta$time, eq$name))
+    if (eq$lhs != eq$name && !(eq$lhs %in% eq$depends$variables)) {
+      req <- setdiff(req, eq$lhs)
+    }
+    stopifnot(all(req %in% names(dat$gpu$access)))
+    access <- sprintf("const %s", dat$gpu$access[req])
+    self <- if (data_info$rank == 0) NULL else dat$gpu$access[[eq$name]]
+    ret <- cpp_block(c(access, self, ret))
+  }
+
+  ret
 }
 
 
-generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite) {
+generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite, gpu) {
   location <- data_info$location
+
   if (location == "transient") {
-    lhs <- sprintf("%s %s", dust_type(data_info$storage_type), eq$lhs)
+    if (is.null(dat$gpu)) {
+      lhs <- sprintf("%s %s", dust_type(data_info$storage_type), eq$lhs)
+    } else {
+      lhs <- dat$gpu$write[[eq$name]]
+    }
   } else if (location == "internal") {
     lhs <- rewrite(eq$lhs)
   } else {
@@ -39,14 +70,14 @@ generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite) {
 }
 
 
-generate_dust_equation_array <- function(eq, data_info, dat, rewrite) {
+generate_dust_equation_array <- function(eq, data_info, dat, rewrite, gpu) {
   lhs <- generate_dust_equation_array_lhs(eq, data_info, dat, rewrite)
   dust_flatten_eqs(lapply(eq$rhs, function(x)
     generate_dust_equation_array_rhs(x$value, x$index, lhs, rewrite)))
 }
 
 
-generate_dust_equation_alloc <- function(eq, data_info, dat, rewrite) {
+generate_dust_equation_alloc <- function(eq, data_info, dat, rewrite, gpu) {
   lhs <- rewrite(eq$lhs)
   ctype <- dust_type(data_info$storage_type)
   len <- rewrite(data_info$dimnames$length)
@@ -54,7 +85,7 @@ generate_dust_equation_alloc <- function(eq, data_info, dat, rewrite) {
 }
 
 
-generate_dust_equation_user <- function(eq, data_info, dat, rewrite) {
+generate_dust_equation_user <- function(eq, data_info, dat, rewrite, gpu) {
   user <- dat$meta$user
   rank <- data_info$rank
 
@@ -115,6 +146,8 @@ generate_dust_equation_array_lhs <- function(eq, data_info, dat, rewrite) {
   pos <- paste(vcapply(seq_along(index), f), collapse = " + ")
   if (location == "internal") {
     lhs <- sprintf("%s[%s]", rewrite(data_info$name), pos)
+  } else if (!is.null(dat$gpu)) {
+    lhs <- sprintf("%s[%s]", eq$name, pos)
   } else {
     offset <- rewrite(dat$data[[location]]$contents[[data_info$name]]$offset)
     lhs <- sprintf("%s[%s + %s]", dat$meta$result, offset, pos)

@@ -89,6 +89,16 @@ cpp_args <- function(return_type, name, args) {
 }
 
 
+cpp_block <- function(body) {
+  c("{", paste0("  ", body), "}")
+}
+
+
+cpp_namespace <- function(name, code) {
+  c(sprintf("namespace %s {", name), code, "}")
+}
+
+
 odin_dust_file <- function(path) {
   system.file(path, package = "odin.dust", mustWork = TRUE)
 }

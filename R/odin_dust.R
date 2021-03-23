@@ -134,9 +134,7 @@ odin_dust_code <- function(dat) {
     dat$gpu,
     dust_flatten_eqs(lapply(dat$support, "[[", "definition")),
     readLines(odin_dust_file("support.hpp")),
-    dat$create,
-    dat$info,
-    dat$data)
+    cpp_namespace("dust", c(dat$create, dat$info, dat$data)))
 }
 
 

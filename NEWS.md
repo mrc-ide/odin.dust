@@ -1,3 +1,7 @@
+# odin.dust 0.2.5
+
+* More efficient GPU code generation (#75)
+
 # odin.dust 0.2.4
 
 * Support `as.numeric()` in odin code (since odin 1.1.10) (#43)
