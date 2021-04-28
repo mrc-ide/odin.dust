@@ -1,6 +1,6 @@
 Package: odin.dust
 Title: Compile Odin to Dust
-Version: 0.2.5
+Version: 0.2.6
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("John", "Lees", role = "aut"),
@@ -21,7 +21,7 @@ Imports:
     brio,
     cpp11,
     decor,
-    dust (>= 0.8.16),
+    dust (>= 0.9.0),
     odin (>= 1.1.10),
     tibble,
     vctrs
@@ -36,5 +36,5 @@ Suggests:
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 Remotes:
-    mrc-ide/dust,
+    mrc-ide/dust@cuda-filter,
     mrc-ide/odin
