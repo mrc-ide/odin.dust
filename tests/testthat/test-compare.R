@@ -244,3 +244,12 @@ test_that("rewrite compare for gpu", {
   expect_false(any(grepl("typedef.+real_t", res)))
   expect_false(any(grepl("odin\\(", res)))
 })
+
+
+test_that("rewrite compare for gpu complains if indenting is bad", {
+  dat <- read_compare_dust("examples/compare.cpp")
+  code <- sub("\\s+return", "return", dat$function_defn)
+  expect_error(
+    transform_compare_odin_gpu(code),
+    "Detected inconsistent indenting while reformatting compare function")
+})
