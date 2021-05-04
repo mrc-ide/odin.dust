@@ -457,6 +457,7 @@ read_compare_dust <- function(filename) {
   data <- vcapply(data, as.character)
 
   list(function_name = function_name,
+       function_defn = ctx,
        data = data)
 }
 
@@ -505,10 +506,9 @@ dust_compare_info <- function(dat, rewrite) {
   }
   filename <- dat$config$custom[[which(i)]]$value
   ret <- read_compare_dust(filename)
-  ret$source <- readLines(filename)
   ret$filename <- filename
 
-  res <- dust_compare_rewrite(ret$source, dat, rewrite, filename)
+  res <- dust_compare_rewrite(readLines(filename), dat, rewrite, filename)
 
   ret$used <- res$used
   ret$include <- res$result
@@ -682,7 +682,7 @@ generate_dust_gpu_compare <- function(dat) {
     return(NULL)
   }
 
-  code <- dat$compare$source
+  code <- dat$compare$function_defn
 
   base <- dat$config$base
   return_type <- sprintf("DEVICE %s::real_t", base)
