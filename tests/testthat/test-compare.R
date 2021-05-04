@@ -119,14 +119,15 @@ test_that("rewrite compare source", {
 
   expect_equal(
     dust_compare_rewrite(c("a", "a + odin(a)", "y / odin(b)"), dat, rewrite,
-                         filename),
+                         filename)$result,
     c("a", "a + shared->a", "y / internal.b"))
   expect_equal(
-    dust_compare_rewrite(c("a", "odin(x) + odin(a)"), dat, rewrite, filename),
+    dust_compare_rewrite(c("a", "odin(x) + odin(a)"), dat, rewrite,
+                         filename)$result,
     c("a", "state[4] + shared->a"))
   expect_equal(
     dust_compare_rewrite(c("a", "odin( x ) + odin( a )"), dat, rewrite,
-                         filename),
+                         filename)$result,
     c("a", "state[4] + shared->a"))
   expect_error(
     dust_compare_rewrite(c("a", "odin(y) + odin(a)"), dat, rewrite, filename),
@@ -234,4 +235,12 @@ test_that("Sensible error message when files are not found in other dir", {
     odin_dust(filename),
     "Did not find a file 'examples/compare_simple.cpp' (relative to odin",
     fixed = TRUE)
+})
+
+
+test_that("rewrite compare for gpu", {
+  dat <- read_compare_dust("examples/compare.cpp")
+  res <- transform_compare_odin_gpu(dat$function_defn)
+  expect_false(any(grepl("typedef.+real_t", res)))
+  expect_false(any(grepl("odin\\(", res)))
 })

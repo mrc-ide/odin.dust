@@ -699,10 +699,7 @@ generate_dust_gpu_compare <- function(dat) {
   names(args) <- sub("%s", base, names(args), fixed = TRUE)
 
   body <- collector()
-  ## We don't actually want this all the time as it will conflict!
-  if (!any(grepl("typedef\\s+typename\\s+.+::real_t real_t", code))) {
-    body$add("typedef %s::real_t real_t;", base)
-  }
+  body$add("typedef %s::real_t real_t;", base)
   body$add(dat$gpu$access[dat$compare$used])
   body$add(transform_compare_odin_gpu(code))
 
@@ -980,6 +977,8 @@ transform_compare_odin_gpu <- function(code) {
   drop <- c(seq_len(grep("{", code, fixed = TRUE)[[1]]),
             seq(max(grep("}", code, fixed = TRUE)), length(code)))
   code <- code[-drop]
+
+  code <- code[!grepl("typedef\\s+typename\\s+T::real_t\\s+real_t", code)]
 
   ## As a sanity check here, we'll look at the indenting and make sure
   ## that everything is at least as indented as the first line:
