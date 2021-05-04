@@ -647,6 +647,7 @@ generate_dust_gpu <- function(dat, rewrite) {
 
 generate_dust_gpu_declaration <- function(dat, rewrite) {
   c("template <>",
+    "DEVICE",
     sprintf("struct has_gpu_support<%s> : std::true_type {};",
             dat$config$base))
 }
