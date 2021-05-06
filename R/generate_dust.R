@@ -123,7 +123,7 @@ generate_dust_core_struct <- function(dat) {
     data_t <- "typedef dust::no_data data_t;"
   } else {
     data_t <- c(
-      "struct data_t {",
+      "struct ALIGN(16) data_t {",
       sprintf("  %s %s;", unname(dat$compare$data), names(dat$compare$data)),
       "};")
   }
@@ -457,6 +457,7 @@ read_compare_dust <- function(filename) {
   data <- vcapply(data, as.character)
 
   list(function_name = function_name,
+       function_defn = ctx,
        data = data)
 }
 
@@ -505,14 +506,17 @@ dust_compare_info <- function(dat, rewrite) {
   }
   filename <- dat$config$custom[[which(i)]]$value
   ret <- read_compare_dust(filename)
-  ret$include <- dust_compare_rewrite(readLines(filename), dat, rewrite,
-                                      filename)
+  ret$filename <- filename
+
+  res <- dust_compare_rewrite(readLines(filename), dat, rewrite, filename)
+
+  ret$used <- res$used
+  ret$include <- res$result
   ret
 }
 
 
 dust_compare_rewrite <- function(text, dat, rewrite, filename) {
-  str <- paste(text, collapse = "\n")
   res <- transform_compare_odin(text, dat, rewrite)
 
   if (length(res$errors) > 0) {
@@ -525,7 +529,7 @@ dust_compare_rewrite <- function(text, dat, rewrite, filename) {
     stop(paste(msg, collapse = "\n"), call. = FALSE)
   }
 
-  res$result
+  res
 }
 
 
@@ -592,13 +596,15 @@ transform_compare_odin <- function(text, dat, rewrite) {
   re <- "odin\\(\\s*([^) ]+)\\s*\\)"
   line_transform <- grep(re, text)
 
-  err <- new.env(parent = emptyenv())
+  err <- collector()
+  used <- collector()
   transform <- function(text) {
+    used$add(text)
     ans <- rewrite(text)
     if (ans == text) {
       el <- dat$data$variable$contents[[text]]
       if (is.null(el)) {
-        err[[text]] <- TRUE
+        err$add(text)
       } else {
         ans <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
       }
@@ -619,7 +625,7 @@ transform_compare_odin <- function(text, dat, rewrite) {
     text[[i]] <- line
   }
 
-  list(result = text, errors = names(err))
+  list(result = text, used = unique(used$get()), errors = unique(err$get()))
 }
 
 
@@ -634,12 +640,14 @@ generate_dust_gpu <- function(dat, rewrite) {
                 c(generate_dust_gpu_declaration(dat),
                   generate_dust_gpu_size(dat, rewrite),
                   generate_dust_gpu_copy(dat, rewrite),
-                  generate_dust_gpu_update(dat)))
+                  generate_dust_gpu_update(dat),
+                  generate_dust_gpu_compare(dat)))
 }
 
 
 generate_dust_gpu_declaration <- function(dat, rewrite) {
   c("template <>",
+    "DEVICE",
     sprintf("struct has_gpu_support<%s> : std::true_type {};",
             dat$config$base))
 }
@@ -667,6 +675,37 @@ generate_dust_gpu_update <- function(dat) {
 
   c("template<>",
     cpp_function("DEVICE void", name, args, body))
+}
+
+
+generate_dust_gpu_compare <- function(dat) {
+  if (is.null(dat$compare)) {
+    return(NULL)
+  }
+
+  code <- dat$compare$function_defn
+
+  base <- dat$config$base
+  return_type <- sprintf("DEVICE %s::real_t", base)
+  name <- sprintf("compare_device<%s>", base)
+
+  args <- c(
+    "const dust::interleaved<%s::real_t>" = "state",
+    "const %s::data_t&" = "data",
+    "dust::interleaved<int>" = "internal_int",
+    "dust::interleaved<%s::real_t>" = "internal_real",
+    "const int *" = "shared_int",
+    "const %s::real_t *" = "shared_real",
+    "dust::rng_state_t<%s::real_t>&" = "rng_state")
+  names(args) <- sub("%s", base, names(args), fixed = TRUE)
+
+  body <- collector()
+  body$add("typedef %s::real_t real_t;", base)
+  body$add(dat$gpu$access[dat$compare$used])
+  body$add(transform_compare_odin_gpu(code))
+
+  c("template<>",
+    cpp_function(return_type, name, args, body$get()))
 }
 
 
@@ -723,6 +762,10 @@ generate_dust_gpu_storage <- function(dat) {
     lapply(dat$equations[equations], function(x)
       c(x$depends$variables, x$lhs)),
     FALSE, FALSE))
+
+  if (!is.null(dat$compare)) {
+    used <- union(used, dat$compare$used)
+  }
 
   ## Make sure we have all dimension and variable offset information
   ## available for included variables.
@@ -926,4 +969,28 @@ dust_gpu_access <- function(x, info) {
   fmt <- if (x$rank == 0) "%s[%s]" else "%s + %s"
   c(paste(x$type, x$name),
     sprintf(fmt, x$location, resolve_offset(x$offset)))
+}
+
+
+transform_compare_odin_gpu <- function(code) {
+  ## Delete the code before (and including) the first "{" and after
+  ## (and including) the last "}"
+  drop <- c(seq_len(grep("{", code, fixed = TRUE)[[1]]),
+            seq(max(grep("}", code, fixed = TRUE)), length(code)))
+  code <- code[-drop]
+
+  code <- code[!grepl("typedef\\s+typename\\s+T::real_t\\s+real_t", code)]
+
+  ## As a sanity check here, we'll look at the indenting and make sure
+  ## that everything is at least as indented as the first line:
+  n <- nchar(sub("[^ ].*", "", code))
+  if (any(n < n[[1]] & nchar(code) > 0)) {
+    stop("Detected inconsistent indenting while reformatting compare function")
+  }
+
+  ## Drop the common indent:
+  code <- sub(sprintf("^[ ]{%d}", n[[1]]), "", code)
+
+  ## Actual transformation is trivial here:
+  gsub("odin\\(\\s*([^) ]+)\\s*\\)", "\\1", code)
 }

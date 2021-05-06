@@ -188,3 +188,48 @@ test_that("control gpu compilation and use", {
     gpu_mode(FALSE, cfg_true),
     list(generate = TRUE, compile = cfg_true))
 })
+
+
+test_that("Can create compare function with gpu code", {
+  ## TODO: our current generation is needlessly weird and should be
+  ## generating non-templated code I think. See the example compare
+  ## functions, which are templated generally not specificically.
+  gen <- odin_dust(
+    c("initial(y) <- 0",
+      "update(y) <- y + rnorm(0, 1)",
+      "scale <- user(1) # ignore.unused",
+      'config(compare) <- "examples/compare_simple.cpp"'),
+    options = odin_dust_options(gpu_generate = TRUE))
+
+  p <- list()
+  mod1 <- gen$new(p, 0, 1, seed = 1L)
+  mod2 <- gen$new(p, 0, 1, seed = 1L, device_id = 0L)
+
+  t <- seq(0, 20, by = 2)
+  d <- dust::dust_data(
+    data.frame(step = t,
+               observed = runif(length(t), 0, sqrt(t)),
+               another = 0L))
+  mod1$set_data(d)
+  mod2$set_data(d)
+
+  ## TODO: this is good
+  ## > mod1$run(5, TRUE)
+  ## Error: Can't refresh a non-existent device
+  ## but this returns NULL which is bad
+  ## > mod1$compare_data(TRUE)
+  ## NULL
+
+  y <- mod1$run(2)
+  y <- mod2$run(2)
+  expect_equal(
+    mod1$compare_data(),
+    drop(y) - d[[2]][[2]]$observed)
+
+  expect_identical(
+    mod1$compare_data(),
+    mod2$compare_data(TRUE))
+  expect_identical(
+    mod2$compare_data(),
+    mod2$compare_data(TRUE))
+})
