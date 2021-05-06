@@ -123,7 +123,7 @@ generate_dust_core_struct <- function(dat) {
     data_t <- "typedef dust::no_data data_t;"
   } else {
     data_t <- c(
-      "struct data_t {",
+      "struct ALIGN(16) data_t {",
       sprintf("  %s %s;", unname(dat$compare$data), names(dat$compare$data)),
       "};")
   }
