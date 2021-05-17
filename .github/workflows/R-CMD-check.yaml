@@ -69,6 +69,12 @@ jobs:
           remotes::install_cran("rcmdcheck")
         shell: Rscript {0}
 
+      - name: Force install oai/socialmixr
+        if: runner.os == 'Linux'
+        run: |
+          install.packages(c("oai", "socialmixr"), type = "source")
+        shell: Rscript {0}
+
       - name: Force install XML
         if: runner.os == 'Windows'
         run: |
