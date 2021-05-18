@@ -72,7 +72,10 @@ jobs:
       - name: Force install oai/socialmixr
         if: runner.os == 'Linux'
         run: |
-          install.packages(c("oai", "socialmixr"), type = "source")
+          if (!requireNamespace("socialmixr", quietly = TRUE)) {
+            remotes::install_github("cran/oai", upgrade = FALSE)
+            install.packages("socialmixr")
+          }
         shell: Rscript {0}
 
       - name: Force install XML
