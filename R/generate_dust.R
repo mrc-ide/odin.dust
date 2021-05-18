@@ -787,7 +787,7 @@ generate_dust_gpu_storage <- function(dat) {
   ## (any lookup) here. I think that the latter will involve the
   ## fewest reads at a small increase in memory usage.
   extra <- lapply(info, function(el)
-    which(vlapply(el$unpack, function(x) is.language(x$offset))))
+    names(which(vlapply(el$unpack, function(x) is.language(x$offset)))))
 
   ## What we have to do here is write these out to new offset
   ## variables, replace the value in info with the symbol *and* ensure
@@ -796,7 +796,13 @@ generate_dust_gpu_storage <- function(dat) {
   if (any(lengths(extra) > 0)) {
     ## This is what we need to compute and add into the internal structure
     fmt <- "offset_%s"
-    extra_offsets <- sprintf(fmt, unlist(lapply(unname(extra), names)))
+    extra_offsets <- sprintf(fmt, unlist(extra, FALSE, FALSE))
+
+    ## The easiest way to do this is just recompute our shared int
+    ## structure again, with these in, rather than shunting things
+    ## along.
+    info$shared_int <-
+      dust_gpu_storage_pack(used, "shared", "int", dat, extra_offsets)
 
     extra_exprs <- unlist(lapply(seq_along(extra), function(i)
       lapply(info[[i]]$unpack[extra[[i]]], "[[", "offset")), FALSE)
@@ -811,12 +817,6 @@ generate_dust_gpu_storage <- function(dat) {
     for (i in which(lengths(extra) > 0)) {
       info[[i]]$unpack[extra[[i]]] <- lapply(info[[i]]$unpack[extra[[i]]], f)
     }
-
-    ## The easiest way to do this is just recompute our shared int
-    ## structure again, with these in, rather than shunting things
-    ## along.
-    info$shared_int <-
-      dust_gpu_storage_pack(used, "shared", "int", dat, extra_offsets)
   } else {
     ## simplifies later
     extra_exprs <- NULL
