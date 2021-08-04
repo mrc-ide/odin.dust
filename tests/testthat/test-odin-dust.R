@@ -24,7 +24,7 @@ test_that("sir model smoke test", {
 
   set.seed(1) # odin code is stochastic with R's generators
   tt <- 0:nstep
-  cmp <- gen_odin(I_ini = 10)$run(tt, y0, replicate = n)
+  cmp <- gen_odin$new(I_ini = 10)$run(tt, y0, replicate = n)
 
   expect_equal(colMeans(res[2, , ]), rowMeans(cmp[, 3, ]), tolerance = 0.01)
 
@@ -134,7 +134,7 @@ test_that("Accept integers", {
   mod <- gen$new(list(n = 10, p = 0.5), 0, 100, seed = 1L)
   expect_equal(mod$state(), matrix(0, 1, 100))
   y <- mod$run(1)
-  cmp <- dust::dust_rng$new(1, 100)$rbinom(100, 10L, 0.5)
+  cmp <- dust::dust_rng$new(1, 100)$rbinom(100, 10, 0.5)
   expect_equal(y, matrix(cmp, 1, 100))
 
   expect_error(
@@ -173,7 +173,7 @@ test_that("Implement sum", {
   yy <- mod$transform_variables(drop(y))
 
   cmp <- odin::odin_("examples/sum.R", target = "r")
-  expect_equal(yy, cmp(m = m)$transform_variables(drop(y))[-1])
+  expect_equal(yy, cmp$new(m = m)$transform_variables(drop(y))[-1])
 
   expect_identical(
     mod$info(),
@@ -205,7 +205,7 @@ test_that("sum over variables", {
   nz <- 9
   a <- array(runif(nr * nc * nz), c(nr, nc, nz))
   mod <- gen$new(list(y0 = a), 0, 1)
-  cmp <- odin::odin_("examples/sum2.R")(y0 = a)
+  cmp <- odin::odin_("examples/sum2.R")$new(y0 = a)
 
   y0 <- mod$transform_variables(drop(mod$state()))
   expect_equal(y0, cmp$transform_variables(drop(mod$state()))[-1])

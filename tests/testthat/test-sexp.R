@@ -99,16 +99,16 @@ test_that("generate random number code", {
   meta <- list(dust = list(rng_state = "rng_state"))
   expect_equal(
     generate_dust_sexp(list("rbinom", "n", "p"), NULL, meta, NULL, FALSE),
-    "dust::distr::rbinom(rng_state, std::round(n), p)")
+    "dust::distr::rbinom<real_t>(rng_state, n, p)")
   expect_equal(
     generate_dust_sexp(list("rpois", "lambda"), NULL, meta, NULL, FALSE),
-    "dust::distr::rpois(rng_state, lambda)")
+    "dust::distr::rpois<real_t>(rng_state, lambda)")
   expect_equal(
     generate_dust_sexp(list("runif", "a", "b"), NULL, meta, NULL, FALSE),
-    "dust::distr::runif(rng_state, a, b)")
+    "dust::distr::runif<real_t>(rng_state, a, b)")
   expect_equal(
     generate_dust_sexp(list("rnorm", "mu", "sd"), NULL, meta, NULL, FALSE),
-    "dust::distr::rnorm(rng_state, mu, sd)")
+    "dust::distr::rnorm<real_t>(rng_state, mu, sd)")
 
   expect_error(
     generate_dust_sexp(list("rchisq", "df"), NULL, meta, NULL, FALSE),
