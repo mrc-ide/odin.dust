@@ -46,13 +46,7 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
     } else if (fn == "sum" || fn == "odin_sum") {
       ret <- generate_dust_sexp_sum(args, data, meta, supported, gpu)
     } else if (any(FUNCTIONS_STOCHASTIC == fn)) {
-      if (fn == "rbinom") {
-        ## This is a little extreme but is useful in at least some
-        ## cases (and I don't imagine that returning NaN will be
-        ## useful most of the time).
-        values[[1L]] <- sprintf("std::round(%s)", values[[1L]])
-      }
-      ret <- sprintf("dust::distr::%s(%s, %s)",
+      ret <- sprintf("dust::distr::%s<real_t>(%s, %s)",
                      fn, meta$dust$rng_state, paste(values, collapse = ", "))
     } else {
       if (any(names(FUNCTIONS_RENAME) == fn)) {
