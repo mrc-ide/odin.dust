@@ -7,7 +7,7 @@
 ##' @title Update package code
 ##'
 ##' @param path Path to the package root (the directory that
-##'   contains \code{DESCRIPTION})
+##'   contains `DESCRIPTION`)
 ##'
 ##' @inheritParams odin_dust
 ##'

@@ -55,7 +55,7 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##'   `rewrite_dims`.
 ##'
 ##' @param real_t C++ type to use for real (floating point)
-##'   numbers. Defaults to \code{double}.
+##'   numbers. Defaults to `double`.
 ##'
 ##' @param gpu **Experimental!** Generate support for running models
 ##'   on a GPU. This implies `gpu_generate` but *does* require a gpu
