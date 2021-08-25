@@ -13,21 +13,21 @@ odin_dust_options(
 )
 }
 \arguments{
-\item{...}{Arguments passed to [odin::odin_options], including
-`verbose`, `workdir`, `no_check_unused_equations` and
-`rewrite_dims`.}
+\item{...}{Arguments passed to \link[odin:odin_options]{odin::odin_options}, including
+\code{verbose}, \code{workdir}, \code{no_check_unused_equations} and
+\code{rewrite_dims}.}
 
 \item{real_t}{C++ type to use for real (floating point)
 numbers. Defaults to \code{double}.}
 
-\item{gpu}{**Experimental!** Generate support for running models
-on a GPU. This implies `gpu_generate` but *does* require a gpu
+\item{gpu}{\strong{Experimental!} Generate support for running models
+on a GPU. This implies \code{gpu_generate} but \emph{does} require a gpu
 and nvcc toolchain. Currently not supported within package code.
-This argument will be passed through to [dust::dust()] and so to
-enable compilation for a gpu, pass either `TRUE` or the results
-of [dust::dust_cuda_options])}
+This argument will be passed through to \code{\link[dust:dust]{dust::dust()}} and so to
+enable compilation for a gpu, pass either \code{TRUE} or the results
+of \link[dust:dust_cuda_options]{dust::dust_cuda_options})}
 
-\item{gpu_generate}{**Experimental** Generate gpu support
+\item{gpu_generate}{\strong{Experimental} Generate gpu support
 code. This does not require a gpu or nvcc toolchain, but creates
 code that could be compiled for a gpu. This is primarily
 intended for testing and development as the generated code will
@@ -35,20 +35,20 @@ be slower than the normal cpu version, and the compilation time
 will be considerably slower. Currently not supported within
 package code.}
 
-\item{options}{An [odin::odin_options] or `odin_dust_options`
+\item{options}{An \link[odin:odin_options]{odin::odin_options} or \link{odin_dust_options}
 object. If given it overrides arguments; if it is already a
-`odin_dust_options` object it is returned unmodified. Otherwise
-it is passed through to [odin::odin_options] where it will
-override arguments in `...` but respond to the `odin_dust`
-specific options (`real_t`, etc)}
+\code{odin_dust_options} object it is returned unmodified. Otherwise
+it is passed through to \link[odin:odin_options]{odin::odin_options} where it will
+override arguments in \code{...} but respond to the \code{odin_dust}
+specific options (\code{real_t}, etc)}
 }
 \value{
-A list of options (class `odin_options`) to
-  pass to `odin.dust::odin_dust`
+A list of options (class \code{odin_options}) to
+pass to \code{odin.dust::odin_dust}
 }
 \description{
-Options for controlling [odin_dust]; this is a superset of
-[odin::odin_options]
+Options for controlling \link{odin_dust}; this is a superset of
+\link[odin:odin_options]{odin::odin_options}
 }
 \examples{
 odin.dust::odin_dust_options()

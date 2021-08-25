@@ -10,20 +10,20 @@ odin_dust_package(path, options = NULL)
 \item{path}{Path to the package root (the directory that
 contains \code{DESCRIPTION})}
 
-\item{options}{An [odin::odin_options] or `odin_dust_options`
+\item{options}{An \link[odin:odin_options]{odin::odin_options} or \link{odin_dust_options}
 object. If given it overrides arguments; if it is already a
-`odin_dust_options` object it is returned unmodified. Otherwise
-it is passed through to [odin::odin_options] where it will
-override arguments in `...` but respond to the `odin_dust`
-specific options (`real_t`, etc)}
+\code{odin_dust_options} object it is returned unmodified. Otherwise
+it is passed through to \link[odin:odin_options]{odin::odin_options} where it will
+override arguments in \code{...} but respond to the \code{odin_dust}
+specific options (\code{real_t}, etc)}
 }
 \value{
 The path to the package
 }
 \description{
 Update generated code in a package that uses odin and dust to
-provide a model. This will generate new dust code in `inst/dust`
-and from that generate a full model in `src`, and an R interface
-in `R/dust.R`, along with the cpp11 attributes that are needed to
+provide a model. This will generate new dust code in \code{inst/dust}
+and from that generate a full model in \code{src}, and an R interface
+in \code{R/dust.R}, along with the cpp11 attributes that are needed to
 use the model.
 }

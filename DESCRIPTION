@@ -1,6 +1,6 @@
 Package: odin.dust
 Title: Compile Odin to Dust
-Version: 0.2.9
+Version: 0.2.10
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("John", "Lees", role = "aut"),
@@ -34,6 +34,7 @@ Suggests:
     socialmixr,
     testthat
 RoxygenNote: 7.1.1
+Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
 Remotes:
     mrc-ide/dust,
