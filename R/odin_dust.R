@@ -13,7 +13,7 @@
 ##'
 ##' @inheritParams odin_dust_options
 ##'
-##' @param ... Arguments passed to [odin::odin_dust_options],
+##' @param ... Arguments passed to [odin.dust::odin_dust_options],
 ##'   including `real_t`, `gpu`, `verbose`, `workdir`,
 ##'   `no_check_unused_equations` and `rewrite_dims`.
 ##'
@@ -55,7 +55,7 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##'   `rewrite_dims`.
 ##'
 ##' @param real_t C++ type to use for real (floating point)
-##'   numbers. Defaults to \code{double}.
+##'   numbers. Defaults to `double`.
 ##'
 ##' @param gpu **Experimental!** Generate support for running models
 ##'   on a GPU. This implies `gpu_generate` but *does* require a gpu
@@ -72,7 +72,7 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##'   will be considerably slower. Currently not supported within
 ##'   package code.
 ##'
-##' @param options An [odin::odin_options] or `odin_dust_options`
+##' @param options An [odin::odin_options] or [odin.dust::odin_dust_options]
 ##'   object. If given it overrides arguments; if it is already a
 ##'   `odin_dust_options` object it is returned unmodified. Otherwise
 ##'   it is passed through to [odin::odin_options] where it will

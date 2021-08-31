@@ -14,16 +14,16 @@ odin_dust_(x, ..., options = NULL)
 length is greater than 1 elements will be joined with newlines)
 or an expression.}
 
-\item{...}{Arguments passed to [odin::odin_dust_options],
-including `real_t`, `gpu`, `verbose`, `workdir`,
-`no_check_unused_equations` and `rewrite_dims`.}
+\item{...}{Arguments passed to \link{odin_dust_options},
+including \code{real_t}, \code{gpu}, \code{verbose}, \code{workdir},
+\code{no_check_unused_equations} and \code{rewrite_dims}.}
 
-\item{options}{An [odin::odin_options] or `odin_dust_options`
+\item{options}{An \link[odin:odin_options]{odin::odin_options} or \link{odin_dust_options}
 object. If given it overrides arguments; if it is already a
-`odin_dust_options` object it is returned unmodified. Otherwise
-it is passed through to [odin::odin_options] where it will
-override arguments in `...` but respond to the `odin_dust`
-specific options (`real_t`, etc)}
+\code{odin_dust_options} object it is returned unmodified. Otherwise
+it is passed through to \link[odin:odin_options]{odin::odin_options} where it will
+override arguments in \code{...} but respond to the \code{odin_dust}
+specific options (\code{real_t}, etc)}
 }
 \description{
 Compile an odin model to work with dust.
