@@ -47,8 +47,8 @@
 
 
 <meta property="og:title" content="Options for odin_dust — odin_dust_options" />
-<meta property="og:description" content="Options for controlling [odin_dust]; this is a superset of
-[odin::odin_options]" />
+<meta property="og:description" content="Options for controlling odin_dust; this is a superset of
+odin::odin_options" />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -81,7 +81,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.10</span>
       </span>
     </div>
 
@@ -138,8 +138,8 @@
     </div>
 
     <div class="ref-description">
-    <p>Options for controlling [odin_dust]; this is a superset of
-[odin::odin_options]</p>
+    <p>Options for controlling <a href='odin_dust.html'>odin_dust</a>; this is a superset of
+<a href='https://rdrr.io/pkg/odin/man/odin_options.html'>odin::odin_options</a></p>
     </div>
 
     <pre class="usage"><span class='fu'>odin_dust_options</span><span class='op'>(</span>
@@ -155,9 +155,9 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>...</th>
-      <td><p>Arguments passed to [odin::odin_options], including
-`verbose`, `workdir`, `no_check_unused_equations` and
-`rewrite_dims`.</p></td>
+      <td><p>Arguments passed to <a href='https://rdrr.io/pkg/odin/man/odin_options.html'>odin::odin_options</a>, including
+<code>verbose</code>, <code>workdir</code>, <code>no_check_unused_equations</code> and
+<code>rewrite_dims</code>.</p></td>
     </tr>
     <tr>
       <th>real_t</th>
@@ -166,16 +166,16 @@ numbers. Defaults to <code>double</code>.</p></td>
     </tr>
     <tr>
       <th>gpu</th>
-      <td><p>**Experimental!** Generate support for running models
-on a GPU. This implies `gpu_generate` but *does* require a gpu
+      <td><p><strong>Experimental!</strong> Generate support for running models
+on a GPU. This implies <code>gpu_generate</code> but <em>does</em> require a gpu
 and nvcc toolchain. Currently not supported within package code.
-This argument will be passed through to [dust::dust()] and so to
-enable compilation for a gpu, pass either `TRUE` or the results
-of [dust::dust_cuda_options])</p></td>
+This argument will be passed through to <code><a href='https://rdrr.io/pkg/dust/man/dust.html'>dust::dust()</a></code> and so to
+enable compilation for a gpu, pass either <code>TRUE</code> or the results
+of <a href='https://rdrr.io/pkg/dust/man/dust_cuda_options.html'>dust::dust_cuda_options</a>)</p></td>
     </tr>
     <tr>
       <th>gpu_generate</th>
-      <td><p>**Experimental** Generate gpu support
+      <td><p><strong>Experimental</strong> Generate gpu support
 code. This does not require a gpu or nvcc toolchain, but creates
 code that could be compiled for a gpu. This is primarily
 intended for testing and development as the generated code will
@@ -185,19 +185,19 @@ package code.</p></td>
     </tr>
     <tr>
       <th>options</th>
-      <td><p>An [odin::odin_options] or `odin_dust_options`
+      <td><p>An <a href='https://rdrr.io/pkg/odin/man/odin_options.html'>odin::odin_options</a> or odin_dust_options
 object. If given it overrides arguments; if it is already a
-`odin_dust_options` object it is returned unmodified. Otherwise
-it is passed through to [odin::odin_options] where it will
-override arguments in `...` but respond to the `odin_dust`
-specific options (`real_t`, etc)</p></td>
+<code>odin_dust_options</code> object it is returned unmodified. Otherwise
+it is passed through to <a href='https://rdrr.io/pkg/odin/man/odin_options.html'>odin::odin_options</a> where it will
+override arguments in <code>...</code> but respond to the <code>odin_dust</code>
+specific options (<code>real_t</code>, etc)</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A list of options (class `odin_options`) to
-  pass to `odin.dust::odin_dust`</p>
+    <p>A list of options (class <code>odin_options</code>) to
+pass to <code><a href='odin_dust.html'>odin.dust::odin_dust</a></code></p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'>odin.dust</span><span class='fu'>::</span><span class='fu'>odin_dust_options</span><span class='op'>(</span><span class='op'>)</span>
@@ -214,7 +214,7 @@ specific options (`real_t`, etc)</p></td>
 #&gt; [1] FALSE
 #&gt; 
 #&gt; $workdir
-#&gt; [1] "/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpBzAio0/file19b63e8af0bb"
+#&gt; [1] "/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmplpK44E/file3823767b382a"
 #&gt; 
 #&gt; $skip_cache
 #&gt; [1] FALSE
@@ -246,7 +246,7 @@ specific options (`real_t`, etc)</p></td>
 #&gt;     list(names = names, data = list(source = paste(readLines(filename), 
 #&gt;         collapse = "\n")))
 #&gt; }
-#&gt; &lt;bytecode: 0x7f9713f10c40&gt;
+#&gt; &lt;bytecode: 0x7f9d12cf3418&gt;
 #&gt; &lt;environment: namespace:odin.dust&gt;
 #&gt; 
 #&gt; $gpu

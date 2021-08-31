@@ -48,9 +48,9 @@
 
 <meta property="og:title" content="Update package code — odin_dust_package" />
 <meta property="og:description" content="Update generated code in a package that uses odin and dust to
-provide a model. This will generate new dust code in `inst/dust`
-and from that generate a full model in `src`, and an R interface
-in `R/dust.R`, along with the cpp11 attributes that are needed to
+provide a model. This will generate new dust code in inst/dust
+and from that generate a full model in src, and an R interface
+in R/dust.R, along with the cpp11 attributes that are needed to
 use the model." />
 <meta property="og:image" content="/logo.png" />
 
@@ -84,7 +84,7 @@ use the model." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.10</span>
       </span>
     </div>
 
@@ -142,9 +142,9 @@ use the model." />
 
     <div class="ref-description">
     <p>Update generated code in a package that uses odin and dust to
-provide a model. This will generate new dust code in `inst/dust`
-and from that generate a full model in `src`, and an R interface
-in `R/dust.R`, along with the cpp11 attributes that are needed to
+provide a model. This will generate new dust code in <code>inst/dust</code>
+and from that generate a full model in <code>src</code>, and an R interface
+in <code>R/dust.R</code>, along with the cpp11 attributes that are needed to
 use the model.</p>
     </div>
 
@@ -160,12 +160,12 @@ contains <code>DESCRIPTION</code>)</p></td>
     </tr>
     <tr>
       <th>options</th>
-      <td><p>An [odin::odin_options] or `odin_dust_options`
+      <td><p>An <a href='https://rdrr.io/pkg/odin/man/odin_options.html'>odin::odin_options</a> or <a href='odin_dust_options.html'>odin_dust_options</a>
 object. If given it overrides arguments; if it is already a
-`odin_dust_options` object it is returned unmodified. Otherwise
-it is passed through to [odin::odin_options] where it will
-override arguments in `...` but respond to the `odin_dust`
-specific options (`real_t`, etc)</p></td>
+<code>odin_dust_options</code> object it is returned unmodified. Otherwise
+it is passed through to <a href='https://rdrr.io/pkg/odin/man/odin_options.html'>odin::odin_options</a> where it will
+override arguments in <code>...</code> but respond to the <code>odin_dust</code>
+specific options (<code>real_t</code>, etc)</p></td>
     </tr>
     </table>
 
