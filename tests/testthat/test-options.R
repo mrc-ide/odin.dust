@@ -4,13 +4,13 @@ test_that("can construct basic options", {
   opts <- odin_dust_options()
   expect_s3_class(opts, c("odin_dust_options", "odin_options"), TRUE)
 
-  expect_equal(opts$real_t, "double")
+  expect_equal(opts$real_type, "double")
   expect_equal(opts$gpu, list(generate = FALSE, compile = FALSE))
 })
 
 
 test_that("can control real type", {
-  expect_equal(odin_dust_options(real_t = "float")$real_t, "float")
+  expect_equal(odin_dust_options(real_type = "float")$real_type, "float")
 })
 
 

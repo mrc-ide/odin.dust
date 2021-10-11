@@ -99,16 +99,16 @@ test_that("generate random number code", {
   meta <- list(dust = list(rng_state = "rng_state"))
   expect_equal(
     generate_dust_sexp(list("rbinom", "n", "p"), NULL, meta, NULL, FALSE),
-    "dust::distr::rbinom<real_t>(rng_state, n, p)")
+    "dust::random::binomial<real_type>(rng_state, n, p)")
   expect_equal(
     generate_dust_sexp(list("rpois", "lambda"), NULL, meta, NULL, FALSE),
-    "dust::distr::rpois<real_t>(rng_state, lambda)")
+    "dust::random::poisson<real_type>(rng_state, lambda)")
   expect_equal(
     generate_dust_sexp(list("runif", "a", "b"), NULL, meta, NULL, FALSE),
-    "dust::distr::runif<real_t>(rng_state, a, b)")
+    "dust::random::uniform<real_type>(rng_state, a, b)")
   expect_equal(
     generate_dust_sexp(list("rnorm", "mu", "sd"), NULL, meta, NULL, FALSE),
-    "dust::distr::rnorm<real_t>(rng_state, mu, sd)")
+    "dust::random::normal<real_type>(rng_state, mu, sd)")
 
   expect_error(
     generate_dust_sexp(list("rchisq", "df"), NULL, meta, NULL, FALSE),
@@ -140,10 +140,10 @@ test_that("Generate sum code", {
                gpu = collector())
   expect_equal(
     generate_dust_sexp(list("sum", "m"), data, meta, NULL, FALSE),
-    "odin_sum1<real_t>(internal.m.data(), 0, shared->dim_m)")
+    "odin_sum1<real_type>(internal.m.data(), 0, shared->dim_m)")
   expect_equal(
     generate_dust_sexp(list("sum", "m"), data, meta, NULL, TRUE),
-    "odin_sum1<real_t>(m, 0, dim_m)")
+    "odin_sum1<real_type>(m, 0, dim_m)")
   expect_setequal(data$gpu$get(), c("m", "dim_m"))
 
   expr <- list("sum", "m",
@@ -151,16 +151,16 @@ test_that("Generate sum code", {
                2L, list("dim", "m", 2))
   expect_equal(
     generate_dust_sexp(expr, data, meta, NULL, FALSE),
-    paste("odin_sum2<real_t>(internal.m.data(), 0, shared->dim_m_1,",
+    paste("odin_sum2<real_type>(internal.m.data(), 0, shared->dim_m_1,",
           "1, shared->dim_m_2, shared->dim_m_1)"))
 
   data$elements$m$location <- "variable"
   expect_equal(
     generate_dust_sexp(list("sum", "m"), data, meta, NULL, FALSE),
-    "odin_sum1<real_t>(m, 0, shared->dim_m)")
+    "odin_sum1<real_type>(m, 0, shared->dim_m)")
   expect_equal(
     generate_dust_sexp(expr, data, meta, NULL, FALSE),
-    paste("odin_sum2<real_t>(m, 0, shared->dim_m_1,",
+    paste("odin_sum2<real_type>(m, 0, shared->dim_m_1,",
           "1, shared->dim_m_2, shared->dim_m_1)"))
 })
 
@@ -180,8 +180,8 @@ test_that("renames", {
     "static_cast<int>(x)")
   expect_equal(
     generate_dust_sexp(list("as.numeric", "x"), NULL, NULL, NULL, FALSE),
-    "static_cast<real_t>(x)")
+    "static_cast<real_type>(x)")
   expect_equal(
     generate_dust_sexp(list("%%", "x", "y"), NULL, NULL, NULL, FALSE),
-    "fmodr<real_t>(x, y)")
+    "fmodr<real_type>(x, y)")
 })

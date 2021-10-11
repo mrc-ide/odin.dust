@@ -14,7 +14,7 @@
 ##' @inheritParams odin_dust_options
 ##'
 ##' @param ... Arguments passed to [odin.dust::odin_dust_options],
-##'   including `real_t`, `gpu`, `verbose`, `workdir`,
+##'   including `real_type`, `gpu`, `verbose`, `workdir`,
 ##'   `no_check_unused_equations` and `rewrite_dims`.
 ##'
 ##' @export
@@ -54,7 +54,7 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##'   `verbose`, `workdir`, `no_check_unused_equations` and
 ##'   `rewrite_dims`.
 ##'
-##' @param real_t C++ type to use for real (floating point)
+##' @param real_type C++ type to use for real (floating point)
 ##'   numbers. Defaults to `double`.
 ##'
 ##' @param gpu **Experimental!** Generate support for running models
@@ -77,7 +77,7 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##'   `odin_dust_options` object it is returned unmodified. Otherwise
 ##'   it is passed through to [odin::odin_options] where it will
 ##'   override arguments in `...` but respond to the `odin_dust`
-##'   specific options (`real_t`, etc)
+##'   specific options (`real_type`, etc)
 ##'
 ##' @return A list of options (class `odin_options`) to
 ##'   pass to `odin.dust::odin_dust`
@@ -85,7 +85,7 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##' @export
 ##' @examples
 ##' odin.dust::odin_dust_options()
-odin_dust_options <- function(..., real_t = NULL,
+odin_dust_options <- function(..., real_type = NULL,
                               gpu = NULL, gpu_generate = NULL,
                               options = NULL) {
   if (inherits(options, "odin_dust_options")) {
@@ -98,7 +98,7 @@ odin_dust_options <- function(..., real_t = NULL,
 
   options <- odin::odin_options(target = "dust", ...)
   options$gpu <- gpu_mode(gpu_generate %||% FALSE, gpu %||% FALSE)
-  options$real_t <- real_t %||% "double"
+  options$real_type <- real_type %||% "double"
   options$read_include <- read_include_dust
   options$config_custom <- "compare"
   class(options) <- c("odin_dust_options", class(options))

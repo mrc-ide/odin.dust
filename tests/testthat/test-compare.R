@@ -5,7 +5,7 @@ read_compare_dust("examples/compare_simple.cpp")
 test_that("Can parse compare metadata", {
   res <- read_compare_dust("examples/compare_simple.cpp")
   expect_equal(res$function_name, "compare")
-  expect_equal(res$data, c(observed = "real_t", another = "int"))
+  expect_equal(res$data, c(observed = "real_type", another = "int"))
 })
 
 
@@ -13,11 +13,11 @@ test_that("Can error if correct metadata not found", {
   fn <- c(
     "// [[odin.dust::compare_function]]",
     "template <typename T>",
-    "typename T::real_t f(const typename T::real_t * state,",
-    "                     const typename T::data_t& data,",
-    "                     const typename T::internal_t internal,",
-    "                     std::shared_ptr<const typename T::shared_t> shared,",
-    "                     dust::rng_state_t<typename T::real_t>& rng_state) {",
+    "typename T::real_type f(const typename T::real_type * state,",
+    "                   const typename T::data_type& data,",
+    "                   const typename T::internal_type internal,",
+    "                   std::shared_ptr<const typename T::shared_type> shared,",
+    "                   typename T::rng_state_type& rng_state) {",
     "  return 0;",
     "}")
 
@@ -41,32 +41,32 @@ test_that("Can error if correct metadata not found", {
     "Expected at least one decoration '[[odin.dust::compare_data(...)]]'",
     fixed = TRUE)
 
-  writeLines(c("// [[odin.dust::compare_data(real_t)]]", fn), path)
+  writeLines(c("// [[odin.dust::compare_data(real_type)]]", fn), path)
   expect_error(
     read_compare_dust(path),
     "All [[odin.dust::compare_data()]] arguments must be named",
     fixed = TRUE)
-  writeLines(c("// [[odin.dust::compare_data(a = real_t, int)]]", fn), path)
+  writeLines(c("// [[odin.dust::compare_data(a = real_type, int)]]", fn), path)
   expect_error(
     read_compare_dust(path),
     "All [[odin.dust::compare_data()]] arguments must be named",
     fixed = TRUE)
 
-  writeLines(c("// [[odin.dust::compare_data(a = real_t, a = int)]]", fn),
+  writeLines(c("// [[odin.dust::compare_data(a = real_type, a = int)]]", fn),
              path)
   expect_error(
     read_compare_dust(path),
     "Duplicated arguments in [[odin.dust::compare_data()]]: 'a'",
     fixed = TRUE)
 
-  writeLines(c("// [[odin.dust::compare_data(a = real_t, b = 2)]]", fn),
+  writeLines(c("// [[odin.dust::compare_data(a = real_type, b = 2)]]", fn),
              path)
   expect_error(
     read_compare_dust(path),
     "All arguments to [[odin.dust::compare_data()]] must be symbols: 'b'",
     fixed = TRUE)
 
-  writeLines(c(fn[[1]], "// [[odin.dust::compare_data(a = real_t)]]", fn[[2]]),
+  writeLines(c(fn[[1]], "// [[odin.dust::compare_data(a = real_type)]]", fn[[2]]),
              path)
   expect_error(
     read_compare_dust(path),
@@ -137,11 +137,11 @@ test_that("rewrite compare source", {
 
 test_that("check_compare_args detects errors", {
   args <- c(
-    "const typename T::real_t *" = "state",
-    "const typename T::data_t&" = "data",
-    "const typename T::internal_t" = "internal",
-    "std::shared_ptr<const typename T::shared_t>" = "shared",
-    "dust::rng_state_t<typename T::real_t>&" = "rng_state")
+    "const typename T::real_type *" = "state",
+    "const typename T::data_type&" = "data",
+    "const typename T::internal_type" = "internal",
+    "std::shared_ptr<const typename T::shared_type>" = "shared",
+    "typename T::rng_state_type&" = "rng_state")
   df <- data.frame(
     type = names(args), name = unname(args), stringsAsFactors = FALSE)
   expect_silent(check_compare_args(df, "compare"))
@@ -150,24 +150,24 @@ test_that("check_compare_args detects errors", {
     "Expected compare function 'compare' to have 5 args (but given 4)",
     fixed = TRUE)
 
-  df$type[[1]] <- "typename T::real_t *"
+  df$type[[1]] <- "typename T::real_type *"
   df$name[[2]] <- "thedata"
   err <- expect_error(
     check_compare_args(df, "compare"),
     "Compare function 'compare' does not conform")
   expect_match(
     err$message,
-    "Expected: const typename T::data_t& data")
+    "Expected: const typename T::data_type& data")
   expect_match(
     err$message,
-    "   Given: const typename T::data_t& thedata")
+    "   Given: const typename T::data_type& thedata")
   expect_match(
     err$message,
-    "Expected: const typename T::real_t * state",
+    "Expected: const typename T::real_type * state",
     fixed = TRUE)
   expect_match(
     err$message,
-    "   Given: typename T::real_t * state",
+    "   Given: typename T::real_type * state",
     fixed = TRUE)
 
   df <- data.frame(type = names(args), name = unname(args),
@@ -241,7 +241,7 @@ test_that("Sensible error message when files are not found in other dir", {
 test_that("rewrite compare for gpu", {
   dat <- read_compare_dust("examples/compare.cpp")
   res <- transform_compare_odin_gpu(dat$function_defn)
-  expect_false(any(grepl("typedef.+real_t", res)))
+  expect_false(any(grepl("typedef.+real_type", res)))
   expect_false(any(grepl("odin\\(", res)))
 })
 
