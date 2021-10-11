@@ -61,7 +61,7 @@ test_that("vector handling test", {
   expect_equal(y1, y2[1, , drop = FALSE])
 
   r <- dust::dust_rng$new(1L, np)$normal(ns * nt, 0, 1)
-  rr <- array(r, c(3, 5, 7))
+  rr <- array(r, c(ns, nt, np))
 
   expect_equal(y2, apply(rr, c(1, 3), sum))
 })
