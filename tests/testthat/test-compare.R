@@ -218,7 +218,7 @@ test_that("Sensible error messages on substitution failure", {
     "Did not find odin variables when reading 'examples/compare_simple.cpp'")
   expect_match(
     err$message,
-    "- scale: line 11")
+    "- scale: line 12")
 })
 
 
