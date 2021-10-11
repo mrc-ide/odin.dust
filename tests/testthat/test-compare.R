@@ -66,7 +66,9 @@ test_that("Can error if correct metadata not found", {
     "All arguments to [[odin.dust::compare_data()]] must be symbols: 'b'",
     fixed = TRUE)
 
-  writeLines(c(fn[[1]], "// [[odin.dust::compare_data(a = real_type)]]", fn[[2]]),
+  writeLines(c(fn[[1]],
+               "// [[odin.dust::compare_data(a = real_type)]]",
+               fn[[2]]),
              path)
   expect_error(
     read_compare_dust(path),
