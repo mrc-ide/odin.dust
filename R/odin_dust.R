@@ -57,7 +57,7 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##' @param real_type C++ type to use for real (floating point)
 ##'   numbers. Defaults to `double`.
 ##'
-##' @param random_state_type C++ type to use for the random number
+##' @param rng_state_type C++ type to use for the random number
 ##'   generator. Defaults to `dust::random::generator<real_type>`
 ##'   which selects a generator based on your real type. The default
 ##'   prior to dust 0.10.0 was
