@@ -57,6 +57,12 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##' @param real_type C++ type to use for real (floating point)
 ##'   numbers. Defaults to `double`.
 ##'
+##' @param random_state_type C++ type to use for the random number
+##'   generator. Defaults to `dust::random::generator<real_type>`
+##'   which selects a generator based on your real type. The default
+##'   prior to dust 0.10.0 was
+##'   `dust::random::xoshiro256starstar_state`.
+##'
 ##' @param gpu **Experimental!** Generate support for running models
 ##'   on a GPU. This implies `gpu_generate` but *does* require a gpu
 ##'   and nvcc toolchain. Currently not supported within package code.
@@ -86,6 +92,7 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##' @examples
 ##' odin.dust::odin_dust_options()
 odin_dust_options <- function(..., real_type = NULL,
+                              rng_state_type = NULL,
                               gpu = NULL, gpu_generate = NULL,
                               options = NULL) {
   if (inherits(options, "odin_dust_options")) {
@@ -99,6 +106,8 @@ odin_dust_options <- function(..., real_type = NULL,
   options <- odin::odin_options(target = "dust", ...)
   options$gpu <- gpu_mode(gpu_generate %||% FALSE, gpu %||% FALSE)
   options$real_type <- real_type %||% "double"
+  options$rng_state_type <- rng_state_type %||%
+    "dust::random::generator<real_type>"
   options$read_include <- read_include_dust
   options$config_custom <- "compare"
   class(options) <- c("odin_dust_options", class(options))

@@ -5,12 +5,18 @@ test_that("can construct basic options", {
   expect_s3_class(opts, c("odin_dust_options", "odin_options"), TRUE)
 
   expect_equal(opts$real_type, "double")
+  expect_equal(opts$rng_state_type, "dust::random::generator<real_type>")
   expect_equal(opts$gpu, list(generate = FALSE, compile = FALSE))
 })
 
 
 test_that("can control real type", {
   expect_equal(odin_dust_options(real_type = "float")$real_type, "float")
+})
+
+test_that("can control real type", {
+  type <- "dust::random::xoshiro256_starstar"
+  expect_equal(odin_dust_options(rng_state_type = type)$rng_state_type, type)
 })
 
 

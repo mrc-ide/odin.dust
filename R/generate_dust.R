@@ -14,7 +14,7 @@ generate_dust <- function(ir, options) {
          paste(squote(unsupported), collapse = ", "))
   }
 
-  dat$meta$dust <- generate_dust_meta(options$real_type)
+  dat$meta$dust <- generate_dust_meta(options)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
@@ -64,12 +64,13 @@ generate_dust <- function(ir, options) {
 ## NOTE that none of these names are protected by odin; we probably
 ## should try and move to names where we are sure that we won't
 ## collide.
-generate_dust_meta <- function(real_type) {
+generate_dust_meta <- function(options) {
   list(pars = "pars",
        data = "data",
        shared = "shared",
        rng_state = "rng_state",
-       real_type = real_type %||% "double",
+       rng_state_type = options$rng_state_type,
+       real_type = options$real_type,
        internal_int = "internal_int",
        internal_real  = "internal_real",
        shared_int = "shared_int",
@@ -129,7 +130,7 @@ generate_dust_core_struct <- function(dat) {
   }
 
   c(sprintf("typedef %s real_type;", dat$meta$dust$real_type),
-    "typedef dust::random::generator<real_type> rng_state_type;",
+    sprintf("typedef %s rng_state_type;", dat$meta$dust$rng_state_type),
     data_type,
     "struct shared_type {",
     els[!i_internal],
