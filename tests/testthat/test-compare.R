@@ -144,19 +144,21 @@ test_that("check_compare_args detects errors", {
     "const typename T::internal_type" = "internal",
     "std::shared_ptr<const typename T::shared_type>" = "shared",
     "typename T::rng_state_type&" = "rng_state")
+  filename <- "f.cpp"
   df <- data.frame(
     type = names(args), name = unname(args), stringsAsFactors = FALSE)
-  expect_silent(check_compare_args(df, "compare"))
+  expect_silent(check_compare_args(df, "compare", filename))
   expect_error(
-    check_compare_args(df[-3, ], "compare"),
-    "Expected compare function 'compare' to have 5 args (but given 4)",
+    check_compare_args(df[-3, ], "compare", filename),
+    "Expected compare function 'compare' (f.cpp) to have 5 args (but given 4)",
     fixed = TRUE)
 
   df$type[[1]] <- "typename T::real_type *"
   df$name[[2]] <- "thedata"
   err <- expect_error(
-    check_compare_args(df, "compare"),
-    "Compare function 'compare' does not conform")
+    check_compare_args(df, "compare", filename),
+    "Compare function 'compare' (f.cpp) does not conform",
+    fixed = TRUE)
   expect_match(
     err$message,
     "Expected: const typename T::data_type& data")
@@ -177,7 +179,7 @@ test_that("check_compare_args detects errors", {
   df$type <- gsub(" ", "  ", df$type)
   df$type <- gsub("<", " < ", df$type)
   df$type <- gsub(">", " > ", df$type)
-  expect_silent(check_compare_args(df, "compare"))
+  expect_silent(check_compare_args(df, "compare", filename))
 })
 
 

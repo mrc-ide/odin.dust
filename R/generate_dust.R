@@ -431,7 +431,7 @@ read_compare_dust <- function(filename) {
     error = function(e) stop(msg, call. = FALSE))
 
   function_name <- fn$name
-  check_compare_args(fn$args[[1]], function_name)
+  check_compare_args(fn$args[[1]], function_name, filename)
 
   i_data <- dat$decoration == "odin.dust::compare_data"
   if (sum(i_data) == 0L) {
@@ -463,11 +463,11 @@ read_compare_dust <- function(filename) {
 }
 
 
-check_compare_args <- function(args, name) {
+check_compare_args <- function(args, name, filename) {
   if (nrow(args) != 5L) {
     stop(sprintf(
-      "Expected compare function '%s' to have 5 args (but given %d)",
-      name, nrow(args)))
+      "Expected compare function '%s' (%s) to have 5 args (but given %d)",
+      name, filename, nrow(args)))
   }
   norm <- function(x) {
     gsub("\\s*([<>])\\s*", "\\1", gsub("\\s+", " ", x))
@@ -488,8 +488,8 @@ check_compare_args <- function(args, name) {
                    args$type[err],
                    args$name[err])
     stop(sprintf(
-      "Compare function '%s' does not conform to expected signature:\n%s",
-      name, paste(msg, collapse = "\n")), call. = FALSE)
+      "Compare function '%s' (%s) does not conform to expected signature:\n%s",
+      name, filename, paste(msg, collapse = "\n")), call. = FALSE)
   }
 }
 
