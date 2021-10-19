@@ -81,7 +81,7 @@ odin::odin_options" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
       </span>
     </div>
 
@@ -144,7 +144,8 @@ odin::odin_options" />
 
     <pre class="usage"><span class='fu'>odin_dust_options</span><span class='op'>(</span>
   <span class='va'>...</span>,
-  real_t <span class='op'>=</span> <span class='cn'>NULL</span>,
+  real_type <span class='op'>=</span> <span class='cn'>NULL</span>,
+  rng_state_type <span class='op'>=</span> <span class='cn'>NULL</span>,
   gpu <span class='op'>=</span> <span class='cn'>NULL</span>,
   gpu_generate <span class='op'>=</span> <span class='cn'>NULL</span>,
   options <span class='op'>=</span> <span class='cn'>NULL</span>
@@ -160,9 +161,17 @@ odin::odin_options" />
 <code>rewrite_dims</code>.</p></td>
     </tr>
     <tr>
-      <th>real_t</th>
+      <th>real_type</th>
       <td><p>C++ type to use for real (floating point)
 numbers. Defaults to <code>double</code>.</p></td>
+    </tr>
+    <tr>
+      <th>rng_state_type</th>
+      <td><p>C++ type to use for the random number
+generator. Defaults to <code>dust::random::generator&lt;real_type&gt;</code>
+which selects a generator based on your real type. The default
+prior to dust 0.10.0 was
+<code>dust::random::xoshiro256starstar_state</code>.</p></td>
     </tr>
     <tr>
       <th>gpu</th>
@@ -190,7 +199,7 @@ object. If given it overrides arguments; if it is already a
 <code>odin_dust_options</code> object it is returned unmodified. Otherwise
 it is passed through to <a href='https://rdrr.io/pkg/odin/man/odin_options.html'>odin::odin_options</a> where it will
 override arguments in <code>...</code> but respond to the <code>odin_dust</code>
-specific options (<code>real_t</code>, etc)</p></td>
+specific options (<code>real_type</code>, etc)</p></td>
     </tr>
     </table>
 
@@ -214,7 +223,7 @@ pass to <code><a href='odin_dust.html'>odin.dust::odin_dust</a></code></p>
 #&gt; [1] FALSE
 #&gt; 
 #&gt; $workdir
-#&gt; [1] "/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmplpK44E/file3823767b382a"
+#&gt; [1] "/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpYUF5fV/file2adc403a8ffb"
 #&gt; 
 #&gt; $skip_cache
 #&gt; [1] FALSE
@@ -246,7 +255,7 @@ pass to <code><a href='odin_dust.html'>odin.dust::odin_dust</a></code></p>
 #&gt;     list(names = names, data = list(source = paste(readLines(filename), 
 #&gt;         collapse = "\n")))
 #&gt; }
-#&gt; &lt;bytecode: 0x7f9d12cf3418&gt;
+#&gt; &lt;bytecode: 0x7fd645de5e38&gt;
 #&gt; &lt;environment: namespace:odin.dust&gt;
 #&gt; 
 #&gt; $gpu
@@ -257,8 +266,11 @@ pass to <code><a href='odin_dust.html'>odin.dust::odin_dust</a></code></p>
 #&gt; [1] FALSE
 #&gt; 
 #&gt; 
-#&gt; $real_t
+#&gt; $real_type
 #&gt; [1] "double"
+#&gt; 
+#&gt; $rng_state_type
+#&gt; [1] "dust::random::generator&lt;real_type&gt;"
 #&gt; 
 #&gt; $config_custom
 #&gt; [1] "compare"
