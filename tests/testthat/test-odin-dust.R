@@ -60,9 +60,10 @@ test_that("vector handling test", {
   y2 <- mod$state()
   expect_equal(y1, y2[1, , drop = FALSE])
 
-  r <- dust::dust_rng$new(1L, np)$rnorm(ns * nt * np, 0, 1)
-  rr <- array(r, c(np, ns, nt))
-  expect_equal(t(apply(rr, c(1:2), sum)), y2)
+  r <- dust::dust_rng$new(1L, np)$normal(ns * nt, 0, 1)
+  rr <- array(r, c(ns, nt, np))
+
+  expect_equal(y2, apply(rr, c(1, 3), sum))
 })
 
 
@@ -134,7 +135,7 @@ test_that("Accept integers", {
   mod <- gen$new(list(n = 10, p = 0.5), 0, 100, seed = 1L)
   expect_equal(mod$state(), matrix(0, 1, 100))
   y <- mod$run(1)
-  cmp <- dust::dust_rng$new(1, 100)$rbinom(100, 10, 0.5)
+  cmp <- dust::dust_rng$new(1, 100)$binomial(1, 10, 0.5)
   expect_equal(y, matrix(cmp, 1, 100))
 
   expect_error(
@@ -326,17 +327,17 @@ test_that("don't encode specific types in generated code", {
 
   expect_equal(sum(grepl("double", res$class)), 1)
   expect_match(grep("double", res$class, value = TRUE),
-               "typedef double real_t;")
+               "typedef double real_type;")
   expect_equal(sum(grepl("double", res$create)), 0)
 })
 
 
 test_that("Generate code with different types", {
-  options <- odin_dust_options(real_t = "DOUBLE")
+  options <- odin_dust_options(real_type = "DOUBLE")
   ir <- odin::odin_parse_("examples/sir.R", options)
   res <- generate_dust(ir, options)
 
-  expect_true(any(grepl("typedef DOUBLE real_t;", res$class)))
+  expect_true(any(grepl("typedef DOUBLE real_type;", res$class)))
 
   cmp <- generate_dust(ir, odin_dust_options())
   expect_equal(replace(res$class, c(DOUBLE = "double")),
@@ -346,9 +347,9 @@ test_that("Generate code with different types", {
 
 test_that("sir model float test", {
   gen_f <- odin_dust_("examples/sir.R",
-                      options = odin_dust_options(real_t = "float"))
+                      options = odin_dust_options(real_type = "float"))
   gen_d <- odin_dust_("examples/sir.R",
-                      options = odin_dust_options(real_t = "double"))
+                      options = odin_dust_options(real_type = "double"))
 
   n <- 10000
   y0 <- c(1000, 10, 0)
@@ -372,9 +373,9 @@ test_that("sir model float test", {
 
 test_that("array model float test", {
   gen_f <- odin_dust_("examples/array.R",
-                      options = odin_dust_options(real_t = "float"))
+                      options = odin_dust_options(real_type = "float"))
   gen_d <- odin_dust_("examples/array.R",
-                      options = odin_dust_options(real_t = "double"))
+                      options = odin_dust_options(real_type = "double"))
 
   r <- matrix(runif(10), 2, 5)
   x0 <- matrix(runif(10), 2, 5)
@@ -488,7 +489,7 @@ test_that("Detect sum corner case", {
   mod <- gen$new(list(len = 10), 0, 1L, seed = 1L)
   y <- mod$simulate(0:5)
   rng <- dust::dust_rng$new(1, seed = 1L)
-  m <- matrix(rng$norm_rand(10 * 5), 10, 5)
+  m <- matrix(rng$normal(10 * 5, 0, 1), 10, 5)
   expect_equal(drop(y), cumsum(c(0, colSums(m))))
 })
 

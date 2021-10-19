@@ -18,7 +18,7 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
       ret <- sprintf("std::pow(%s, %s)", values[[1]], values[[2]])
     } else if (n == 2L && fn %in% odin:::FUNCTIONS_INFIX) {
       fmt <- switch(fn,
-                    "/" = "%s %s (real_t) %s",
+                    "/" = "%s %s (real_type) %s",
                     "%s %s %s")
       ret <- sprintf(fmt, values[[1]], fn, values[[2]])
     } else if (n == 1L && fn == "-") {
@@ -45,9 +45,10 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
       ret <- dust_fold_call(fn, values)
     } else if (fn == "sum" || fn == "odin_sum") {
       ret <- generate_dust_sexp_sum(args, data, meta, supported, gpu)
-    } else if (any(FUNCTIONS_STOCHASTIC == fn)) {
-      ret <- sprintf("dust::distr::%s<real_t>(%s, %s)",
-                     fn, meta$dust$rng_state, paste(values, collapse = ", "))
+    } else if (any(names(FUNCTIONS_STOCHASTIC) == fn)) {
+      ret <- sprintf("dust::random::%s<real_type>(%s, %s)",
+                     FUNCTIONS_STOCHASTIC[[fn]], meta$dust$rng_state,
+                     paste(values, collapse = ", "))
     } else {
       if (any(names(FUNCTIONS_RENAME) == fn)) {
         fn <- FUNCTIONS_RENAME[[fn]]
@@ -88,7 +89,7 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
 generate_dust_sexp_sum <- function(args, data, meta, supported, gpu) {
   target <- generate_dust_sexp(args[[1]], data, meta, supported, gpu)
   data_info <- data$elements[[args[[1]]]]
-  type <- if (data_info$storage_type == "double") "real_t" else "int"
+  type <- if (data_info$storage_type == "double") "real_type" else "int"
 
   if (data_info$location == "internal" && !gpu) {
     target <- sprintf("%s.data()", target)

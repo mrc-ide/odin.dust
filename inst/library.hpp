@@ -1,6 +1,7 @@
-template <typename real_t, typename T, typename U>
-HOSTDEVICE real_t fmodr(T x, U y) {
-  real_t tmp = std::fmod(static_cast<real_t>(x), static_cast<real_t>(y));
+template <typename real_type, typename T, typename U>
+HOSTDEVICE real_type fmodr(T x, U y) {
+  real_type tmp = std::fmod(static_cast<real_type>(x),
+                            static_cast<real_type>(y));
   if (tmp * y < 0) {
     tmp += y;
   }

@@ -14,7 +14,7 @@ generate_dust <- function(ir, options) {
          paste(squote(unsupported), collapse = ", "))
   }
 
-  dat$meta$dust <- generate_dust_meta(options$real_t)
+  dat$meta$dust <- generate_dust_meta(options)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
@@ -64,12 +64,13 @@ generate_dust <- function(ir, options) {
 ## NOTE that none of these names are protected by odin; we probably
 ## should try and move to names where we are sure that we won't
 ## collide.
-generate_dust_meta <- function(real_t) {
+generate_dust_meta <- function(options) {
   list(pars = "pars",
        data = "data",
        shared = "shared",
        rng_state = "rng_state",
-       real_t = real_t %||% "double",
+       rng_state_type = options$rng_state_type,
+       real_type = options$real_type,
        internal_int = "internal_int",
        internal_real  = "internal_real",
        shared_int = "shared_int",
@@ -97,8 +98,8 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ret$add(paste0("  ", update))
   ret$add(sprintf("  %s", compare)) # ensures we don't add trailing whitespace
   ret$add("private:")
-  ret$add("  std::shared_ptr<const shared_t> %s;", dat$meta$dust$shared)
-  ret$add("  internal_t %s;", dat$meta$internal)
+  ret$add("  std::shared_ptr<const shared_type> %s;", dat$meta$dust$shared)
+  ret$add("  internal_type %s;", dat$meta$internal)
   ret$add("};")
 
   ret$get()
@@ -120,27 +121,28 @@ generate_dust_core_struct <- function(dat) {
   i_internal <- vcapply(dat$data$elements[i], "[[", "stage") == "time"
 
   if (is.null(dat$compare)) {
-    data_t <- "typedef dust::no_data data_t;"
+    data_type <- "typedef dust::no_data data_type;"
   } else {
-    data_t <- c(
-      "struct ALIGN(16) data_t {",
+    data_type <- c(
+      "struct ALIGN(16) data_type {",
       sprintf("  %s %s;", unname(dat$compare$data), names(dat$compare$data)),
       "};")
   }
 
-  c(sprintf("typedef %s real_t;", dat$meta$dust$real_t),
-    data_t,
-    "struct shared_t {",
+  c(sprintf("typedef %s real_type;", dat$meta$dust$real_type),
+    sprintf("typedef %s rng_state_type;", dat$meta$dust$rng_state_type),
+    data_type,
+    "struct shared_type {",
     els[!i_internal],
     "};",
-    "struct internal_t {",
+    "struct internal_type {",
     els[i_internal],
     "};")
 }
 
 
 generate_dust_core_ctor <- function(dat) {
-  c(sprintf("%s(const dust::pars_t<%s>& %s) :",
+  c(sprintf("%s(const dust::pars_type<%s>& %s) :",
             dat$config$base, dat$config$base, dat$meta$dust$pars),
     sprintf("  %s(%s.shared), %s(%s.internal) {",
             dat$meta$dust$shared, dat$meta$dust$pars,
@@ -181,12 +183,12 @@ generate_dust_core_initial <- function(dat, rewrite) {
   initial <- dust_flatten_eqs(lapply(dat$data$variable$contents, set_initial))
 
   args <- c("size_t" = dat$meta$time)
-  body <- c(sprintf("std::vector<real_t> %s(%s);",
+  body <- c(sprintf("std::vector<real_type> %s(%s);",
                     dat$meta$state, rewrite(dat$data$variable$length)),
             dust_flatten_eqs(eqs_initial),
             initial,
             sprintf("return %s;", dat$meta$state))
-  cpp_function("std::vector<real_t>", "initial", args, body)
+  cpp_function("std::vector<real_type>", "initial", args, body)
 }
 
 
@@ -199,9 +201,9 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
   body <- dust_flatten_eqs(c(unpack, eqs[equations]))
 
   args <- c("size_t" = dat$meta$time,
-            "const real_t *" = dat$meta$state,
-            "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state,
-            "real_t *" = dat$meta$result)
+            "const real_type *" = dat$meta$state,
+            "rng_state_type&" = dat$meta$dust$rng_state,
+            "real_type *" = dat$meta$result)
 
   cpp_function("HOST void", "update", args, body)
 }
@@ -209,12 +211,12 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
 
 generate_dust_core_create <- function(eqs, dat, rewrite) {
   pars_name <- dat$meta$dust$pars
-  pars_type <- sprintf("dust::pars_t<%s>", dat$config$base)
-  internal_type <- sprintf("%s::internal_t", dat$config$base)
+  pars_type <- sprintf("dust::pars_type<%s>", dat$config$base)
+  internal_type <- sprintf("%s::internal_type", dat$config$base)
 
   body <- collector()
-  body$add("typedef typename %s::real_t real_t;", dat$config$base)
-  body$add("auto %s = std::make_shared<%s::shared_t>();",
+  body$add("typedef typename %s::real_type real_type;", dat$config$base)
+  body$add("auto %s = std::make_shared<%s::shared_type>();",
            dat$meta$dust$shared, dat$config$base)
   body$add("%s %s;", internal_type, dat$meta$internal)
 
@@ -244,13 +246,13 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 generate_dust_core_info <- function(dat, rewrite) {
   nms <- names(dat$data$variable$contents)
   args <- dat$meta$dust$pars
-  names(args) <- sprintf("const dust::pars_t<%s>&", dat$config$base)
+  names(args) <- sprintf("const dust::pars_type<%s>&", dat$config$base)
 
   body <- collector()
-  body$add("const %s::internal_t %s = %s.%s;",
+  body$add("const %s::internal_type %s = %s.%s;",
            dat$config$base, dat$meta$internal, dat$meta$dust$pars,
            dat$meta$internal)
-  body$add("const std::shared_ptr<const %s::shared_t> %s = %s.%s;",
+  body$add("const std::shared_ptr<const %s::shared_type> %s = %s.%s;",
            dat$config$base, dat$meta$dust$shared, dat$meta$dust$pars,
            dat$meta$dust$shared)
 
@@ -430,7 +432,7 @@ read_compare_dust <- function(filename) {
     error = function(e) stop(msg, call. = FALSE))
 
   function_name <- fn$name
-  check_compare_args(fn$args[[1]], function_name)
+  check_compare_args(fn$args[[1]], function_name, filename)
 
   i_data <- dat$decoration == "odin.dust::compare_data"
   if (sum(i_data) == 0L) {
@@ -462,21 +464,21 @@ read_compare_dust <- function(filename) {
 }
 
 
-check_compare_args <- function(args, name) {
+check_compare_args <- function(args, name, filename) {
   if (nrow(args) != 5L) {
     stop(sprintf(
-      "Expected compare function '%s' to have 5 args (but given %d)",
-      name, nrow(args)))
+      "Expected compare function '%s' (%s) to have 5 args (but given %d)",
+      name, filename, nrow(args)))
   }
   norm <- function(x) {
     gsub("\\s*([<>])\\s*", "\\1", gsub("\\s+", " ", x))
   }
   args_expected <- c(
-    "const typename T::real_t *" = "state",
-    "const typename T::data_t&" = "data",
-    "const typename T::internal_t" = "internal",
-    "std::shared_ptr<const typename T::shared_t>" = "shared",
-    "dust::rng_state_t<typename T::real_t>&" = "rng_state")
+    "const typename T::real_type *" = "state",
+    "const typename T::data_type&" = "data",
+    "const typename T::internal_type" = "internal",
+    "std::shared_ptr<const typename T::shared_type>" = "shared",
+    "typename T::rng_state_type&" = "rng_state")
   err <- norm(args$type) != norm(names(args_expected)) |
     args$name != unname(args_expected)
   if (any(err)) {
@@ -487,8 +489,8 @@ check_compare_args <- function(args, name) {
                    args$type[err],
                    args$name[err])
     stop(sprintf(
-      "Compare function '%s' does not conform to expected signature:\n%s",
-      name, paste(msg, collapse = "\n")), call. = FALSE)
+      "Compare function '%s' (%s) does not conform to expected signature:\n%s",
+      name, filename, paste(msg, collapse = "\n")), call. = FALSE)
   }
 }
 
@@ -537,9 +539,9 @@ generate_dust_compare_method <- function(dat) {
   if (is.null(dat$compare)) {
     return(NULL)
   }
-  args <- c("const real_t *" = dat$meta$state,
-            "const data_t&" = dat$meta$dust$data,
-            "dust::rng_state_t<real_t>&" = dat$meta$dust$rng_state)
+  args <- c("const real_type *" = dat$meta$state,
+            "const data_type&" = dat$meta$dust$data,
+            "rng_state_type&" = dat$meta$dust$rng_state)
   body <- sprintf("return %s<%s>(%s, %s, %s, %s, %s);",
                   dat$compare$function_name,
                   dat$config$base,
@@ -548,7 +550,7 @@ generate_dust_compare_method <- function(dat) {
                   dat$meta$internal,
                   dat$meta$dust$shared,
                   dat$meta$dust$rng_state)
-  cpp_function("real_t",
+  cpp_function("real_type",
                "compare_data",
                args,
                body)
@@ -563,12 +565,12 @@ generate_dust_core_data <- function(dat) {
                       unname(dat$compare$data),
                       names(dat$compare$data),
                       rep(c(",", ""), c(length(dat$compare$data) - 1, 1)))
-  body <- c(sprintf("typedef %s::real_t real_t;", dat$config$base),
-            sprintf("return %s::data_t{", dat$config$base),
+  body <- c(sprintf("typedef %s::real_type real_type;", dat$config$base),
+            sprintf("return %s::data_type{", dat$config$base),
             contents,
             "  };")
   c("template <>",
-    cpp_function(sprintf("%s::data_t", dat$config$base),
+    cpp_function(sprintf("%s::data_type", dat$config$base),
                  sprintf("dust_data<%s>", dat$config$base),
                  c("cpp11::list" = dat$meta$dust$data),
                  body))
@@ -638,10 +640,11 @@ generate_dust_gpu <- function(dat, rewrite) {
 
   cpp_namespace("dust",
                 c(generate_dust_gpu_declaration(dat),
-                  generate_dust_gpu_size(dat, rewrite),
-                  generate_dust_gpu_copy(dat, rewrite),
-                  generate_dust_gpu_update(dat),
-                  generate_dust_gpu_compare(dat)))
+                  cpp_namespace("cuda",
+                                c(generate_dust_gpu_size(dat, rewrite),
+                                  generate_dust_gpu_copy(dat, rewrite),
+                                  generate_dust_gpu_update(dat),
+                                  generate_dust_gpu_compare(dat)))))
 }
 
 
@@ -658,19 +661,19 @@ generate_dust_gpu_update <- function(dat) {
 
   args <- c(
     "size_t" = dat$meta$time,
-    "const dust::interleaved<%s::real_t>" = dat$meta$state,
-    "dust::interleaved<int>" = dat$meta$dust$internal_int,
-    "dust::interleaved<%s::real_t>" = dat$meta$dust$internal_real,
+    "const dust::cuda::interleaved<%s::real_type>" = dat$meta$state,
+    "dust::cuda::interleaved<int>" = dat$meta$dust$internal_int,
+    "dust::cuda::interleaved<%s::real_type>" = dat$meta$dust$internal_real,
     "const int *" = dat$meta$dust$shared_int,
-    "const %s::real_t *" = dat$meta$dust$shared_real,
-    "dust::rng_state_t<%s::real_t>&" = dat$meta$dust$rng_state,
-    "dust::interleaved<%s::real_t>" = dat$meta$result)
+    "const %s::real_type *" = dat$meta$dust$shared_real,
+    "%s::rng_state_type&" = dat$meta$dust$rng_state,
+    "dust::cuda::interleaved<%s::real_type>" = dat$meta$result)
   names(args) <- sub("%s", dat$config$base, names(args), fixed = TRUE)
 
   eqs <- generate_dust_equations(dat, NULL, dat$components$rhs$equations,
                                  TRUE)
 
-  body <- c(sprintf("typedef %s::real_t real_t;", dat$config$base),
+  body <- c(sprintf("typedef %s::real_type real_type;", dat$config$base),
             dust_flatten_eqs(eqs))
 
   c("template<>",
@@ -686,21 +689,21 @@ generate_dust_gpu_compare <- function(dat) {
   code <- dat$compare$function_defn
 
   base <- dat$config$base
-  return_type <- sprintf("DEVICE %s::real_t", base)
+  return_type <- sprintf("DEVICE %s::real_type", base)
   name <- sprintf("compare_device<%s>", base)
 
   args <- c(
-    "const dust::interleaved<%s::real_t>" = "state",
-    "const %s::data_t&" = "data",
-    "dust::interleaved<int>" = "internal_int",
-    "dust::interleaved<%s::real_t>" = "internal_real",
+    "const dust::cuda::interleaved<%s::real_type>" = "state",
+    "const %s::data_type&" = "data",
+    "dust::cuda::interleaved<int>" = "internal_int",
+    "dust::cuda::interleaved<%s::real_type>" = "internal_real",
     "const int *" = "shared_int",
-    "const %s::real_t *" = "shared_real",
-    "dust::rng_state_t<%s::real_t>&" = "rng_state")
+    "const %s::real_type *" = "shared_real",
+    "%s::rng_state_type&" = "rng_state")
   names(args) <- sub("%s", base, names(args), fixed = TRUE)
 
   body <- collector()
-  body$add("typedef %s::real_t real_t;", base)
+  body$add("typedef %s::real_type real_type;", base)
   body$add(dat$gpu$access[dat$compare$used])
   body$add(transform_compare_odin_gpu(code))
 
@@ -711,7 +714,7 @@ generate_dust_gpu_compare <- function(dat) {
 
 generate_dust_gpu_size <- function(dat, rewrite) {
   dust_gpu_size <- function(x) {
-    name <- sprintf("dust::device_%s_size<%s>",
+    name <- sprintf("dust::cuda::device_%s_size<%s>",
                     x$location, dat$config$base)
     args <- set_names(dat$meta$dust$shared,
                       sprintf("dust::shared_ptr<%s>", dat$config$base))
@@ -725,15 +728,15 @@ generate_dust_gpu_size <- function(dat, rewrite) {
 
 
 generate_dust_gpu_copy <- function(dat, rewrite) {
-  name <- sprintf("dust::device_shared_copy<%s>", dat$config$base)
+  name <- sprintf("dust::cuda::device_shared_copy<%s>", dat$config$base)
   args <- c(
     "dust::shared_ptr<%s>" = dat$meta$dust$shared,
     "int *" = dat$meta$dust$shared_int,
-    "%s::real_t *" = dat$meta$dust$shared_real)
+    "%s::real_type *" = dat$meta$dust$shared_real)
   names(args) <- sub("%s", dat$config$base, names(args), fixed = TRUE)
 
   copy1 <- function(name, shared) {
-    sprintf("%s = dust::shared_copy(%s, %s);", shared, shared,
+    sprintf("%s = dust::cuda::shared_copy(%s, %s);", shared, shared,
             vcapply(name, rewrite, USE.NAMES = FALSE))
   }
 
@@ -833,7 +836,7 @@ generate_dust_gpu_storage <- function(dat) {
     } else {
       location <- dat$meta$state
     }
-    type <- if (rank == 0) "real_t" else "dust::interleaved<real_t>"
+    type <- if (rank == 0) "real_type" else "dust::cuda::interleaved<real_type>"
     c(x, list(type = type, rank = rank, location = location))
   }
 
@@ -928,7 +931,7 @@ dust_gpu_storage_pack <- function(used, location, type, dat, extra = NULL) {
   location_dust <- sprintf("%s_%s",
                            location, if (type == "int") "int" else "real")
   if (location == "internal") {
-    type_array <- sprintf("dust::interleaved<%s>", type_dust)
+    type_array <- sprintf("dust::cuda::interleaved<%s>", type_dust)
   } else {
     type_array <- sprintf("%s *", type_dust)
   }
@@ -979,7 +982,7 @@ transform_compare_odin_gpu <- function(code) {
             seq(max(grep("}", code, fixed = TRUE)), length(code)))
   code <- code[-drop]
 
-  code <- code[!grepl("typedef\\s+typename\\s+T::real_t\\s+real_t", code)]
+  code <- code[!grepl("typedef\\s+typename\\s+T::real_type\\s+real_type", code)]
 
   ## As a sanity check here, we'll look at the indenting and make sure
   ## that everything is at least as indented as the first line:

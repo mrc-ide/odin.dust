@@ -6,7 +6,8 @@
 \usage{
 odin_dust_options(
   ...,
-  real_t = NULL,
+  real_type = NULL,
+  rng_state_type = NULL,
   gpu = NULL,
   gpu_generate = NULL,
   options = NULL
@@ -17,8 +18,14 @@ odin_dust_options(
 \code{verbose}, \code{workdir}, \code{no_check_unused_equations} and
 \code{rewrite_dims}.}
 
-\item{real_t}{C++ type to use for real (floating point)
+\item{real_type}{C++ type to use for real (floating point)
 numbers. Defaults to \code{double}.}
+
+\item{rng_state_type}{C++ type to use for the random number
+generator. Defaults to \verb{dust::random::generator<real_type>}
+which selects a generator based on your real type. The default
+prior to dust 0.10.0 was
+\verb{dust::random::xoshiro256starstar_state}.}
 
 \item{gpu}{\strong{Experimental!} Generate support for running models
 on a GPU. This implies \code{gpu_generate} but \emph{does} require a gpu
@@ -40,7 +47,7 @@ object. If given it overrides arguments; if it is already a
 \code{odin_dust_options} object it is returned unmodified. Otherwise
 it is passed through to \link[odin:odin_options]{odin::odin_options} where it will
 override arguments in \code{...} but respond to the \code{odin_dust}
-specific options (\code{real_t}, etc)}
+specific options (\code{real_type}, etc)}
 }
 \value{
 A list of options (class \code{odin_options}) to

@@ -15,7 +15,7 @@ object. If given it overrides arguments; if it is already a
 \code{odin_dust_options} object it is returned unmodified. Otherwise
 it is passed through to \link[odin:odin_options]{odin::odin_options} where it will
 override arguments in \code{...} but respond to the \code{odin_dust}
-specific options (\code{real_t}, etc)}
+specific options (\code{real_type}, etc)}
 }
 \value{
 The path to the package
