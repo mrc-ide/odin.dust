@@ -639,20 +639,11 @@ generate_dust_gpu <- function(dat, rewrite) {
   dat$gpu <- generate_dust_gpu_storage(dat)
 
   cpp_namespace("dust",
-                c(generate_dust_gpu_declaration(dat),
-                  cpp_namespace("cuda",
-                                c(generate_dust_gpu_size(dat, rewrite),
-                                  generate_dust_gpu_copy(dat, rewrite),
-                                  generate_dust_gpu_update(dat),
-                                  generate_dust_gpu_compare(dat)))))
-}
-
-
-generate_dust_gpu_declaration <- function(dat, rewrite) {
-  c("template <>",
-    "DEVICE",
-    sprintf("struct has_gpu_support<%s> : std::true_type {};",
-            dat$config$base))
+                cpp_namespace("cuda",
+                              c(generate_dust_gpu_size(dat, rewrite),
+                                generate_dust_gpu_copy(dat, rewrite),
+                                generate_dust_gpu_update(dat),
+                                generate_dust_gpu_compare(dat))))
 }
 
 
