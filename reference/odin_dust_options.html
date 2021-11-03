@@ -81,7 +81,7 @@ odin::odin_options" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.12</span>
       </span>
     </div>
 
@@ -209,74 +209,75 @@ specific options (<code>real_type</code>, etc)</p></td>
 pass to <code><a href='odin_dust.html'>odin.dust::odin_dust</a></code></p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>odin.dust</span><span class='fu'>::</span><span class='fu'>odin_dust_options</span><span class='op'>(</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; $validate
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $verbose
-#&gt; [1] TRUE
-#&gt; 
-#&gt; $target
-#&gt; [1] "dust"
-#&gt; 
-#&gt; $pretty
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $workdir
-#&gt; [1] "/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpYUF5fV/file2adc403a8ffb"
-#&gt; 
-#&gt; $skip_cache
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $rewrite_dims
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $rewrite_constants
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $substitutions
-#&gt; NULL
-#&gt; 
-#&gt; $no_check_unused_equations
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $compiler_warnings
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $read_include
-#&gt; function (filename) 
-#&gt; {
-#&gt;     dat &lt;- decor::cpp_decorations(files = filename)
-#&gt;     code &lt;- dat$context[dat$decoration == "odin.dust::register"]
-#&gt;     names &lt;- vcapply(code, function(x) decor::parse_cpp_function(x)$name)
-#&gt;     if (length(names) == 0) {
-#&gt;         stop("Did not find any functions decorated with '[[odin.dust::register]]'")
-#&gt;     }
-#&gt;     list(names = names, data = list(source = paste(readLines(filename), 
-#&gt;         collapse = "\n")))
-#&gt; }
-#&gt; &lt;bytecode: 0x7fd645de5e38&gt;
-#&gt; &lt;environment: namespace:odin.dust&gt;
-#&gt; 
-#&gt; $gpu
-#&gt; $gpu$generate
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $gpu$compile
-#&gt; [1] FALSE
-#&gt; 
-#&gt; 
-#&gt; $real_type
-#&gt; [1] "double"
-#&gt; 
-#&gt; $rng_state_type
-#&gt; [1] "dust::random::generator&lt;real_type&gt;"
-#&gt; 
-#&gt; $config_custom
-#&gt; [1] "compare"
-#&gt; 
-#&gt; attr(,"class")
-#&gt; [1] "odin_dust_options" "odin_options"     </div></pre>
+    <pre class="examples"><span class='r-in'><span class='fu'>odin.dust</span><span class='fu'>::</span><span class='fu'>odin_dust_options</span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $validate</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $verbose</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] TRUE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $target</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "dust"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $pretty</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $workdir</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpuZKksw/file1cc233b84fb3"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $skip_cache</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $rewrite_dims</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $rewrite_constants</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $substitutions</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> NULL</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $no_check_unused_equations</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $compiler_warnings</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $read_include</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> function (filename) </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> {</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>     dat &lt;- decor::cpp_decorations(files = filename)</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>     code &lt;- dat$context[dat$decoration == "odin.dust::register"]</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>     names &lt;- vcapply(code, function(x) decor::parse_cpp_function(x)$name)</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>     if (length(names) == 0) {</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>         stop("Did not find any functions decorated with '[[odin.dust::register]]'")</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>     }</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>     list(names = names, data = list(source = paste(readLines(filename), </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>         collapse = "\n")))</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> }</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> &lt;bytecode: 0x7fce24738040&gt;</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> &lt;environment: namespace:odin.dust&gt;</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $gpu</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $gpu$generate</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $gpu$compile</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $real_type</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "double"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $rng_state_type</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "dust::random::generator&lt;real_type&gt;"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $config_custom</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "compare"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> attr(,"class")</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "odin_dust_options" "odin_options"     </span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
