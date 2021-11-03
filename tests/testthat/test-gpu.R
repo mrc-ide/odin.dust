@@ -14,9 +14,10 @@ test_that("Can generate interleaved interface for basic model", {
 
   mod1 <- gen$new(list(len = 10), 0, 10, seed = 1L)
   mod2 <- gen$new(list(len = 10), 0, 10, seed = 1L, device_config = 0L)
+  expect_true(mod2$uses_gpu(TRUE))
   expect_identical(
     mod1$run(10),
-    mod2$run(10, device = TRUE))
+    mod2$run(10))
 })
 
 
@@ -36,9 +37,10 @@ test_that("Can generate gpu code with internal storage", {
 
   mod1 <- gen$new(list(len = 10), 0, 10, seed = 1L)
   mod2 <- gen$new(list(len = 10), 0, 10, seed = 1L, device_config = 0L)
+  expect_true(mod2$uses_gpu(TRUE))
   expect_identical(
     mod1$run(10),
-    mod2$run(10, device = TRUE))
+    mod2$run(10))
 })
 
 
@@ -85,7 +87,7 @@ test_that("Can run basic sums on device", {
   mod2 <- gen$new(list(m_user = m), 0, 1, device_config = 0L)
 
   y1 <- mod1$transform_variables(drop(mod1$run(1)))
-  y2 <- mod1$transform_variables(drop(mod2$run(1, device = TRUE)))
+  y2 <- mod1$transform_variables(drop(mod2$run(1)))
   expect_identical(y1, y2)
 })
 
@@ -106,7 +108,7 @@ test_that("Generate correct code with scalars and vectors in shared", {
   mod1 <- gen$new(p, 0, 1, seed = 1L)
   mod2 <- gen$new(p, 0, 1, seed = 1L, device_config = 0L)
   expect_identical(mod1$run(5),
-                   mod2$run(5, device = TRUE))
+                   mod2$run(5))
 })
 
 
@@ -127,7 +129,7 @@ test_that("Use offsets correctly", {
   mod1 <- gen$new(list(), 0, 13, seed = 1L)
   mod2 <- gen$new(list(), 0, 13, seed = 1L, device_config = 0L)
   expect_identical(mod1$run(5),
-                   mod2$run(5, device = TRUE))
+                   mod2$run(5))
 })
 
 
@@ -137,10 +139,10 @@ test_that("gpu and gpu-free versions do not interfere in cache", {
   gen2 <- odin_dust_("examples/sir.R",
                      options = odin_dust_options(gpu_generate = TRUE))
   expect_error(
-    gen1$new(list(I_ini = 1), 0, 1)$run(0, device = TRUE),
+    gen1$new(list(I_ini = 1), 0, 1, device_config = 0L),
     "GPU support not enabled for this object")
   expect_silent(
-    gen2$new(list(I_ini = 1), 0, 1, device_config = 0L)$run(0, device = TRUE))
+    gen2$new(list(I_ini = 1), 0, 1, device_config = 0L)$run(0))
 })
 
 
@@ -228,10 +230,10 @@ test_that("Can create compare function with gpu code", {
 
   expect_identical(
     mod1$compare_data(),
-    mod2$compare_data(TRUE))
+    mod2$compare_data())
   expect_identical(
     mod2$compare_data(),
-    mod2$compare_data(TRUE))
+    mod2$compare_data())
 })
 
 
@@ -254,7 +256,7 @@ test_that("Can include a pair of integer vectors in gpu shared memory", {
   mod_cpu <- gen$new(pars, 0, 1)
   mod_gpu <- gen$new(pars, 0, 1, device_config = 0L)
 
-  y_cpu <- mod_cpu$run(1, device = FALSE)
-  y_gpu <- mod_gpu$run(1, device = TRUE)
+  y_cpu <- mod_cpu$run(1)
+  y_gpu <- mod_gpu$run(1)
   expect_identical(y_cpu, y_gpu)
 })
