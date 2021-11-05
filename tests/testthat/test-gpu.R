@@ -13,7 +13,7 @@ test_that("Can generate interleaved interface for basic model", {
   }, options = odin_dust_options(gpu_generate = TRUE))
 
   mod1 <- gen$new(list(len = 10), 0, 10, seed = 1L)
-  mod2 <- gen$new(list(len = 10), 0, 10, seed = 1L, device_config = 0L)
+  mod2 <- gen$new(list(len = 10), 0, 10, seed = 1L, gpu_config = 0L)
   expect_true(mod2$uses_gpu(TRUE))
   expect_identical(
     mod1$run(10),
@@ -36,7 +36,7 @@ test_that("Can generate gpu code with internal storage", {
   }, options = odin_dust_options(gpu_generate = TRUE))
 
   mod1 <- gen$new(list(len = 10), 0, 10, seed = 1L)
-  mod2 <- gen$new(list(len = 10), 0, 10, seed = 1L, device_config = 0L)
+  mod2 <- gen$new(list(len = 10), 0, 10, seed = 1L, gpu_config = 0L)
   expect_true(mod2$uses_gpu(TRUE))
   expect_identical(
     mod1$run(10),
@@ -47,7 +47,7 @@ test_that("Can generate gpu code with internal storage", {
 ## Sums of time varying things are important, so we use a slighty
 ## modified version of examples/sum.R that forces 'm' to be stored in
 ## ther internal data (rather than constant shared data)
-test_that("Can run basic sums on device", {
+test_that("Can run basic sums on gpu", {
   gen <- odin_dust({
     m_user[, ] <- user()
     dim(m_user) <- user()
@@ -84,7 +84,7 @@ test_that("Can run basic sums on device", {
   nc <- 7
   m <- matrix(runif(nr * nc), nr, nc)
   mod1 <- gen$new(list(m_user = m), 0, 1)
-  mod2 <- gen$new(list(m_user = m), 0, 1, device_config = 0L)
+  mod2 <- gen$new(list(m_user = m), 0, 1, gpu_config = 0L)
 
   y1 <- mod1$transform_variables(drop(mod1$run(1)))
   y2 <- mod1$transform_variables(drop(mod2$run(1)))
@@ -106,7 +106,7 @@ test_that("Generate correct code with scalars and vectors in shared", {
 
   p <- list(a = runif(1), b = runif(1), x = runif(10), y = runif(5))
   mod1 <- gen$new(p, 0, 1, seed = 1L)
-  mod2 <- gen$new(p, 0, 1, seed = 1L, device_config = 0L)
+  mod2 <- gen$new(p, 0, 1, seed = 1L, gpu_config = 0L)
   expect_identical(mod1$run(5),
                    mod2$run(5))
 })
@@ -127,7 +127,7 @@ test_that("Use offsets correctly", {
   }, options = odin_dust_options(gpu_generate = TRUE))
 
   mod1 <- gen$new(list(), 0, 13, seed = 1L)
-  mod2 <- gen$new(list(), 0, 13, seed = 1L, device_config = 0L)
+  mod2 <- gen$new(list(), 0, 13, seed = 1L, gpu_config = 0L)
   expect_identical(mod1$run(5),
                    mod2$run(5))
 })
@@ -139,10 +139,10 @@ test_that("gpu and gpu-free versions do not interfere in cache", {
   gen2 <- odin_dust_("examples/sir.R",
                      options = odin_dust_options(gpu_generate = TRUE))
   expect_error(
-    gen1$new(list(I_ini = 1), 0, 1, device_config = 0L),
+    gen1$new(list(I_ini = 1), 0, 1, gpu_config = 0L),
     "GPU support not enabled for this object")
   expect_silent(
-    gen2$new(list(I_ini = 1), 0, 1, device_config = 0L)$run(0))
+    gen2$new(list(I_ini = 1), 0, 1, gpu_config = 0L)$run(0))
 })
 
 
@@ -205,7 +205,7 @@ test_that("Can create compare function with gpu code", {
 
   p <- list()
   mod1 <- gen$new(p, 0, 1, seed = 1L)
-  mod2 <- gen$new(p, 0, 1, seed = 1L, device_config = 0L)
+  mod2 <- gen$new(p, 0, 1, seed = 1L, gpu_config = 0L)
 
   t <- seq(0, 20, by = 2)
   d <- dust::dust_data(
@@ -214,13 +214,6 @@ test_that("Can create compare function with gpu code", {
                another = 0L))
   mod1$set_data(d)
   mod2$set_data(d)
-
-  ## TODO: this is good
-  ## > mod1$run(5, TRUE)
-  ## Error: Can't refresh a non-existent device
-  ## but this returns NULL which is bad
-  ## > mod1$compare_data(TRUE)
-  ## NULL
 
   y <- mod1$run(2)
   y <- mod2$run(2)
@@ -254,7 +247,7 @@ test_that("Can include a pair of integer vectors in gpu shared memory", {
                index_z1 = sample(10),
                index_z2 = sample(10))
   mod_cpu <- gen$new(pars, 0, 1)
-  mod_gpu <- gen$new(pars, 0, 1, device_config = 0L)
+  mod_gpu <- gen$new(pars, 0, 1, gpu_config = 0L)
 
   y_cpu <- mod_cpu$run(1)
   y_gpu <- mod_gpu$run(1)

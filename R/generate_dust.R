@@ -124,7 +124,7 @@ generate_dust_core_struct <- function(dat) {
     data_type <- "typedef dust::no_data data_type;"
   } else {
     data_type <- c(
-      "struct ALIGN(16) data_type {",
+      "struct __align__(16) data_type {",
       sprintf("  %s %s;", unname(dat$compare$data), names(dat$compare$data)),
       "};")
   }
@@ -205,7 +205,7 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
             "rng_state_type&" = dat$meta$dust$rng_state,
             "real_type *" = dat$meta$result)
 
-  cpp_function("HOST void", "update", args, body)
+  cpp_function("void", "update", args, body)
 }
 
 
@@ -639,7 +639,7 @@ generate_dust_gpu <- function(dat, rewrite) {
   dat$gpu <- generate_dust_gpu_storage(dat)
 
   cpp_namespace("dust",
-                cpp_namespace("cuda",
+                cpp_namespace("gpu",
                               c(generate_dust_gpu_size(dat, rewrite),
                                 generate_dust_gpu_copy(dat, rewrite),
                                 generate_dust_gpu_update(dat),
@@ -648,17 +648,17 @@ generate_dust_gpu <- function(dat, rewrite) {
 
 
 generate_dust_gpu_update <- function(dat) {
-  name <- sprintf("update_device<%s>", dat$config$base)
+  name <- sprintf("update_gpu<%s>", dat$config$base)
 
   args <- c(
     "size_t" = dat$meta$time,
-    "const dust::cuda::interleaved<%s::real_type>" = dat$meta$state,
-    "dust::cuda::interleaved<int>" = dat$meta$dust$internal_int,
-    "dust::cuda::interleaved<%s::real_type>" = dat$meta$dust$internal_real,
+    "const dust::gpu::interleaved<%s::real_type>" = dat$meta$state,
+    "dust::gpu::interleaved<int>" = dat$meta$dust$internal_int,
+    "dust::gpu::interleaved<%s::real_type>" = dat$meta$dust$internal_real,
     "const int *" = dat$meta$dust$shared_int,
     "const %s::real_type *" = dat$meta$dust$shared_real,
     "%s::rng_state_type&" = dat$meta$dust$rng_state,
-    "dust::cuda::interleaved<%s::real_type>" = dat$meta$result)
+    "dust::gpu::interleaved<%s::real_type>" = dat$meta$result)
   names(args) <- sub("%s", dat$config$base, names(args), fixed = TRUE)
 
   eqs <- generate_dust_equations(dat, NULL, dat$components$rhs$equations,
@@ -668,7 +668,7 @@ generate_dust_gpu_update <- function(dat) {
             dust_flatten_eqs(eqs))
 
   c("template<>",
-    cpp_function("DEVICE void", name, args, body))
+    cpp_function("__device__ void", name, args, body))
 }
 
 
@@ -680,14 +680,14 @@ generate_dust_gpu_compare <- function(dat) {
   code <- dat$compare$function_defn
 
   base <- dat$config$base
-  return_type <- sprintf("DEVICE %s::real_type", base)
-  name <- sprintf("compare_device<%s>", base)
+  return_type <- sprintf("__device__ %s::real_type", base)
+  name <- sprintf("compare_gpu<%s>", base)
 
   args <- c(
-    "const dust::cuda::interleaved<%s::real_type>" = "state",
+    "const dust::gpu::interleaved<%s::real_type>" = "state",
     "const %s::data_type&" = "data",
-    "dust::cuda::interleaved<int>" = "internal_int",
-    "dust::cuda::interleaved<%s::real_type>" = "internal_real",
+    "dust::gpu::interleaved<int>" = "internal_int",
+    "dust::gpu::interleaved<%s::real_type>" = "internal_real",
     "const int *" = "shared_int",
     "const %s::real_type *" = "shared_real",
     "%s::rng_state_type&" = "rng_state")
@@ -705,7 +705,7 @@ generate_dust_gpu_compare <- function(dat) {
 
 generate_dust_gpu_size <- function(dat, rewrite) {
   dust_gpu_size <- function(x) {
-    name <- sprintf("dust::cuda::device_%s_size<%s>",
+    name <- sprintf("%s_size<%s>",
                     x$location, dat$config$base)
     args <- set_names(dat$meta$dust$shared,
                       sprintf("dust::shared_ptr<%s>", dat$config$base))
@@ -719,7 +719,7 @@ generate_dust_gpu_size <- function(dat, rewrite) {
 
 
 generate_dust_gpu_copy <- function(dat, rewrite) {
-  name <- sprintf("dust::cuda::device_shared_copy<%s>", dat$config$base)
+  name <- sprintf("dust::gpu::shared_copy<%s>", dat$config$base)
   args <- c(
     "dust::shared_ptr<%s>" = dat$meta$dust$shared,
     "int *" = dat$meta$dust$shared_int,
@@ -727,7 +727,7 @@ generate_dust_gpu_copy <- function(dat, rewrite) {
   names(args) <- sub("%s", dat$config$base, names(args), fixed = TRUE)
 
   copy1 <- function(name, shared) {
-    sprintf("%s = dust::cuda::shared_copy(%s, %s);", shared, shared,
+    sprintf("%s = dust::gpu::shared_copy_data(%s, %s);", shared, shared,
             vcapply(name, rewrite, USE.NAMES = FALSE))
   }
 
@@ -827,7 +827,7 @@ generate_dust_gpu_storage <- function(dat) {
     } else {
       location <- dat$meta$state
     }
-    type <- if (rank == 0) "real_type" else "dust::cuda::interleaved<real_type>"
+    type <- if (rank == 0) "real_type" else "dust::gpu::interleaved<real_type>"
     c(x, list(type = type, rank = rank, location = location))
   }
 
@@ -922,7 +922,7 @@ dust_gpu_storage_pack <- function(used, location, type, dat, extra = NULL) {
   location_dust <- sprintf("%s_%s",
                            location, if (type == "int") "int" else "real")
   if (location == "internal") {
-    type_array <- sprintf("dust::cuda::interleaved<%s>", type_dust)
+    type_array <- sprintf("dust::gpu::interleaved<%s>", type_dust)
   } else {
     type_array <- sprintf("%s *", type_dust)
   }

@@ -195,7 +195,8 @@ inline std::vector<float> user_get_array_value(cpp11::sexp x, const char * name,
 // This is sum with inclusive "from", exclusive "to", following the
 // same function in odin
 template <typename real_type, typename container>
-HOSTDEVICE real_type odin_sum1(const container x, size_t from, size_t to) {
+__host__ __device__
+real_type odin_sum1(const container x, size_t from, size_t to) {
   real_type tot = 0.0;
   for (size_t i = from; i < to; ++i) {
     tot += x[i];
