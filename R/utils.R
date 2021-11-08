@@ -115,7 +115,7 @@ generate_dust_support_sum <- function(rank) {
       name = "odin_sum1",
       declaration = c(
         "template <typename real_type, typename container>",
-        paste("HOSTDEVICE real_type",
+        paste("__host__ __device__ real_type",
               "odin_sum1(const container x, size_t from, size_t to);")),
       definition = NULL)
   } else {
@@ -127,7 +127,7 @@ generate_dust_support_sum <- function(rank) {
     ret <- lapply(odin:::generate_c_support_sum(rank), replace, tr)
     for (v in c("declaration", "definition")) {
       s <- ret[[v]]
-      s[[1L]] <- paste("HOSTDEVICE", s[[1L]])
+      s[[1L]] <- paste("__host__ __device__", s[[1L]])
       ret[[v]] <- c(head, s)
     }
   }
