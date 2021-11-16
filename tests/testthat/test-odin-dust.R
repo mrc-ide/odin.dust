@@ -327,7 +327,7 @@ test_that("don't encode specific types in generated code", {
 
   expect_equal(sum(grepl("double", res$class)), 1)
   expect_match(grep("double", res$class, value = TRUE),
-               "typedef double real_type;")
+               "using real_type = double;")
   expect_equal(sum(grepl("double", res$create)), 0)
 })
 
@@ -337,7 +337,7 @@ test_that("Generate code with different types", {
   ir <- odin::odin_parse_("examples/sir.R", options)
   res <- generate_dust(ir, options)
 
-  expect_true(any(grepl("typedef DOUBLE real_type;", res$class)))
+  expect_true(any(grepl("using real_type = DOUBLE;", res$class)))
 
   cmp <- generate_dust(ir, odin_dust_options())
   expect_equal(replace(res$class, c(DOUBLE = "double")),
