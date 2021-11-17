@@ -246,6 +246,7 @@ test_that("rewrite compare for gpu", {
   dat <- read_compare_dust("examples/compare.cpp")
   res <- transform_compare_odin_gpu(dat$function_defn)
   expect_false(any(grepl("typedef.+real_type", res)))
+  expect_false(any(grepl("using real_type", res)))
   expect_false(any(grepl("odin\\(", res)))
 })
 

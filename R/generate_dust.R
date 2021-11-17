@@ -121,7 +121,7 @@ generate_dust_core_struct <- function(dat) {
   i_internal <- vcapply(dat$data$elements[i], "[[", "stage") == "time"
 
   if (is.null(dat$compare)) {
-    data_type <- "typedef dust::no_data data_type;"
+    data_type <- "using data_type = dust::no_data;"
   } else {
     data_type <- c(
       "struct __align__(16) data_type {",
@@ -129,8 +129,8 @@ generate_dust_core_struct <- function(dat) {
       "};")
   }
 
-  c(sprintf("typedef %s real_type;", dat$meta$dust$real_type),
-    sprintf("typedef %s rng_state_type;", dat$meta$dust$rng_state_type),
+  c(sprintf("using real_type = %s;", dat$meta$dust$real_type),
+    sprintf("using rng_state_type = %s;", dat$meta$dust$rng_state_type),
     data_type,
     "struct shared_type {",
     els[!i_internal],
@@ -215,7 +215,7 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   internal_type <- sprintf("%s::internal_type", dat$config$base)
 
   body <- collector()
-  body$add("typedef typename %s::real_type real_type;", dat$config$base)
+  body$add("using real_type = typename %s::real_type;", dat$config$base)
   body$add("auto %s = std::make_shared<%s::shared_type>();",
            dat$meta$dust$shared, dat$config$base)
   body$add("%s %s;", internal_type, dat$meta$internal)
@@ -565,7 +565,7 @@ generate_dust_core_data <- function(dat) {
                       unname(dat$compare$data),
                       names(dat$compare$data),
                       rep(c(",", ""), c(length(dat$compare$data) - 1, 1)))
-  body <- c(sprintf("typedef %s::real_type real_type;", dat$config$base),
+  body <- c(sprintf("using real_type = %s::real_type;", dat$config$base),
             sprintf("return %s::data_type{", dat$config$base),
             contents,
             "  };")
@@ -664,7 +664,7 @@ generate_dust_gpu_update <- function(dat) {
   eqs <- generate_dust_equations(dat, NULL, dat$components$rhs$equations,
                                  TRUE)
 
-  body <- c(sprintf("typedef %s::real_type real_type;", dat$config$base),
+  body <- c(sprintf("using real_type = %s::real_type;", dat$config$base),
             dust_flatten_eqs(eqs))
 
   c("template<>",
@@ -694,7 +694,7 @@ generate_dust_gpu_compare <- function(dat) {
   names(args) <- sub("%s", base, names(args), fixed = TRUE)
 
   body <- collector()
-  body$add("typedef %s::real_type real_type;", base)
+  body$add("using real_type = %s::real_type;", base)
   body$add(dat$gpu$access[dat$compare$used])
   body$add(transform_compare_odin_gpu(code))
 
@@ -974,6 +974,8 @@ transform_compare_odin_gpu <- function(code) {
   code <- code[-drop]
 
   code <- code[!grepl("typedef\\s+typename\\s+T::real_type\\s+real_type", code)]
+  code <- code[!grepl("using\\s+real_type\\s*=\\s*typename\\s+T::real_type",
+                      code)]
 
   ## As a sanity check here, we'll look at the indenting and make sure
   ## that everything is at least as indented as the first line:

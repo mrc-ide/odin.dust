@@ -12,7 +12,7 @@ compare(const typename T::real_type * state,
         const typename T::internal_type internal,
         std::shared_ptr<const typename T::shared_type> shared,
         typename T::rng_state_type& rng_state) {
-  typedef typename T::real_type real_type;
+  using real_type = typename T::real_type;
   const real_type incidence_modelled = odin(incidence);
   const real_type incidence_observed = data.incidence;
   const real_type lambda = incidence_modelled +
