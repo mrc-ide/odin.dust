@@ -108,12 +108,8 @@ We can change the parameters, say by increasing the infection rate and the popul
 ```{r}
 dt <- 0.25
 n_particles <- 10L
-sir_model$reset(pars = list(dt = dt,
-                            S_ini = 2000,
-                            I_ini = 10,
-                            beta = 0.4,
-                            gamma = 0.1),
-                step = 0)
+p_new <- list(dt = dt, S_ini = 2000, I_ini = 10, beta = 0.4, gamma = 0.1)
+sir_model$update_state(pars = p_new, step = 0)
 sir_model$state()
 ```
 
