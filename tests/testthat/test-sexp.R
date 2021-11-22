@@ -185,3 +185,37 @@ test_that("renames", {
     generate_dust_sexp(list("%%", "x", "y"), NULL, NULL, NULL, FALSE),
     "fmodr<real_type>(x, y)")
 })
+
+
+test_that("Can cope with overflow", {
+  build_expr <- function(n, fn = "+") {
+    ret <- call(fn, quote(x1), quote(x2))
+    ret <- quote(x1 + x2)
+    for (i in seq(3, n)) {
+      ret <- as.call(list(as.name(fn), ret, as.name(paste0("x", i))))
+    }
+    as.call(ret)
+  }
+
+  ## Simple case:
+  expect_equal(
+    generate_dust_sexp(build_expr(5), NULL, NULL, NULL, FALSE),
+    "x1 + x2 + x3 + x4 + x5")
+
+  ## This causes stack overflow on odin.dust 0.2.14 and below
+  expect_equal(
+    generate_dust_sexp(build_expr(1000), NULL, NULL, NULL, FALSE),
+    paste0("x", seq_len(1000), collapse = " + "))
+
+  ## This will fail as we do not optimise, but we can't test this
+  ## because the overflow is unrecoverable:
+  ## > generate_dust_sexp(build_expr(1000, "*"), NULL, NULL, NULL, FALSE)
+
+  ## Additional edge cases:
+  expect_equal(
+    generate_dust_sexp(quote(a * b + c * d), NULL, NULL, NULL, FALSE),
+    "a * b + c * d")
+  expect_equal(
+    generate_dust_sexp(quote(a + b), NULL, NULL, NULL, FALSE),
+    "a + b")
+})
