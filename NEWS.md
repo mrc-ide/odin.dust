@@ -1,3 +1,7 @@
+# odin.dust 0.2.15
+
+* Avoid stack overflow when generating very long expressions
+
 # odin.dust 0.2.5
 
 * More efficient GPU code generation (#75)

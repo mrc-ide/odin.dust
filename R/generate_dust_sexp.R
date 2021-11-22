@@ -7,6 +7,10 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
     }
     args <- x[-1L]
     n <- length(args)
+
+    if (fn == "+") {
+      args <- flatten_addition(args)
+    }
     values <- vcapply(args, generate_dust_sexp, data, meta, supported, gpu)
 
     if (fn == "(") {
@@ -16,6 +20,8 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
       ret <- sprintf("%s[%s]", values[[1L]], pos)
     } else if (fn == "^") {
       ret <- sprintf("std::pow(%s, %s)", values[[1]], values[[2]])
+    } else if (fn == "+") {
+      ret <- paste(values, collapse = " + ")
     } else if (n == 2L && fn %in% odin:::FUNCTIONS_INFIX) {
       fmt <- switch(fn,
                     "/" = "%s %s (real_type) %s",
@@ -113,4 +119,27 @@ generate_dust_sexp_sum <- function(args, data, meta, supported, gpu) {
 
     sprintf("odin_sum%d<%s>(%s)", length(i), type, arg_str)
   }
+}
+
+
+## Especially for the GPU output we create some pretty large strings
+## of additions a + b + c + ... + z, which then causes stack overflow
+## when recursing through the expression.  This helper does a tail
+## call elimination on the expressions, converting
+##     (+ (+ a b) c)
+## to
+##     (+ a b c)
+## so that the subsequent conversion to sexp does not need to recurse
+## deeply. Of course we can't do that with recursion, so doing that
+## here with a while loop.
+flatten_addition <- function(args) {
+  tail <- list(args[[2]])
+  args <- args[[1]]
+  while (is_call(args, "+")) {
+    tail <- c(list(args[[3]]), tail)
+    args <- args[[2]]
+  }
+
+  args <- list(args)
+  c(args, tail)
 }
