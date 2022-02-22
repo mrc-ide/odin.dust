@@ -92,8 +92,9 @@ generate_dust_equation_user <- function(eq, data_info, dat, rewrite, gpu) {
   lhs <- rewrite(eq$lhs)
   storage_type <- dust_type(data_info$storage_type)
   is_integer <- if (storage_type == "int") "true" else "false"
-  min <- rewrite(eq$user$min %||% "NA_REAL")
-  max <- rewrite(eq$user$max %||% "NA_REAL")
+  na_value <- if (is_integer) "NA_INTEGER" else "NA_REAL"
+  min <- rewrite(eq$user$min %||% na_value)
+  max <- rewrite(eq$user$max %||% na_value)
   previous <- lhs
 
   if (eq$user$dim) {
