@@ -26,6 +26,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -38,18 +40,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.15</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.16</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
@@ -71,7 +67,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/mrc-ide/odin.dust/">
+  <a href="https://github.com/mrc-ide/odin.dust/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -92,17 +88,17 @@
       <h1 data-toc-skip>SIR models</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/mrc-ide/odin.dust/blob/master/vignettes/sir_models.Rmd"><code>vignettes/sir_models.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/mrc-ide/odin.dust/blob/HEAD/vignettes/sir_models.Rmd" class="external-link"><code>vignettes/sir_models.Rmd</code></a></small>
       <div class="hidden name"><code>sir_models.Rmd</code></div>
 
     </div>
 
     
     
-<div id="stochastic-sir-model-definition" class="section level1">
-<h1 class="hasAnchor">
-<a href="#stochastic-sir-model-definition" class="anchor"></a>Stochastic SIR model definition</h1>
-<p>A simple definition of the SIR model, as given in the <a href="https://mrc-ide.github.io/odin/articles/discrete.html">odin documentation</a> is: <span class="math display">\[\begin{align*}
+<div class="section level2">
+<h2 id="stochastic-sir-model-definition">Stochastic SIR model definition<a class="anchor" aria-label="anchor" href="#stochastic-sir-model-definition"></a>
+</h2>
+<p>A simple definition of the SIR model, as given in the <a href="https://mrc-ide.github.io/odin/articles/discrete.html" class="external-link">odin documentation</a> is: <span class="math display">\[\begin{align*}
 \frac{dS}{dt} &amp;= -\beta \frac{SI}{N} \\
 \frac{dI}{dt} &amp;= \beta \frac{SI}{N} - \gamma I \\
 \frac{dR}{dt} &amp;= \gamma I \\
@@ -117,30 +113,29 @@ R_{t+1} &amp;= R_t + n_{IR}
 n_{SI} &amp;\sim B(S, 1 - e^{-\beta \frac{I}{N} \cdot dt}) \\
 n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 \end{align*}\]</span></p>
-<div id="implementing-the-sir-model-using-odin-dust" class="section level2">
-<h2 class="hasAnchor">
-<a href="#implementing-the-sir-model-using-odin-dust" class="anchor"></a>Implementing the SIR model using <a href="https://mrc-ide.github.io/odin.dust/"><code>odin.dust</code></a>
-</h2>
+<div class="section level3">
+<h3 id="implementing-the-sir-model-using-odin-dust">Implementing the SIR model using <a href="https://mrc-ide.github.io/odin.dust/" class="external-link"><code>odin.dust</code></a><a class="anchor" aria-label="anchor" href="#implementing-the-sir-model-using-odin-dust"></a>
+</h3>
 <p>The above equations can straightforwardly be written out using the odin DSL:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">## Definition of the time-step and output as "time"</span>
 <span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>
 <span class="fu">initial</span><span class="op">(</span><span class="va">time</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">0</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">step</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="va">dt</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">step</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="va">dt</span>
 
 <span class="co">## Core equations for transitions between compartments:</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">S</span> <span class="op">-</span> <span class="va">n_SI</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">I</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">I</span> <span class="op">+</span> <span class="va">n_SI</span> <span class="op">-</span> <span class="va">n_IR</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">R</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">R</span> <span class="op">+</span> <span class="va">n_IR</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">S</span> <span class="op">-</span> <span class="va">n_SI</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">I</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">I</span> <span class="op">+</span> <span class="va">n_SI</span> <span class="op">-</span> <span class="va">n_IR</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">R</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">R</span> <span class="op">+</span> <span class="va">n_IR</span>
 
 <span class="co">## Individual probabilities of transition:</span>
-<span class="va">p_SI</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">beta</span> <span class="op">*</span> <span class="va">I</span> <span class="op">/</span> <span class="va">N</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span> <span class="co"># S to I</span>
-<span class="va">p_IR</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">gamma</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span> <span class="co"># I to R</span>
+<span class="va">p_SI</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">beta</span> <span class="op">*</span> <span class="va">I</span> <span class="op">/</span> <span class="va">N</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span> <span class="co"># S to I</span>
+<span class="va">p_IR</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">gamma</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span> <span class="co"># I to R</span>
 
 <span class="co">## Draws from binomial distributions for numbers changing between</span>
 <span class="co">## compartments:</span>
-<span class="va">n_IR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">I</span>, <span class="va">p_IR</span><span class="op">)</span>
-<span class="va">n_SI</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">S</span>, <span class="va">p_SI</span><span class="op">)</span>
+<span class="va">n_IR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">I</span>, <span class="va">p_IR</span><span class="op">)</span>
+<span class="va">n_SI</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">S</span>, <span class="va">p_SI</span><span class="op">)</span>
 
 <span class="co">## Total population size</span>
 <span class="va">N</span> <span class="op">&lt;-</span> <span class="va">S</span> <span class="op">+</span> <span class="va">I</span> <span class="op">+</span> <span class="va">R</span>
@@ -155,59 +150,36 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="va">I_ini</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">10</span><span class="op">)</span>
 <span class="va">beta</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
 <span class="va">gamma</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">0.1</span><span class="op">)</span></code></pre></div>
-<p>This is converted to a C++ dust model, and compiled into a library in a single step, using <a href="https://mrc-ide.github.io/odin.dust/"><code>odin.dust</code></a>. Save the above code as a file named <code>sir.R</code>. File names must not contain special characters.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(odin.dust)</span>
-<span id="cb2-2"><a href="#cb2-2"></a>gen_sir &lt;-<span class="st"> </span>odin.dust<span class="op">::</span><span class="kw">odin_dust</span>(<span class="st">"sir.R"</span>)</span>
-<span id="cb2-3"><a href="#cb2-3"></a><span class="co">#&gt; Loading required namespace: pkgbuild</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt; ℹ 18 functions decorated with [[cpp11::register]]</span></span>
-<span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt; ✔ generated file 'cpp11.R'</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt; ✔ generated file 'cpp11.cpp'</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt; Re-compiling sirb906c7e5</span></span>
-<span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt;   </span></span>
-<span id="cb2-9"><a href="#cb2-9"></a>─  installing <span class="op">*</span>source<span class="op">*</span><span class="st"> </span>package ‘sirb906c7e5’ <span class="kw">...</span> (<span class="fl">1.3</span>s)</span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt; </span></span>
-<span id="cb2-11"><a href="#cb2-11"></a>  </span>
-<span id="cb2-12"><a href="#cb2-12"></a>   <span class="op">**</span><span class="st"> </span>using staged installation</span>
-<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt; </span></span>
-<span id="cb2-14"><a href="#cb2-14"></a>  </span>
-<span id="cb2-15"><a href="#cb2-15"></a>   <span class="op">**</span><span class="st"> </span>libs</span>
-<span id="cb2-16"><a href="#cb2-16"></a><span class="co">#&gt; </span></span>
-<span id="cb2-17"><a href="#cb2-17"></a>  </span>
-<span id="cb2-18"><a href="#cb2-18"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>Wall <span class="op">-</span>pedantic <span class="op">-</span>c cpp11.cpp <span class="op">-</span>o cpp11.o</span>
-<span id="cb2-19"><a href="#cb2-19"></a><span class="co">#&gt; </span></span>
-<span id="cb2-20"><a href="#cb2-20"></a>  </span>
-<span id="cb2-21"><a href="#cb2-21"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>Wall <span class="op">-</span>pedantic <span class="op">-</span>c dust.cpp <span class="op">-</span>o dust.o</span>
-<span id="cb2-22"><a href="#cb2-22"></a><span class="co">#&gt; </span></span>
-<span id="cb2-23"><a href="#cb2-23"></a>  </span>
-<span id="cb2-24"><a href="#cb2-24"></a>   dust.cpp<span class="op">:</span><span class="dv">298</span><span class="op">:</span><span class="dv">28</span><span class="op">:</span><span class="st"> </span>warning<span class="op">:</span><span class="st"> </span>unused variable <span class="st">'internal'</span> [<span class="op">-</span>Wunused<span class="op">-</span>variable]</span>
-<span id="cb2-25"><a href="#cb2-25"></a><span class="co">#&gt;      const sir::internal_type internal = pars.internal;</span></span>
-<span id="cb2-26"><a href="#cb2-26"></a><span class="co">#&gt;                               ^</span></span>
-<span id="cb2-27"><a href="#cb2-27"></a><span class="co">#&gt; </span></span>
-<span id="cb2-28"><a href="#cb2-28"></a>  </span>
-<span id="cb2-29"><a href="#cb2-29"></a>   dust.cpp<span class="op">:</span><span class="dv">57</span><span class="op">:</span><span class="dv">17</span><span class="op">:</span><span class="st"> </span>warning<span class="op">:</span><span class="st"> </span>private field <span class="st">'internal'</span> is not used [<span class="op">-</span>Wunused<span class="op">-</span>private<span class="op">-</span>field]</span>
-<span id="cb2-30"><a href="#cb2-30"></a><span class="co">#&gt;      internal_type internal;</span></span>
-<span id="cb2-31"><a href="#cb2-31"></a><span class="co">#&gt;                    ^</span></span>
-<span id="cb2-32"><a href="#cb2-32"></a><span class="co">#&gt; </span></span>
-<span id="cb2-33"><a href="#cb2-33"></a>  </span>
-<span id="cb2-34"><a href="#cb2-34"></a>   <span class="dv">2</span> warnings generated.</span>
-<span id="cb2-35"><a href="#cb2-35"></a><span class="co">#&gt; </span></span>
-<span id="cb2-36"><a href="#cb2-36"></a>  </span>
-<span id="cb2-37"><a href="#cb2-37"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o sirb906c7e5.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
-<span id="cb2-38"><a href="#cb2-38"></a><span class="co">#&gt; </span></span>
-<span id="cb2-39"><a href="#cb2-39"></a>  </span>
-<span id="cb2-40"><a href="#cb2-40"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>RtmpWh9XWU<span class="op">/</span>devtools_install_<span class="fl">1e111</span>cc0c9f<span class="op">/</span>00LOCK<span class="op">-</span>file1e11c1897fe<span class="op">/</span>00new<span class="op">/</span>sirb906c7e5<span class="op">/</span>libs</span>
-<span id="cb2-41"><a href="#cb2-41"></a><span class="co">#&gt; </span></span>
-<span id="cb2-42"><a href="#cb2-42"></a>  </span>
-<span id="cb2-43"><a href="#cb2-43"></a>   <span class="op">**</span><span class="st"> </span>checking absolute paths <span class="cf">in</span> shared objects and dynamic libraries</span>
-<span id="cb2-44"><a href="#cb2-44"></a><span class="co">#&gt; </span></span>
-<span id="cb2-45"><a href="#cb2-45"></a>  </span>
-<span id="cb2-46"><a href="#cb2-46"></a>─  <span class="kw">DONE</span> (sirb906c7e5)</span>
-<span id="cb2-47"><a href="#cb2-47"></a><span class="co">#&gt; </span></span>
-<span id="cb2-48"><a href="#cb2-48"></a><span class="co">#&gt; ℹ Loading sirb906c7e5</span></span></code></pre></div>
+<p>This is converted to a C++ dust model, and compiled into a library in a single step, using <a href="https://mrc-ide.github.io/odin.dust/" class="external-link"><code>odin.dust</code></a>. Save the above code as a file named <code>sir.R</code>. File names must not contain special characters.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mrc-ide/odin.dust" class="external-link">odin.dust</a></span><span class="op">)</span>
+<span class="va">gen_sir</span> <span class="op">&lt;-</span> <span class="fu">odin.dust</span><span class="fu">::</span><span class="fu"><a href="../reference/odin_dust.html">odin_dust</a></span><span class="op">(</span><span class="st">"sir.R"</span><span class="op">)</span>
+<span class="co">#&gt; Loading required namespace: pkgbuild</span>
+<span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 18 functions decorated with [[cpp11::register]]</span>
+<span class="co">#&gt; <span style="color: #00BB00;">✔</span> generated file <span style="color: #0000BB;">cpp11.R</span></span>
+<span class="co">#&gt; <span style="color: #00BB00;">✔</span> generated file <span style="color: #0000BB;">cpp11.cpp</span></span>
+<span class="co">#&gt; Re-compiling sirb906c7e5</span>
+<span class="co">#&gt; * installing *source* package ‘sirb906c7e5’ ...</span>
+<span class="co">#&gt; ** using staged installation</span>
+<span class="co">#&gt; ** libs</span>
+<span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG  -I'/Users/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/Users/runner/work/_temp/Library/dust/include -DHAVE_INLINE  -fPIC  -Wall -g -O2  -Wall -pedantic -fdiagnostics-color=always -c cpp11.cpp -o cpp11.o</span>
+<span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG  -I'/Users/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/Users/runner/work/_temp/Library/dust/include -DHAVE_INLINE  -fPIC  -Wall -g -O2  -Wall -pedantic -fdiagnostics-color=always -c dust.cpp -o dust.o</span>
+<span class="co">#&gt; <span style="font-weight: bold;">dust.cpp:298:28: </span><span style="color: #BB00BB; font-weight: bold;">warning: </span><span style="font-weight: bold;">unused variable 'internal' [-Wunused-variable]</span></span>
+<span class="co">#&gt;   const sir::internal_type internal = pars.internal;</span>
+<span class="co">#&gt; <span style="color: #00BB00; font-weight: bold;">                           ^</span></span>
+<span class="co"><span style="color: #00BB00; font-weight: bold;">#&gt; </span><span style="font-weight: bold;">dust.cpp:57:17: </span><span style="color: #BB00BB; font-weight: bold;">warning: </span><span style="font-weight: bold;">private field 'internal' is not used [-Wunused-private-field]</span></span>
+<span class="co">#&gt;   internal_type internal;</span>
+<span class="co">#&gt; <span style="color: #00BB00; font-weight: bold;">                ^</span></span>
+<span class="co"><span style="color: #00BB00; font-weight: bold;">#&gt; </span>2 warnings generated.</span>
+<span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -single_module -multiply_defined suppress -L/Library/Frameworks/R.framework/Resources/lib -L/usr/local/lib -o sirb906c7e5.so cpp11.o dust.o -F/Library/Frameworks/R.framework/.. -framework R -Wl,-framework -Wl,CoreFoundation</span>
+<span class="co">#&gt; installing to /private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/Rtmp9ict3I/devtools_install_cff7b1c1864/00LOCK-filecff3c628367/00new/sirb906c7e5/libs</span>
+<span class="co">#&gt; ** checking absolute paths in shared objects and dynamic libraries</span>
+<span class="co">#&gt; * DONE (sirb906c7e5)</span>
+<span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">sirb906c7e5</span></span></code></pre></div>
 </div>
-<div id="saving-a-model-into-a-package" class="section level2">
-<h2 class="hasAnchor">
-<a href="#saving-a-model-into-a-package" class="anchor"></a>Saving a model into a package</h2>
+<div class="section level3">
+<h3 id="saving-a-model-into-a-package">Saving a model into a package<a class="anchor" aria-label="anchor" href="#saving-a-model-into-a-package"></a>
+</h3>
 <p>If you want to distribute your model in an R package, rather than building it locally, you will want to use the <code><a href="../reference/odin_dust_package.html">odin_dust_package()</a></code> function instead. This will write the transpiled C++ dust code into <code>src</code> and its R interface in <code>R/dust.R</code>. Package users are not required to regenerate the dust code, and their compiler will build the library when they install the package. You may also wish to add a file <code>R/zzz.R</code> to your package <code>myrpackage</code> with the following lines:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">##' @useDynLib myrpackage, .registration = TRUE</span>
@@ -215,15 +187,14 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <p>to help automate the compilation of the model.</p>
 </div>
 </div>
-<div id="running-the-sir-model-with-dust" class="section level1">
-<h1 class="hasAnchor">
-<a href="#running-the-sir-model-with-dust" class="anchor"></a>Running the SIR model with <a href="https://mrc-ide.github.io/dust/"><code>dust</code></a>
-</h1>
-<p>Now we can use the <code>new</code> method on the generator to make <code>dust</code> objects. <code>dust</code> can be driven directly from R, and also interfaces with the <a href="https://mrc-ide.github.io/mcstate/"><code>mcstate</code></a> package to allow parameter inference and forecasting.</p>
-<p><a href="https://mrc-ide.github.io/dust/reference/dust.html#method-new"><code>new()</code></a> takes the data needed to run the model i.e. a list with any parameters defined as <code>user</code> in the odin code above, the value of the initial step <span class="math inline">\(t_0\)</span>, and the number of particles, each for now can simply be thought of as an independent stochastic realisation of the model, but in the next step will be used when inferring model parameters.</p>
+<div class="section level2">
+<h2 id="running-the-sir-model-with-dust">Running the SIR model with <a href="https://mrc-ide.github.io/dust/" class="external-link"><code>dust</code></a><a class="anchor" aria-label="anchor" href="#running-the-sir-model-with-dust"></a>
+</h2>
+<p>Now we can use the <code>new</code> method on the generator to make <code>dust</code> objects. <code>dust</code> can be driven directly from R, and also interfaces with the <a href="https://mrc-ide.github.io/mcstate/" class="external-link"><code>mcstate</code></a> package to allow parameter inference and forecasting.</p>
+<p><a href="https://mrc-ide.github.io/dust/reference/dust.html#method-new" class="external-link"><code>new()</code></a> takes the data needed to run the model i.e. a list with any parameters defined as <code>user</code> in the odin code above, the value of the initial step <span class="math inline">\(t_0\)</span>, and the number of particles, each for now can simply be thought of as an independent stochastic realisation of the model, but in the next step will be used when inferring model parameters.</p>
 <p>Additional arguments include the number of threads to parallelise the particles over, and the seed for the random number generator. The seed must be an integer, and using the same seed will ensure reproducible results for all particles. To use this to directly create a new dust object with 10 particles, run using 4 threads:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">sir_model</span> <span class="op">&lt;-</span> <span class="va">gen_sir</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="fl">1</span>,
+<code class="sourceCode R"><span class="va">sir_model</span> <span class="op">&lt;-</span> <span class="va">gen_sir</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="fl">1</span>,
                                      S_ini <span class="op">=</span> <span class="fl">1000</span>,
                                      I_ini <span class="op">=</span> <span class="fl">10</span>,
                                      beta <span class="op">=</span> <span class="fl">0.2</span>,
@@ -258,7 +229,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fl">0.25</span>
 <span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">10L</span>
-<span class="va">p_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="va">dt</span>, S_ini <span class="op">=</span> <span class="fl">2000</span>, I_ini <span class="op">=</span> <span class="fl">10</span>, beta <span class="op">=</span> <span class="fl">0.4</span>, gamma <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>
+<span class="va">p_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="va">dt</span>, S_ini <span class="op">=</span> <span class="fl">2000</span>, I_ini <span class="op">=</span> <span class="fl">10</span>, beta <span class="op">=</span> <span class="fl">0.4</span>, gamma <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>
 <span class="va">sir_model</span><span class="op">$</span><span class="fu">update_state</span><span class="op">(</span>pars <span class="op">=</span> <span class="va">p_new</span>, step <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>
 <span class="va">sir_model</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span><span class="op">)</span>
 <span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span>
@@ -269,79 +240,79 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <p>Let’s run this epidemic forward, and plot the trajectories:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">n_steps</span> <span class="op">&lt;-</span> <span class="fl">200</span>
-<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html">array</a></span><span class="op">(</span><span class="cn">NA</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">sir_model</span><span class="op">$</span><span class="fu">info</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">len</span>, <span class="va">n_particles</span>, <span class="va">n_steps</span><span class="op">)</span><span class="op">)</span>
+<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="cn">NA</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sir_model</span><span class="op">$</span><span class="fu">info</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">len</span>, <span class="va">n_particles</span>, <span class="va">n_steps</span><span class="op">)</span><span class="op">)</span>
 
-<span class="kw">for</span> <span class="op">(</span><span class="va">t</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_len</a></span><span class="op">(</span><span class="va">n_steps</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
+<span class="kw">for</span> <span class="op">(</span><span class="va">t</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_steps</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
   <span class="va">x</span><span class="op">[</span> , , <span class="va">t</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sir_model</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">t</span><span class="op">)</span>
 <span class="op">}</span>
 <span class="va">time</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="op">]</span>
 <span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span>, , <span class="op">]</span>
 
-<span class="fu"><a href="https://rdrr.io/r/graphics/par.html">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">4.1</span>, <span class="fl">5.1</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>, las <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
-<span class="va">cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>S <span class="op">=</span> <span class="st">"#8c8cd9"</span>, I <span class="op">=</span> <span class="st">"#cc0044"</span>, R <span class="op">=</span> <span class="st">"#999966"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matplot</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">1</span>, , <span class="op">]</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>,
+<span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4.1</span>, <span class="fl">5.1</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>, las <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
+<span class="va">cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>S <span class="op">=</span> <span class="st">"#8c8cd9"</span>, I <span class="op">=</span> <span class="st">"#cc0044"</span>, R <span class="op">=</span> <span class="st">"#999966"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">1</span>, , <span class="op">]</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>,
          xlab <span class="op">=</span> <span class="st">"Time"</span>, ylab <span class="op">=</span> <span class="st">"Number of individuals"</span>,
-         col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"S"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matlines</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">2</span>, , <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"I"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matlines</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">3</span>, , <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"R"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/legend.html">legend</a></span><span class="op">(</span><span class="st">"left"</span>, lwd <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="va">cols</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">cols</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></code></pre></div>
+         col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"S"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matlines</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">2</span>, , <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"I"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matlines</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">3</span>, , <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"R"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"left"</span>, lwd <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="va">cols</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">cols</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></code></pre></div>
 <p><img src="sir_models_files/figure-html/unnamed-chunk-7-1.png" width="672"></p>
-<div id="adding-age-structure-to-the-model" class="section level2">
-<h2 class="hasAnchor">
-<a href="#adding-age-structure-to-the-model" class="anchor"></a>Adding age structure to the model</h2>
+<div class="section level3">
+<h3 id="adding-age-structure-to-the-model">Adding age structure to the model<a class="anchor" aria-label="anchor" href="#adding-age-structure-to-the-model"></a>
+</h3>
 <p>Adding age structure to the model consists of the following steps, which turn variables into arrays:</p>
 <ul>
 <li>Define the number of age categories as a user parameter <code>N_age</code>.</li>
 <li>Add age structure to each compartment, by adding square brackets to the lvalues.</li>
 <li>Modify the rvalues to use quantities from the appropriate compartment, by adding an <code>i</code> index to the rvalues. These will automatically be looped over.</li>
-<li>Where an age compartment needs to be reduced into a single compartment/variable, use <code>sum</code> (or another array function from <a href="https://mrc-ide.github.io/odin/articles/functions.html" class="uri">https://mrc-ide.github.io/odin/articles/functions.html</a> as appropriate)</li>
+<li>Where an age compartment needs to be reduced into a single compartment/variable, use <code>sum</code> (or another array function from <a href="https://mrc-ide.github.io/odin/articles/functions.html" class="external-link uri">https://mrc-ide.github.io/odin/articles/functions.html</a> as appropriate)</li>
 <li>Define the dimensions of all arrays, for example by setting <code>dim(S) &lt;- N_age</code>.</li>
 </ul>
 <p>This would simply give <code>N_age</code> independent processes equivalent to the first model, scaled by the size of the population in each age category. To actually make this useful, you likely want to add some interaction or transitions between the compartments. An example of this would be to add an age-specific contact matrix, demonstrated below, which defines a different force of infection <span class="math inline">\(\lambda\)</span> for each age group. This is calculated by <span class="math display">\[\lambda_i = \frac{\beta}{N} \cdot \sum_{j=1}^{N_{\mathrm{age}}} I_j m_{ij}\]</span> In the odin code:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">m</span><span class="op">[</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span> <span class="co"># age-structured contact matrix</span>
 <span class="va">s_ij</span><span class="op">[</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="va">m</span><span class="op">[</span><span class="va">i</span>, <span class="va">j</span><span class="op">]</span> <span class="op">*</span> <span class="va">I</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
-<span class="va">lambda</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">beta</span> <span class="op">/</span> <span class="va">N</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">s_ij</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span><span class="op">)</span></code></pre></div>
+<span class="va">lambda</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">beta</span> <span class="op">/</span> <span class="va">N</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">s_ij</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span><span class="op">)</span></code></pre></div>
 <p>The probability of infection of a susceptible is then indexed by this force of infection:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">p_SI</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">lambda</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="va">p_SI</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">lambda</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span></code></pre></div>
 <p>Putting this all together, the age structured SIR model is as follows:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">## Definition of the time-step and output as "time"</span>
 <span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span>
 <span class="fu">initial</span><span class="op">(</span><span class="va">time</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">0</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">step</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="va">dt</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">step</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="va">dt</span>
 
 <span class="co">## Core equations for transitions between compartments:</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">S_tot</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">S_tot</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">n_SI</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">I_tot</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">I_tot</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">n_SI</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">n_IR</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">R_tot</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">R_tot</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">n_IR</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">S_tot</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">S_tot</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_SI</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">I_tot</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">I_tot</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_SI</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_IR</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">R_tot</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">R_tot</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_IR</span><span class="op">)</span>
 
 <span class="co">## Equations for transitions between compartments by age group</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">S</span><span class="op">[</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">S</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">-</span> <span class="va">n_SI</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">I</span><span class="op">[</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">I</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="va">n_SI</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">-</span> <span class="va">n_IR</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">R</span><span class="op">[</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">R</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="va">n_IR</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">S</span><span class="op">[</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">S</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">-</span> <span class="va">n_SI</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">I</span><span class="op">[</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">I</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="va">n_SI</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">-</span> <span class="va">n_IR</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">R</span><span class="op">[</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">R</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="va">n_IR</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
 
 <span class="co">## To compute cumulative incidence</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span><span class="va">cumu_inc</span><span class="op">[</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">cumu_inc</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="va">n_SI</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
+<span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">cumu_inc</span><span class="op">[</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">cumu_inc</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="va">n_SI</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
 
 <span class="co">## Individual probabilities of transition:</span>
-<span class="va">p_SI</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">lambda</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span> <span class="co"># S to I</span>
-<span class="va">p_IR</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">gamma</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span> <span class="co"># I to R</span>
+<span class="va">p_SI</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">lambda</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span> <span class="co"># S to I</span>
+<span class="va">p_IR</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">gamma</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span> <span class="co"># I to R</span>
 
 <span class="co">## Force of infection</span>
 <span class="va">m</span><span class="op">[</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span> <span class="co"># age-structured contact matrix</span>
 <span class="va">s_ij</span><span class="op">[</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="va">m</span><span class="op">[</span><span class="va">i</span>, <span class="va">j</span><span class="op">]</span> <span class="op">*</span> <span class="va">I</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
-<span class="va">lambda</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">beta</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">s_ij</span><span class="op">[</span>, <span class="va">i</span><span class="op">]</span><span class="op">)</span>
+<span class="va">lambda</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">beta</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">s_ij</span><span class="op">[</span>, <span class="va">i</span><span class="op">]</span><span class="op">)</span>
 
 <span class="co">## Draws from binomial distributions for numbers changing between</span>
 <span class="co">## compartments:</span>
-<span class="va">n_SI</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">S</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">p_SI</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>
-<span class="va">n_IR</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">I</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="va">p_IR</span><span class="op">)</span>
+<span class="va">n_SI</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">S</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">p_SI</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>
+<span class="va">n_IR</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">I</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="va">p_IR</span><span class="op">)</span>
 
 <span class="co">## Initial states:</span>
-<span class="fu">initial</span><span class="op">(</span><span class="va">S_tot</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">S_ini</span><span class="op">)</span>
-<span class="fu">initial</span><span class="op">(</span><span class="va">I_tot</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">I_ini</span><span class="op">)</span>
+<span class="fu">initial</span><span class="op">(</span><span class="va">S_tot</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">S_ini</span><span class="op">)</span>
+<span class="fu">initial</span><span class="op">(</span><span class="va">I_tot</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">I_ini</span><span class="op">)</span>
 <span class="fu">initial</span><span class="op">(</span><span class="va">R_tot</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">0</span>
 
 <span class="fu">initial</span><span class="op">(</span><span class="va">S</span><span class="op">[</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">S_ini</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
@@ -357,61 +328,44 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 
 <span class="co"># dimensions of arrays</span>
 <span class="va">N_age</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">S_ini</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">I_ini</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">I</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">R</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">cumu_inc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">n_SI</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">n_IR</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">p_SI</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">N_age</span>, <span class="va">N_age</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">s_ij</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">N_age</span>, <span class="va">N_age</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">lambda</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">S_ini</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">I_ini</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">I</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">R</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">cumu_inc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">n_SI</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">n_IR</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">p_SI</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">N_age</span>, <span class="va">N_age</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">s_ij</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">N_age</span>, <span class="va">N_age</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">lambda</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span></code></pre></div>
 <p>As before, save the file, and use <code>odin.dust</code> to compile the model:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>gen_age &lt;-<span class="st"> </span>odin.dust<span class="op">::</span><span class="kw">odin_dust</span>(<span class="st">"sirage.R"</span>)</span>
-<span id="cb12-2"><a href="#cb12-2"></a><span class="co">#&gt; ℹ 18 functions decorated with [[cpp11::register]]</span></span>
-<span id="cb12-3"><a href="#cb12-3"></a><span class="co">#&gt; ✔ generated file 'cpp11.R'</span></span>
-<span id="cb12-4"><a href="#cb12-4"></a><span class="co">#&gt; ✔ generated file 'cpp11.cpp'</span></span>
-<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt; Re-compiling siragefd5dfe0b</span></span>
-<span id="cb12-6"><a href="#cb12-6"></a><span class="co">#&gt;   </span></span>
-<span id="cb12-7"><a href="#cb12-7"></a>─  installing <span class="op">*</span>source<span class="op">*</span><span class="st"> </span>package ‘siragefd5dfe0b’ <span class="kw">...</span> (<span class="fl">1.3</span>s)</span>
-<span id="cb12-8"><a href="#cb12-8"></a><span class="co">#&gt; </span></span>
-<span id="cb12-9"><a href="#cb12-9"></a>  </span>
-<span id="cb12-10"><a href="#cb12-10"></a>   <span class="op">**</span><span class="st"> </span>using staged installation</span>
-<span id="cb12-11"><a href="#cb12-11"></a><span class="co">#&gt; </span></span>
-<span id="cb12-12"><a href="#cb12-12"></a>  </span>
-<span id="cb12-13"><a href="#cb12-13"></a>   <span class="op">**</span><span class="st"> </span>libs</span>
-<span id="cb12-14"><a href="#cb12-14"></a><span class="co">#&gt; </span></span>
-<span id="cb12-15"><a href="#cb12-15"></a>  </span>
-<span id="cb12-16"><a href="#cb12-16"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>Wall <span class="op">-</span>pedantic <span class="op">-</span>c cpp11.cpp <span class="op">-</span>o cpp11.o</span>
-<span id="cb12-17"><a href="#cb12-17"></a><span class="co">#&gt; </span></span>
-<span id="cb12-18"><a href="#cb12-18"></a>  </span>
-<span id="cb12-19"><a href="#cb12-19"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>I<span class="st">"/Library/Frameworks/R.framework/Resources/include"</span> <span class="op">-</span>DNDEBUG  <span class="op">-</span>I<span class="st">'/Users/runner/work/_temp/Library/cpp11/include'</span> <span class="op">-</span>I<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>include  <span class="op">-</span>I<span class="op">/</span>Users<span class="op">/</span>runner<span class="op">/</span>work<span class="op">/</span>_temp<span class="op">/</span>Library<span class="op">/</span>dust<span class="op">/</span>include <span class="op">-</span>DHAVE_INLINE  <span class="op">-</span>fPIC  <span class="op">-</span>Wall <span class="op">-</span>g <span class="op">-</span>O2  <span class="op">-</span>Wall <span class="op">-</span>pedantic <span class="op">-</span>c dust.cpp <span class="op">-</span>o dust.o</span>
-<span id="cb12-20"><a href="#cb12-20"></a><span class="co">#&gt; </span></span>
-<span id="cb12-21"><a href="#cb12-21"></a>  </span>
-<span id="cb12-22"><a href="#cb12-22"></a>   clang<span class="op">++</span><span class="st"> </span><span class="op">-</span>mmacosx<span class="op">-</span>version<span class="op">-</span>min=<span class="fl">10.13</span> <span class="op">-</span>std=gnu<span class="op">++</span><span class="dv">11</span> <span class="op">-</span>dynamiclib <span class="op">-</span>Wl,<span class="op">-</span>headerpad_max_install_names <span class="op">-</span>undefined dynamic_lookup <span class="op">-</span>single_module <span class="op">-</span>multiply_defined suppress <span class="op">-</span>L<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>Resources<span class="op">/</span>lib <span class="op">-</span>L<span class="op">/</span>usr<span class="op">/</span>local<span class="op">/</span>lib <span class="op">-</span>o siragefd5dfe0b.so cpp11.o dust.o <span class="op">-</span>F<span class="op">/</span>Library<span class="op">/</span>Frameworks<span class="op">/</span>R.framework<span class="op">/</span>.. <span class="op">-</span>framework R <span class="op">-</span>Wl,<span class="op">-</span>framework <span class="op">-</span>Wl,CoreFoundation</span>
-<span id="cb12-23"><a href="#cb12-23"></a><span class="co">#&gt; </span></span>
-<span id="cb12-24"><a href="#cb12-24"></a>  </span>
-<span id="cb12-25"><a href="#cb12-25"></a>   installing to <span class="op">/</span>private<span class="op">/</span>var<span class="op">/</span>folders<span class="op">/</span><span class="dv">24</span><span class="op">/</span>8k48jl6d249_n_qfxwsl6xvm0000gn<span class="op">/</span>T<span class="op">/</span>RtmpWh9XWU<span class="op">/</span>devtools_install_<span class="fl">1e115</span>e41ff45<span class="op">/</span>00LOCK<span class="op">-</span>file1e11f945947<span class="op">/</span>00new<span class="op">/</span>siragefd5dfe0b<span class="op">/</span>libs</span>
-<span id="cb12-26"><a href="#cb12-26"></a><span class="co">#&gt; </span></span>
-<span id="cb12-27"><a href="#cb12-27"></a>  </span>
-<span id="cb12-28"><a href="#cb12-28"></a>   <span class="op">**</span><span class="st"> </span>checking absolute paths <span class="cf">in</span> shared objects and dynamic libraries</span>
-<span id="cb12-29"><a href="#cb12-29"></a><span class="co">#&gt; </span></span>
-<span id="cb12-30"><a href="#cb12-30"></a>  </span>
-<span id="cb12-31"><a href="#cb12-31"></a>─  <span class="kw">DONE</span> (siragefd5dfe0b)</span>
-<span id="cb12-32"><a href="#cb12-32"></a><span class="co">#&gt; </span></span>
-<span id="cb12-33"><a href="#cb12-33"></a><span class="co">#&gt; ℹ Loading siragefd5dfe0b</span></span></code></pre></div>
-<p>We can generate an age-structured contact matrix based on the <a href="https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074">POLYMOD</a> survey by using the <a href="https://github.com/sbfnk/socialmixr">socialmixr</a> package:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">gen_age</span> <span class="op">&lt;-</span> <span class="fu">odin.dust</span><span class="fu">::</span><span class="fu"><a href="../reference/odin_dust.html">odin_dust</a></span><span class="op">(</span><span class="st">"sirage.R"</span><span class="op">)</span>
+<span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 18 functions decorated with [[cpp11::register]]</span>
+<span class="co">#&gt; <span style="color: #00BB00;">✔</span> generated file <span style="color: #0000BB;">cpp11.R</span></span>
+<span class="co">#&gt; <span style="color: #00BB00;">✔</span> generated file <span style="color: #0000BB;">cpp11.cpp</span></span>
+<span class="co">#&gt; Re-compiling siraged3f65e02</span>
+<span class="co">#&gt; * installing *source* package ‘siraged3f65e02’ ...</span>
+<span class="co">#&gt; ** using staged installation</span>
+<span class="co">#&gt; ** libs</span>
+<span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG  -I'/Users/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/Users/runner/work/_temp/Library/dust/include -DHAVE_INLINE  -fPIC  -Wall -g -O2  -Wall -pedantic -fdiagnostics-color=always -c cpp11.cpp -o cpp11.o</span>
+<span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG  -I'/Users/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/Users/runner/work/_temp/Library/dust/include -DHAVE_INLINE  -fPIC  -Wall -g -O2  -Wall -pedantic -fdiagnostics-color=always -c dust.cpp -o dust.o</span>
+<span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -single_module -multiply_defined suppress -L/Library/Frameworks/R.framework/Resources/lib -L/usr/local/lib -o siraged3f65e02.so cpp11.o dust.o -F/Library/Frameworks/R.framework/.. -framework R -Wl,-framework -Wl,CoreFoundation</span>
+<span class="co">#&gt; installing to /private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/Rtmp9ict3I/devtools_install_cff4d01ec84/00LOCK-filecff1d69200a/00new/siraged3f65e02/libs</span>
+<span class="co">#&gt; ** checking absolute paths in shared objects and dynamic libraries</span>
+<span class="co">#&gt; * DONE (siraged3f65e02)</span>
+<span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">siraged3f65e02</span></span></code></pre></div>
+<p>We can generate an age-structured contact matrix based on the <a href="https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074" class="external-link">POLYMOD</a> survey by using the <a href="https://github.com/sbfnk/socialmixr" class="external-link">socialmixr</a> package:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">polymod</span>, package <span class="op">=</span> <span class="st">"socialmixr"</span><span class="op">)</span>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">polymod</span>, package <span class="op">=</span> <span class="st">"socialmixr"</span><span class="op">)</span>
 
 <span class="co">## In this example we use 8 age bands of 10 years from 0-70 years old.</span>
-<span class="va">age.limits</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">70</span>, <span class="fl">10</span><span class="op">)</span>
+<span class="va">age.limits</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">70</span>, <span class="fl">10</span><span class="op">)</span>
 
 <span class="co">## Get the contact matrix from socialmixr</span>
-<span class="va">contact</span> <span class="op">&lt;-</span> <span class="fu">socialmixr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/socialmixr/man/contact_matrix.html">contact_matrix</a></span><span class="op">(</span>
+<span class="va">contact</span> <span class="op">&lt;-</span> <span class="fu">socialmixr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/socialmixr/man/contact_matrix.html" class="external-link">contact_matrix</a></span><span class="op">(</span>
   survey <span class="op">=</span> <span class="va">polymod</span>,
   countries <span class="op">=</span> <span class="st">"United Kingdom"</span>,
   age.limits <span class="op">=</span> <span class="va">age.limits</span>,
@@ -423,7 +377,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="co">## rather than the contact matrix. This transmission matrix is</span>
 <span class="co">## weighted by the population in each age band.</span>
 <span class="va">transmission</span> <span class="op">&lt;-</span> <span class="va">contact</span><span class="op">$</span><span class="va">matrix</span> <span class="op">/</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="va">contact</span><span class="op">$</span><span class="va">demography</span><span class="op">$</span><span class="va">population</span>, each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">contact</span><span class="op">$</span><span class="va">matrix</span><span class="op">)</span><span class="op">)</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">contact</span><span class="op">$</span><span class="va">demography</span><span class="op">$</span><span class="va">population</span>, each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">contact</span><span class="op">$</span><span class="va">matrix</span><span class="op">)</span><span class="op">)</span>
 <span class="va">transmission</span>
 <span class="co">#&gt;       contact.age.group</span>
 <span class="co">#&gt;              [0,10)      [10,20)      [20,30)      [30,40)      [40,50)</span>
@@ -447,12 +401,12 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="co">#&gt;   [8,] 1.076856e-07 1.431130e-07 1.941792e-07</span></code></pre></div>
 <p>This can be given as a parameter to the model by adding the argument <code>pars = list(m = transmission)</code> when using the <code>new()</code> method on the <code>gen_age</code> generator.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">N_age</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">age.limits</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">N_age</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">age.limits</span><span class="op">)</span>
 <span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">5L</span>
 <span class="va">dt</span> <span class="op">&lt;-</span> <span class="fl">0.25</span>
-<span class="va">model</span> <span class="op">&lt;-</span> <span class="va">gen_age</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="va">dt</span>,
+<span class="va">model</span> <span class="op">&lt;-</span> <span class="va">gen_age</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="va">dt</span>,
                                  S_ini <span class="op">=</span> <span class="va">contact</span><span class="op">$</span><span class="va">demography</span><span class="op">$</span><span class="va">population</span>,
-                                 I_ini <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,
+                                 I_ini <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,
                                  beta <span class="op">=</span> <span class="fl">0.2</span> <span class="op">/</span> <span class="fl">12.11</span>,
                                  gamma <span class="op">=</span> <span class="fl">0.1</span>,
                                  m <span class="op">=</span> <span class="va">transmission</span>,
@@ -468,32 +422,32 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="co"># Create an array to contain outputs after looping the model.</span>
 <span class="co"># Array contains 35 rows = Total S, I, R (3), and</span>
 <span class="co"># in each age compartment (24) as well as the cumulative incidence (8)</span>
-<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html">array</a></span><span class="op">(</span><span class="cn">NA</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="fu">info</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">len</span>, <span class="va">n_particles</span>, <span class="va">n_steps</span><span class="op">)</span><span class="op">)</span>
+<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="cn">NA</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="fu">info</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">len</span>, <span class="va">n_particles</span>, <span class="va">n_steps</span><span class="op">)</span><span class="op">)</span>
 
 <span class="co"># For loop to run the model iteratively</span>
-<span class="kw">for</span> <span class="op">(</span><span class="va">t</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_len</a></span><span class="op">(</span><span class="va">n_steps</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
+<span class="kw">for</span> <span class="op">(</span><span class="va">t</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_steps</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
   <span class="va">x</span><span class="op">[</span> , , <span class="va">t</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">t</span><span class="op">)</span>
 <span class="op">}</span>
 <span class="va">time</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="op">]</span>
 <span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span>, , <span class="op">]</span>
 <span class="co"># Plotting the trajectories</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/par.html">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">4</span><span class="op">)</span>, oma<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">3</span>,<span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">4</span><span class="op">)</span>, oma<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">3</span>,<span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span>
 <span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">N_age</span><span class="op">)</span> <span class="op">{</span>
-  <span class="fu"><a href="https://rdrr.io/r/graphics/par.html">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">2</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span>
-  <span class="va">cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>S <span class="op">=</span> <span class="st">"#8c8cd9"</span>, I <span class="op">=</span> <span class="st">"#cc0044"</span>, R <span class="op">=</span> <span class="st">"#999966"</span><span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matplot</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="va">i</span> <span class="op">+</span> <span class="fl">3</span>,, <span class="op">]</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>, <span class="co"># Offset to access numbers in age compartment</span>
-          xlab <span class="op">=</span> <span class="st">""</span>, ylab <span class="op">=</span> <span class="st">""</span>, yaxt<span class="op">=</span><span class="st">"none"</span>, main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">"Age "</span>, <span class="va">contact</span><span class="op">$</span><span class="va">demography</span><span class="op">$</span><span class="va">age.group</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span>,
-          col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"S"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span>, ylim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">:</span><span class="op">-</span><span class="fl">3</span>,,<span class="op">]</span><span class="op">)</span><span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matlines</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="va">i</span> <span class="op">+</span> <span class="fl">3</span> <span class="op">+</span> <span class="va">N_age</span>, , <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"I"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matlines</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="va">i</span> <span class="op">+</span> <span class="fl">3</span> <span class="op">+</span> <span class="fl">2</span><span class="op">*</span><span class="va">N_age</span>, , <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"R"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/graphics/legend.html">legend</a></span><span class="op">(</span><span class="st">"right"</span>, lwd <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="va">cols</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">cols</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/graphics/axis.html">axis</a></span><span class="op">(</span><span class="fl">2</span>, las <span class="op">=</span><span class="fl">2</span><span class="op">)</span>
+  <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">2</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span>
+  <span class="va">cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>S <span class="op">=</span> <span class="st">"#8c8cd9"</span>, I <span class="op">=</span> <span class="st">"#cc0044"</span>, R <span class="op">=</span> <span class="st">"#999966"</span><span class="op">)</span>
+  <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="va">i</span> <span class="op">+</span> <span class="fl">3</span>,, <span class="op">]</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>, <span class="co"># Offset to access numbers in age compartment</span>
+          xlab <span class="op">=</span> <span class="st">""</span>, ylab <span class="op">=</span> <span class="st">""</span>, yaxt<span class="op">=</span><span class="st">"none"</span>, main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Age "</span>, <span class="va">contact</span><span class="op">$</span><span class="va">demography</span><span class="op">$</span><span class="va">age.group</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span>,
+          col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"S"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span>, ylim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">:</span><span class="op">-</span><span class="fl">3</span>,,<span class="op">]</span><span class="op">)</span><span class="op">)</span>
+  <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matlines</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="va">i</span> <span class="op">+</span> <span class="fl">3</span> <span class="op">+</span> <span class="va">N_age</span>, , <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"I"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
+  <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matlines</a></span><span class="op">(</span><span class="va">time</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="va">i</span> <span class="op">+</span> <span class="fl">3</span> <span class="op">+</span> <span class="fl">2</span><span class="op">*</span><span class="va">N_age</span>, , <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="va">cols</span><span class="op">[[</span><span class="st">"R"</span><span class="op">]</span><span class="op">]</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
+  <span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"right"</span>, lwd <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="va">cols</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">cols</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span>
+  <span class="fu"><a href="https://rdrr.io/r/graphics/axis.html" class="external-link">axis</a></span><span class="op">(</span><span class="fl">2</span>, las <span class="op">=</span><span class="fl">2</span><span class="op">)</span>
 <span class="op">}</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html">mtext</a></span><span class="op">(</span><span class="st">"Number of individuals"</span>, side<span class="op">=</span><span class="fl">2</span>,line<span class="op">=</span><span class="fl">1</span>, outer<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html">mtext</a></span><span class="op">(</span><span class="st">"Time"</span>, side <span class="op">=</span> <span class="fl">1</span>, line <span class="op">=</span> <span class="fl">0</span>, outer <span class="op">=</span><span class="cn">T</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Number of individuals"</span>, side<span class="op">=</span><span class="fl">2</span>,line<span class="op">=</span><span class="fl">1</span>, outer<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Time"</span>, side <span class="op">=</span> <span class="fl">1</span>, line <span class="op">=</span> <span class="fl">0</span>, outer <span class="op">=</span><span class="cn">T</span><span class="op">)</span></code></pre></div>
 <p><img src="sir_models_files/figure-html/unnamed-chunk-10-1.png" width="672"></p>
-<p>Note that a scale factor is introduced for beta so that <span class="math inline">\(R_0\)</span> remains at 2, offsetting the scaling of the contact matrix <code>m</code>. This is calculated using the next-generation matrix. See <a href="https://doi.org/10.1016/j.idm.2017.06.002">Driessche</a> and <a href="https://dx.doi.org/10.1016/j.mbs.2012.07.007">Towers and Feng</a>.</p>
-<p>Many other methods are available on the dust object to support inference, but typically you may want to use the <a href="https://mrc-ide.github.io/mcstate/"><code>mcstate</code></a> package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from <a href="https://mrc-ide.github.io/dust/"><code>dust</code></a>.</p>
+<p>Note that a scale factor is introduced for beta so that <span class="math inline">\(R_0\)</span> remains at 2, offsetting the scaling of the contact matrix <code>m</code>. This is calculated using the next-generation matrix. See <a href="https://doi.org/10.1016/j.idm.2017.06.002" class="external-link">Driessche</a> and <a href="https://dx.doi.org/10.1016/j.mbs.2012.07.007" class="external-link">Towers and Feng</a>.</p>
+<p>Many other methods are available on the dust object to support inference, but typically you may want to use the <a href="https://mrc-ide.github.io/mcstate/" class="external-link"><code>mcstate</code></a> package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from <a href="https://mrc-ide.github.io/dust/" class="external-link"><code>dust</code></a>.</p>
 </div>
 </div>
   </div>
@@ -509,11 +463,13 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 
 
       <footer><div class="copyright">
-  <p>Developed by Rich FitzJohn, John Lees.</p>
+  <p></p>
+<p>Developed by Rich FitzJohn, John Lees.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer>
@@ -521,6 +477,8 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 
   
 
+
+  
 
   </body>
 </html>
