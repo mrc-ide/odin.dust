@@ -24,3 +24,14 @@ user_wrapper <- function() {
 sub_package_name <- function(text, name) {
   gsub("{{name}}", name, text, fixed = TRUE)
 }
+
+
+## Quick fix for
+## https://github.com/mrc-ide/odin.dust/issues/85
+## Will think about this and implement as an API function later.
+odin_dust_generate <- function(code) {
+  ir <- odin::odin_parse_(code)
+  options <- odin_dust_options()
+  dat <- generate_dust(ir, options)
+  odin_dust_code(dat)
+}

@@ -181,3 +181,24 @@ test_that("Correct if data exists and is provided", {
                                   NA_real_, NA_real_),
     list(v2, dim(a2)))
 })
+
+
+test_that("Generate correct types for user variables", {
+  ## We were previously including NA_REAL as the default which is not
+  ## the same as NA_INTEGER and causing weird errors on M1 (ARM) macs
+  ## only.
+
+  code <- odin_dust_generate(quote({
+    var_a <- user(integer = TRUE)
+    var_b <- user(integer = FALSE)
+    initial(x) <- 1
+    update(x) <- x + var_a + var_b
+  }))
+
+  expect_match(
+    grep("user_get_scalar.+var_a", code, value = TRUE),
+    "NA_INTEGER, NA_INTEGER\\);$")
+  expect_match(
+    grep("user_get_scalar.+var_b", code, value = TRUE),
+    "NA_REAL, NA_REAL\\);$")
+})
