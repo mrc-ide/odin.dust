@@ -503,3 +503,12 @@ test_that("disallow output()", {
     }),
     "Using unsupported features: 'has_output'")
 })
+
+test_that("can compile deterministic model", {
+
+  odin_dust({
+    initial(x) <- 1
+    deriv(x) <- 1
+  }, verbose = TRUE)
+
+})
