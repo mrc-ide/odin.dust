@@ -120,7 +120,6 @@ odin_dust_wrapper <- function(ir, srcdir, options) {
     srcdir,
     generate_dust(ir, options))
   code <- odin_dust_code(dat)
-
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
@@ -142,11 +141,6 @@ odin_dust_wrapper <- function(ir, srcdir, options) {
 
 
 odin_dust_code <- function(dat) {
-  if (dat$discrete) {
-    ns <- "dust"
-  } else {
-    ns <- "mode"
-  }
   c(dust_flatten_eqs(lapply(dat$support, "[[", "declaration")),
     dat$include,
     dat$compare$support,
@@ -154,7 +148,7 @@ odin_dust_code <- function(dat) {
     dat$gpu,
     dust_flatten_eqs(lapply(dat$support, "[[", "definition")),
     readLines(odin_dust_file("support.hpp")),
-    cpp_namespace(ns, c(dat$create, dat$info, dat$data)))
+    cpp_namespace(dat$namespace, c(dat$create, dat$info, dat$data)))
 }
 
 

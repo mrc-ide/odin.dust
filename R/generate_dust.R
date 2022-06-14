@@ -2,14 +2,18 @@ generate_dust <- function(ir, options) {
   dat <- odin::odin_ir_deserialise(ir)
   features <- vlapply(dat$features, identity)
   supported <- c("initial_time_dependent", "has_user", "has_array",
-                 "discrete", "has_stochastic", "has_include")
+                 "discrete", "has_stochastic", "has_include", "has_output")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
          paste(squote(unsupported), collapse = ", "))
   }
+  if (dat$features$has_output && dat$features$discrete) {
+    stop("Using unsupported features: 'has_output'")
+  }
 
   dat$meta$dust <- generate_dust_meta(options)
+  dat$meta$namespace <- namespace_name(dat)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
@@ -50,10 +54,9 @@ generate_dust <- function(ir, options) {
   } else {
     code_gpu <- NULL
   }
-
   list(class = class, create = create, info = info, data = data, gpu = code_gpu,
        support = support, include = include, name = dat$config$base,
-       discrete = dat$features$discrete)
+       discrete = dat$features$discrete, namespace = dat$meta$namespace)
 }
 
 
@@ -127,11 +130,7 @@ generate_dust_core_struct <- function(dat) {
   i_internal <- vcapply(dat$data$elements[i], "[[", "stage") == "time"
 
   if (is.null(dat$compare)) {
-    if (dat$features$discrete){
-      data_type <- "using data_type = dust::no_data;"
-    } else {
-      data_type <- "using data_type = mode::no_data;"
-    }
+    data_type <- sprintf("using data_type = %s::no_data;", dat$meta$namespace)
   } else {
     data_type <- c(
       "struct __align__(16) data_type {",
@@ -152,8 +151,9 @@ generate_dust_core_struct <- function(dat) {
 
 
 generate_dust_core_ctor <- function(dat) {
-  c(sprintf("%s(const %s<%s>& %s) :",
-            dat$config$base, pars_type(dat), dat$config$base, dat$meta$dust$pars),
+  c(sprintf("%s(const %s::pars_type<%s>& %s) :",
+            dat$config$base, dat$meta$namespace,
+            dat$config$base, dat$meta$dust$pars),
     sprintf("  %s(%s.shared), %s(%s.internal) {",
             dat$meta$dust$shared, dat$meta$dust$pars,
             dat$meta$internal, dat$meta$dust$pars),
@@ -162,7 +162,7 @@ generate_dust_core_ctor <- function(dat) {
 
 
 generate_dust_core_size <- function(dat, rewrite) {
-  if (dat$features$discrete){
+  if (dat$features$discrete) {
     body <- sprintf("return %s;", rewrite(dat$data$variable$length))
     cpp_function("size_t", "size", NULL, body)
   } else {
@@ -243,7 +243,6 @@ generate_dust_core_output <- function(eqs, dat, rewrite) {
   unpack <- lapply(variables, dust_unpack_variable,
                    dat, dat$meta$state, rewrite)
   body <- dust_flatten_eqs(c(unpack, eqs[equations]))
-
   args <- c("double" = dat$meta$time,
             "const std::vector<double>&" = dat$meta$state,
             "std::vector<double>&" = dat$meta$output)
@@ -268,7 +267,8 @@ generate_dust_core_rhs <- function(eqs, dat, rewrite) {
 
 generate_dust_core_create <- function(eqs, dat, rewrite) {
   pars_name <- dat$meta$dust$pars
-  pars_type <- sprintf("%s<%s>", pars_type(dat), dat$config$base)
+  pars_type <- sprintf("%s::pars_type<%s>",
+                       dat$meta$namespace, dat$config$base)
   internal_type <- sprintf("%s::internal_type", dat$config$base)
 
   body <- collector()
@@ -293,11 +293,7 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   body$add("return %s(%s, %s);",
            pars_type, dat$meta$dust$shared, dat$meta$internal)
 
-  if (dat$features$discrete) {
-    name <- sprintf("dust_pars<%s>", dat$config$base)
-  } else {
-    name <- sprintf("mode_pars<%s>", dat$config$base)
-  }
+  name <- sprintf("%s_pars<%s>", dat$meta$namespace, dat$config$base)
 
   args <- c("cpp11::list" = dat$meta$user)
   c("template<>",
@@ -308,7 +304,8 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 generate_dust_core_info <- function(dat, rewrite) {
   nms <- names(dat$data$variable$contents)
   args <- dat$meta$dust$pars
-  names(args) <- sprintf("const %s<%s>&", pars_type(dat), dat$config$base)
+  names(args) <- sprintf("const %s::pars_type<%s>&",
+                         dat$meta$namespace, dat$config$base)
 
   body <- collector()
   body$add("const %s::internal_type %s = %s.%s;",
@@ -332,11 +329,7 @@ generate_dust_core_info <- function(dat, rewrite) {
   body$add('         "len"_nm = len,')
   body$add('         "index"_nm = index});')
 
-  if (dat$features$discrete) {
-    name <- sprintf("dust_info<%s>", dat$config$base)
-  } else {
-    name <- sprintf("mode_info<%s>", dat$config$base)
-  }
+  name <- sprintf("%s_info<%s>", dat$meta$namespace, dat$config$base)
 
   c("template <>",
     cpp_function("cpp11::sexp", name, args, body$get()))
@@ -1058,11 +1051,11 @@ transform_compare_odin_gpu <- function(code) {
   gsub("odin\\(\\s*([^) ]+)\\s*\\)", "\\1", code)
 }
 
-
-pars_type <- function(dat) {
+# This will become obsolete once mode is absorbed into dust
+namespace_name <- function(dat) {
   if (dat$features$discrete) {
-    "dust::pars_type"
+    "dust"
   } else {
-    "mode::pars_type"
+    "mode"
   }
 }
