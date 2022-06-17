@@ -33,7 +33,7 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu, mixed) {
       generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, TRUE)
     }
   } else if (isTRUE(mixed)) {
-    dat$meta$result <- "state_next"
+    dat$meta$result <- dat$meta$dust$update_stochastic_result
     rewrite <- function(x, gpu = FALSE) {
       generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
     }

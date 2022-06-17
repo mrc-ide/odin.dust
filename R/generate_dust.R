@@ -74,6 +74,7 @@ generate_dust_meta <- function(options) {
        rng_state = "rng_state",
        rng_state_type = options$rng_state_type,
        real_type = options$real_type,
+       update_stochastic_result = "state_next",
        internal_int = "internal_int",
        internal_real  = "internal_real",
        shared_int = "shared_int",
@@ -233,23 +234,20 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
 
 
 generate_dust_core_update_stochastic <- function(eqs, dat, rewrite) {
-  args <- c("double" = dat$meta$time,
-            "std::vector<double>&" = dat$meta$state,
-            "rng_state_type&" = dat$meta$dust$rng_state,
-            "std::vector<double>&" = dat$meta$result)
   variables <- dat$components$update_stochastic$variables
   equations <- dat$components$update_stochastic$equations
 
   unpack <- lapply(variables, dust_unpack_variable,
                    dat, dat$meta$state, rewrite)
 
-  ## Need to regenerate these equations so that they point at
-  ## state_next not dstatedt
   body <- dust_flatten_eqs(
     c(unpack,
       generate_dust_equations(dat, rewrite, which = equations, mixed = TRUE)))
 
-  
+  args <- c("double" = dat$meta$time,
+            "const std::vector<double>&" = dat$meta$state,
+            "rng_state_type&" = dat$meta$dust$rng_state,
+            "std::vector<double>&" = dat$meta$dust_update_stochastic_result)
   cpp_function("void", "update_stochastic", args, body)
 }
 
