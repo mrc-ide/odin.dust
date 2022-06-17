@@ -247,7 +247,7 @@ generate_dust_core_update_stochastic <- function(eqs, dat, rewrite) {
   args <- c("double" = dat$meta$time,
             "const std::vector<double>&" = dat$meta$state,
             "rng_state_type&" = dat$meta$dust$rng_state,
-            "std::vector<double>&" = dat$meta$dust_update_stochastic_result)
+            "std::vector<double>&" = dat$meta$dust$update_stochastic_result)
   cpp_function("void", "update_stochastic", args, body)
 }
 
