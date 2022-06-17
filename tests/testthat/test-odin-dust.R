@@ -537,6 +537,7 @@ test_that("correctly compiles logistic model", {
 })
 
 
+<<<<<<< HEAD
 test_that("correctly compiles compartmental model", {
   gen <- odin_dust_("examples/age.R")
   mod <- gen$new(list(IO = 1), 0, 1)
@@ -544,4 +545,32 @@ test_that("correctly compiles compartmental model", {
   y_mode <- mod$run(10)
   y_odin <- cmp$run(c(0, 10))[2, -1]
   expect_equal(drop(y_mode), unname(y_odin))
+=======
+test_that("Can compile mixed deterministic/stochastic model", {
+  gen <- odin_dust({
+    initial(x) <- 0
+    deriv(x) <- a
+    initial(a) <- 0
+    update(a) <- a + rnorm(0, 1)
+  })
+
+  mod <- gen$new(list(), 0, 10, seed = 1L)
+  mod$set_stochastic_schedule(0:10)
+  out <- array(NA_real_, c(2, 10, 11))
+  for (i in 1:11) {
+    out[, , i] <- mod$run(i)
+  }
+
+  rng <- dust::dust_rng$new(seed = 1L, n_streams = 10)
+  draws <- rng$normal(11, 0, 1)
+  cmp <- t(apply(draws, 2, cumsum))
+  ## There's some sort of tiny issue here that is making these
+  ## non-identical - it's by a factor of ~1e-16 though so I expect
+  ## that we've got some sort of optimisation difference? Running
+  ## under valgrind was identical oddly.
+  expect_equal(out[2, , ], cmp, tolerance = 1e-15)
+
+  expect_equal(t(apply(cbind(0, out[1, , ]), 1, diff)),
+               out[2, , ])
+>>>>>>> Add simple test of compilation
 })

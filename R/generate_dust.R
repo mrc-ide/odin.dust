@@ -237,8 +237,8 @@ generate_dust_core_update_stochastic <- function(eqs, dat, rewrite) {
             "std::vector<double>&" = dat$meta$state,
             "rng_state_type&" = dat$meta$dust$rng_state,
             "std::vector<double>&" = dat$meta$result)
-  variables <- dat$components$MIXED$variables
-  equations <- dat$components$MIXED$equations
+  variables <- dat$components$update_stochastic$variables
+  equations <- dat$components$update_stochastic$equations
 
   unpack <- lapply(variables, dust_unpack_variable,
                    dat, dat$meta$state, rewrite)
