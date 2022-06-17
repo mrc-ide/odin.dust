@@ -23,7 +23,7 @@ Imports:
     decor,
     dust (>= 0.11.14),
     mode,
-    odin (>= 1.1.10),
+    odin (>= 1.3.5),
     tibble,
     vctrs
 Suggests:

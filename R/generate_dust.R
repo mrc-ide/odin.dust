@@ -2,13 +2,14 @@ generate_dust <- function(ir, options) {
   dat <- odin::odin_ir_deserialise(ir)
   features <- vlapply(dat$features, identity)
   supported <- c("initial_time_dependent", "has_user", "has_array",
-                 "discrete", "has_stochastic", "has_include", "has_output")
+                 "discrete", "has_stochastic", "has_include", "has_output",
+                 "continuous", "mixed")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
          paste(squote(unsupported), collapse = ", "))
   }
-  if (dat$features$has_output && dat$features$discrete) {
+  if (dat$features$has_output && !dat$features$continuous) {
     stop("Using unsupported features: 'has_output'")
   }
 
@@ -82,7 +83,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ctor <- generate_dust_core_ctor(dat)
   size <- generate_dust_core_size(dat, rewrite)
   initial <- generate_dust_core_initial(dat, rewrite)
-  if (dat$features$discrete) {
+  if (dat$features$discrete && !dat$features$continuous) {
     update <- generate_dust_core_update(eqs, dat, rewrite)
     rhs <- NULL
     output <- NULL
@@ -232,7 +233,26 @@ generate_dust_core_update_stochastic <- function(eqs, dat, rewrite) {
   args <- c("double" = dat$meta$time,
             "std::vector<double>&" = dat$meta$state,
             "rng_state_type&" = dat$meta$dust$rng_state,
-            "std::vector<double>&" = "y_next")
+            "std::vector<double>&" = dat$meta$result)
+  variables <- dat$components$MIXED$variables
+  equations <- dat$components$MIXED$equations
+
+  unpack <- lapply(variables, dust_unpack_variable,
+                   dat, dat$meta$state, rewrite)
+
+  ## At this point it's not super ideal but we have dstatedt rather
+  ## than state or state_next as our update (we do need to patch mode
+  ## a little to fix that). We can cope with the incorrect name, or we
+  ## can redo things like we do for delays:
+  body <- dust_flatten_eqs(
+    c(unpack,
+      generate_dust_equations(dat, rewrite, which = equations, mixed = TRUE)))
+
+  args <- c("size_t" = dat$meta$time,
+            "const real_type *" = dat$meta$state,
+            "rng_state_type&" = dat$meta$dust$rng_state,
+            "real_type *" = dat$meta$result)
+  
   cpp_function("void", "update_stochastic", args, NULL)
 }
 
