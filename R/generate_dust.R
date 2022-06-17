@@ -55,9 +55,12 @@ generate_dust <- function(ir, options) {
   } else {
     code_gpu <- NULL
   }
+
+  discrete <- dat$features$discrete && !dat$features$mixed
+
   list(class = class, create = create, info = info, data = data, gpu = code_gpu,
        support = support, include = include, name = dat$config$base,
-       discrete = dat$features$discrete, namespace = dat$meta$namespace)
+       discrete = discrete, namespace = dat$meta$namespace)
 }
 
 
@@ -163,7 +166,7 @@ generate_dust_core_ctor <- function(dat) {
 
 
 generate_dust_core_size <- function(dat, rewrite) {
-  if (dat$features$discrete) {
+  if (!dat$features$continuous) {
     body <- sprintf("return %s;", rewrite(dat$data$variable$length))
     cpp_function("size_t", "size", NULL, body)
   } else {
@@ -240,20 +243,14 @@ generate_dust_core_update_stochastic <- function(eqs, dat, rewrite) {
   unpack <- lapply(variables, dust_unpack_variable,
                    dat, dat$meta$state, rewrite)
 
-  ## At this point it's not super ideal but we have dstatedt rather
-  ## than state or state_next as our update (we do need to patch mode
-  ## a little to fix that). We can cope with the incorrect name, or we
-  ## can redo things like we do for delays:
+  ## Need to regenerate these equations so that they point at
+  ## state_next not dstatedt
   body <- dust_flatten_eqs(
     c(unpack,
       generate_dust_equations(dat, rewrite, which = equations, mixed = TRUE)))
 
-  args <- c("size_t" = dat$meta$time,
-            "const real_type *" = dat$meta$state,
-            "rng_state_type&" = dat$meta$dust$rng_state,
-            "real_type *" = dat$meta$result)
   
-  cpp_function("void", "update_stochastic", args, NULL)
+  cpp_function("void", "update_stochastic", args, body)
 }
 
 
@@ -342,7 +339,6 @@ generate_dust_core_info <- function(dat, rewrite) {
   body$add(generate_dust_core_info_dim(nms, dat, rewrite))
   body$add(generate_dust_core_info_index(nms, dat, rewrite))
   body$add(generate_dust_core_info_len(nms, dat, rewrite))
-
 
   body$add("using namespace cpp11::literals;")
   body$add("return cpp11::writable::list({")
@@ -1078,9 +1074,9 @@ transform_compare_odin_gpu <- function(code) {
 
 # This will become obsolete once mode is absorbed into dust
 namespace_name <- function(dat) {
-  if (dat$features$discrete) {
-    "dust"
-  } else {
+  if (dat$features$continuous) {
     "mode"
+  } else {
+    "dust"
   }
 }
