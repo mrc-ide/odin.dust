@@ -200,7 +200,7 @@ generate_dust_core_initial <- function(dat, rewrite) {
     subs <- lapply(dat$data$variable$contents, function(x) rewrite(x$initial))
     eqs_initial <- dat$equations[dat$components$initial$equations]
     eqs_initial <- lapply(odin:::ir_substitute(eqs_initial, subs),
-                          generate_dust_equation, dat, rewrite, FALSE)
+                          generate_dust_equation, dat, rewrite, FALSE, FALSE)
   } else {
     eqs_initial <- NULL
   }
