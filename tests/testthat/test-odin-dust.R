@@ -258,18 +258,7 @@ test_that("sum over variables", {
 })
 
 
-test_that("odin.dust required discrete model", {
-  expect_error(
-    odin_dust({
-      deriv(x) <- 1
-      initial(x) <- 1
-    }),
-    "Using 'odin.dust' requires a discrete model",
-    fixed = TRUE)
-})
-
-
-test_that("odin.dust disallows output", {
+test_that("odin.dust disallows output for discrete models", {
   expect_error(
     odin_dust({
       initial(x) <- 1
@@ -281,7 +270,7 @@ test_that("odin.dust disallows output", {
 })
 
 
-test_that("odin.dust disallows output", {
+test_that("odin.dust disallows delays", {
   expect_error(
     odin_dust({
       initial(x) <- 1
@@ -494,12 +483,65 @@ test_that("Detect sum corner case", {
 })
 
 
-test_that("disallow output()", {
-  expect_error(
-    odin_dust({
-      initial(x) <- 1
-      update(x) <- 1
-      output(y) <- x * 2
-    }),
-    "Using unsupported features: 'has_output'")
+test_that("can compile deterministic model", {
+  gen <- odin_dust({
+    initial(x) <- 1
+    deriv(x) <- beta
+    output(y) <- x * 2
+
+    beta <- user(0)
+  })
+
+  mod <- gen$new(list(beta = 1), 1, 2)
+  mod$run(10)
+
+  expect_equal(mod$state()[1, ], c(10, 10))
+  expect_equal(mod$state()[2, ], c(20, 20))
+  expect_equal(mod$pars(), list(beta = 1))
+})
+
+
+test_that("correctly compiles logistic model", {
+  y0 <- c(1, 1)
+  r <- c(0.1, 0.2)
+  k <- c(100, 100)
+  times <- 0:25
+
+  gen <- odin_dust({
+    initial(y1) <- 1
+    initial(y2) <- 1
+
+    deriv(y1) <- r1 * y1 * (1 - y1 / k1)
+    deriv(y2) <- r2 * y2 * (1 - y2 / k2)
+
+    output(y) <- y1 + y2
+
+    r1 <- user(0.1)
+    r2 <- user(0.2)
+    k1 <- user(100)
+    k2 <- user(100)
+  })
+
+  n_particles <- 5
+  mod <- gen$new(list(r1 = 0.1, r2 = 0.2, k1 = 100, k2 = 100), 0, n_particles)
+
+  logistic_analytic <- function(r, k, times, y0) {
+    sapply(times, function(t) k / (1 + (k / y0 - 1) * exp(-r * t)))
+  }
+
+  analytic <- logistic_analytic(r, k, times, y0)
+
+  actual <- vapply(times, function(t) mod$run(t),
+                   matrix(0.0, 3, n_particles))
+  expect_equal(actual[1:2, 1, ], analytic, tolerance = 1e-7)
+})
+
+
+test_that("correctly compiles compartmental model", {
+  gen <- odin_dust_("examples/age.R")
+  mod <- gen$new(list(IO = 1), 0, 1)
+  cmp <- odin::odin("examples/age.R", target = "c")$new(I0 = 1, use_dde = TRUE)
+  y_mode <- mod$run(10)
+  y_odin <- cmp$run(c(0, 10))[2, -1]
+  expect_equal(drop(y_mode), unname(y_odin))
 })

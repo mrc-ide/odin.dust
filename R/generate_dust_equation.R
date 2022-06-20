@@ -4,6 +4,7 @@ generate_dust_equations <- function(dat, rewrite, which = NULL, gpu = FALSE) {
   } else {
     eqs <- dat$equations[which]
   }
+
   lapply(eqs, generate_dust_equation, dat, rewrite, gpu)
 }
 
@@ -52,7 +53,6 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu) {
 
 generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite, gpu) {
   location <- data_info$location
-
   if (location == "transient") {
     if (is.null(dat$gpu)) {
       lhs <- sprintf("%s %s", dust_type(data_info$storage_type), eq$lhs)
@@ -63,7 +63,8 @@ generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite, gpu) {
     lhs <- rewrite(eq$lhs)
   } else {
     offset <- dat$data[[location]]$contents[[data_info$name]]$offset
-    lhs <- sprintf("%s[%s]", dat$meta$result, rewrite(offset))
+    target <- if (location == "output") dat$meta$output else dat$meta$result
+    lhs <- sprintf("%s[%s]", target, rewrite(offset))
   }
   rhs <- rewrite(eq$rhs$value)
   sprintf("%s = %s;", lhs, rhs)
@@ -151,7 +152,8 @@ generate_dust_equation_array_lhs <- function(eq, data_info, dat, rewrite) {
     lhs <- sprintf("%s[%s]", eq$name, pos)
   } else {
     offset <- rewrite(dat$data[[location]]$contents[[data_info$name]]$offset)
-    lhs <- sprintf("%s[%s + %s]", dat$meta$result, offset, pos)
+    target <- if (location == "output") dat$meta$output else dat$meta$result
+    lhs <- sprintf("%s[%s + %s]", target, offset, pos)
   }
 
   lhs

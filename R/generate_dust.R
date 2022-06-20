@@ -1,20 +1,19 @@
 generate_dust <- function(ir, options) {
   dat <- odin::odin_ir_deserialise(ir)
-
-  if (!dat$features$discrete) {
-    stop("Using 'odin.dust' requires a discrete model")
-  }
-
   features <- vlapply(dat$features, identity)
   supported <- c("initial_time_dependent", "has_user", "has_array",
-                 "discrete", "has_stochastic", "has_include")
+                 "discrete", "has_stochastic", "has_include", "has_output")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
          paste(squote(unsupported), collapse = ", "))
   }
+  if (dat$features$has_output && dat$features$discrete) {
+    stop("Using unsupported features: 'has_output'")
+  }
 
   dat$meta$dust <- generate_dust_meta(options)
+  dat$meta$namespace <- namespace_name(dat)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
@@ -55,9 +54,9 @@ generate_dust <- function(ir, options) {
   } else {
     code_gpu <- NULL
   }
-
   list(class = class, create = create, info = info, data = data, gpu = code_gpu,
-       support = support, include = include, name = dat$config$base)
+       support = support, include = include, name = dat$config$base,
+       discrete = dat$features$discrete, namespace = dat$meta$namespace)
 }
 
 
@@ -83,7 +82,15 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ctor <- generate_dust_core_ctor(dat)
   size <- generate_dust_core_size(dat, rewrite)
   initial <- generate_dust_core_initial(dat, rewrite)
-  update <- generate_dust_core_update(eqs, dat, rewrite)
+  if (dat$features$discrete) {
+    update <- generate_dust_core_update(eqs, dat, rewrite)
+    rhs <- NULL
+    output <- NULL
+  } else {
+    update <- generate_dust_core_update_stochastic(eqs, dat, rewrite)
+    rhs <- generate_dust_core_rhs(eqs, dat, rewrite)
+    output <- generate_dust_core_output(eqs, dat, rewrite)
+  }
   attributes <- generate_dust_core_attributes(dat)
   compare <- generate_dust_compare_method(dat)
 
@@ -95,7 +102,9 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ret$add(paste0("  ", ctor))
   ret$add(paste0("  ", size))
   ret$add(paste0("  ", initial))
-  ret$add(paste0("  ", update))
+  ret$add(sprintf("  %s", update))
+  ret$add(sprintf("  %s", rhs))
+  ret$add(sprintf("  %s", output))
   ret$add(sprintf("  %s", compare)) # ensures we don't add trailing whitespace
   ret$add("private:")
   ret$add("  std::shared_ptr<const shared_type> %s;", dat$meta$dust$shared)
@@ -121,7 +130,7 @@ generate_dust_core_struct <- function(dat) {
   i_internal <- vcapply(dat$data$elements[i], "[[", "stage") == "time"
 
   if (is.null(dat$compare)) {
-    data_type <- "using data_type = dust::no_data;"
+    data_type <- sprintf("using data_type = %s::no_data;", dat$meta$namespace)
   } else {
     data_type <- c(
       "struct __align__(16) data_type {",
@@ -142,8 +151,9 @@ generate_dust_core_struct <- function(dat) {
 
 
 generate_dust_core_ctor <- function(dat) {
-  c(sprintf("%s(const dust::pars_type<%s>& %s) :",
-            dat$config$base, dat$config$base, dat$meta$dust$pars),
+  c(sprintf("%s(const %s::pars_type<%s>& %s) :",
+            dat$config$base, dat$meta$namespace,
+            dat$config$base, dat$meta$dust$pars),
     sprintf("  %s(%s.shared), %s(%s.internal) {",
             dat$meta$dust$shared, dat$meta$dust$pars,
             dat$meta$internal, dat$meta$dust$pars),
@@ -152,8 +162,18 @@ generate_dust_core_ctor <- function(dat) {
 
 
 generate_dust_core_size <- function(dat, rewrite) {
-  body <- sprintf("return %s;", rewrite(dat$data$variable$length))
-  cpp_function("size_t", "size", NULL, body)
+  if (dat$features$discrete) {
+    body <- sprintf("return %s;", rewrite(dat$data$variable$length))
+    cpp_function("size_t", "size", NULL, body)
+  } else {
+    body <- sprintf("return %s;", rewrite(dat$data$variable$length))
+    n_var <- cpp_function("size_t", "n_variables", NULL, body)
+
+    body <- sprintf("return %s;", rewrite(dat$data$output$length))
+    n_output <- cpp_function("size_t", "n_output", NULL, body)
+
+    c(n_var, n_output)
+  }
 }
 
 
@@ -204,14 +224,52 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
             "const real_type *" = dat$meta$state,
             "rng_state_type&" = dat$meta$dust$rng_state,
             "real_type *" = dat$meta$result)
-
   cpp_function("void", "update", args, body)
+}
+
+
+generate_dust_core_update_stochastic <- function(eqs, dat, rewrite) {
+  args <- c("double" = dat$meta$time,
+            "std::vector<double>&" = dat$meta$state,
+            "rng_state_type&" = dat$meta$dust$rng_state,
+            "std::vector<double>&" = "y_next")
+  cpp_function("void", "update_stochastic", args, NULL)
+}
+
+
+generate_dust_core_output <- function(eqs, dat, rewrite) {
+  variables <- dat$components$output$variables
+  equations <- dat$components$output$equations
+
+  unpack <- lapply(variables, dust_unpack_variable,
+                   dat, dat$meta$state, rewrite)
+  body <- dust_flatten_eqs(c(unpack, eqs[equations]))
+  args <- c("double" = dat$meta$time,
+            "const std::vector<double>&" = dat$meta$state,
+            "std::vector<double>&" = dat$meta$output)
+  cpp_function("void", "output", args, body)
+}
+
+
+generate_dust_core_rhs <- function(eqs, dat, rewrite) {
+  variables <- dat$components$rhs$variables
+  equations <- dat$components$rhs$equations
+
+  unpack <- lapply(variables, dust_unpack_variable,
+                   dat, dat$meta$state, rewrite)
+  body <- dust_flatten_eqs(c(unpack, eqs[equations]))
+
+  args <- c("double" = dat$meta$time,
+            "const std::vector<double>&" = dat$meta$state,
+            "std::vector<double>&" = dat$meta$result)
+  cpp_function("void", "rhs", args, body)
 }
 
 
 generate_dust_core_create <- function(eqs, dat, rewrite) {
   pars_name <- dat$meta$dust$pars
-  pars_type <- sprintf("dust::pars_type<%s>", dat$config$base)
+  pars_type <- sprintf("%s::pars_type<%s>",
+                       dat$meta$namespace, dat$config$base)
   internal_type <- sprintf("%s::internal_type", dat$config$base)
 
   body <- collector()
@@ -236,7 +294,8 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   body$add("return %s(%s, %s);",
            pars_type, dat$meta$dust$shared, dat$meta$internal)
 
-  name <- sprintf("dust_pars<%s>", dat$config$base)
+  name <- sprintf("%s_pars<%s>", dat$meta$namespace, dat$config$base)
+
   args <- c("cpp11::list" = dat$meta$user)
   c("template<>",
     cpp_function(pars_type, name, args, body$get()))
@@ -246,7 +305,8 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 generate_dust_core_info <- function(dat, rewrite) {
   nms <- names(dat$data$variable$contents)
   args <- dat$meta$dust$pars
-  names(args) <- sprintf("const dust::pars_type<%s>&", dat$config$base)
+  names(args) <- sprintf("const %s::pars_type<%s>&",
+                         dat$meta$namespace, dat$config$base)
 
   body <- collector()
   body$add("const %s::internal_type %s = %s.%s;",
@@ -270,7 +330,8 @@ generate_dust_core_info <- function(dat, rewrite) {
   body$add('         "len"_nm = len,')
   body$add('         "index"_nm = index});')
 
-  name <- sprintf("dust_info<%s>", dat$config$base)
+  name <- sprintf("%s_info<%s>", dat$meta$namespace, dat$config$base)
+
   c("template <>",
     cpp_function("cpp11::sexp", name, args, body$get()))
 }
@@ -373,7 +434,8 @@ generate_dust_core_attributes <- function(dat) {
 dust_unpack_variable <- function(name, dat, state, rewrite) {
   x <- dat$data$variable$contents[[name]]
   data_info <- dat$data$elements[[name]]
-  rhs <- dust_extract_variable(x, dat$data$elements, state, rewrite)
+  rhs <- dust_extract_variable(x, dat$data$elements, state, rewrite,
+                                dat$features$discrete)
   if (data_info$rank == 0L) {
     fmt <- "const %s %s = %s;"
   } else {
@@ -383,15 +445,18 @@ dust_unpack_variable <- function(name, dat, state, rewrite) {
 }
 
 
-dust_extract_variable <- function(x, data_elements, state, rewrite) {
+dust_extract_variable <- function(x, data_elements, state, rewrite, discrete) {
   d <- data_elements[[x$name]]
   if (d$rank == 0L) {
     sprintf("%s[%s]", state, rewrite(x$offset))
   } else {
     ## Using a wrapper here would be more C++'ish but is it needed?
     offset <- rewrite(x$offset)
-    len <- rewrite(d$dimnames$length)
-    sprintf("%s + %s", state, offset)
+    if (discrete) {
+      sprintf("%s + %s", state, offset)
+    } else {
+      sprintf("%s.data() + %s", state, offset)
+    }
   }
 }
 
@@ -989,4 +1054,13 @@ transform_compare_odin_gpu <- function(code) {
 
   ## Actual transformation is trivial here:
   gsub("odin\\(\\s*([^) ]+)\\s*\\)", "\\1", code)
+}
+
+# This will become obsolete once mode is absorbed into dust
+namespace_name <- function(dat) {
+  if (dat$features$discrete) {
+    "dust"
+  } else {
+    "mode"
+  }
 }

@@ -120,13 +120,18 @@ odin_dust_wrapper <- function(ir, srcdir, options) {
     srcdir,
     generate_dust(ir, options))
   code <- odin_dust_code(dat)
-
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
-  generator <- dust::dust(path, quiet = !options$verbose,
-                          workdir = options$workdir,
-                          gpu = options$gpu$compile)
+  if (dat$discrete) {
+    generator <- dust::dust(path, quiet = !options$verbose,
+                            workdir = options$workdir,
+                            gpu = options$gpu$compile)
+  } else {
+    generator <- mode::mode(path,
+                            quiet = !options$verbose,
+                            workdir = options$workdir)
+  }
   if (!("transform_variables" %in% names(generator$public_methods))) {
     generator$set("public", "transform_variables",
                   odin_dust_transform_variables)
@@ -143,7 +148,7 @@ odin_dust_code <- function(dat) {
     dat$gpu,
     dust_flatten_eqs(lapply(dat$support, "[[", "definition")),
     readLines(odin_dust_file("support.hpp")),
-    cpp_namespace("dust", c(dat$create, dat$info, dat$data)))
+    cpp_namespace(dat$namespace, c(dat$create, dat$info, dat$data)))
 }
 
 
