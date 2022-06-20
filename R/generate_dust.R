@@ -454,8 +454,7 @@ dust_extract_variable <- function(x, data_elements, state, rewrite, discrete) {
     offset <- rewrite(x$offset)
     if (discrete) {
       sprintf("%s + %s", state, offset)
-    }
-    else {
+    } else {
       sprintf("%s.data() + %s", state, offset)
     }
   }
