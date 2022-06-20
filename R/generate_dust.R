@@ -433,7 +433,8 @@ generate_dust_core_attributes <- function(dat) {
 dust_unpack_variable <- function(name, dat, state, rewrite) {
   x <- dat$data$variable$contents[[name]]
   data_info <- dat$data$elements[[name]]
-  rhs <- dust_extract_variable(x, dat$data$elements, state, rewrite)
+  rhs <- dust_extract_variable(x, dat$data$elements, state, rewrite,
+                                dat$features$discrete)
   if (data_info$rank == 0L) {
     fmt <- "const %s %s = %s;"
   } else {
@@ -443,15 +444,19 @@ dust_unpack_variable <- function(name, dat, state, rewrite) {
 }
 
 
-dust_extract_variable <- function(x, data_elements, state, rewrite) {
+dust_extract_variable <- function(x, data_elements, state, rewrite, discrete) {
   d <- data_elements[[x$name]]
   if (d$rank == 0L) {
     sprintf("%s[%s]", state, rewrite(x$offset))
   } else {
     ## Using a wrapper here would be more C++'ish but is it needed?
     offset <- rewrite(x$offset)
-    len <- rewrite(d$dimnames$length)
-    sprintf("%s + %s", state, offset)
+    if (discrete) {
+      sprintf("%s + %s", state, offset)
+    }
+    else {
+      sprintf("%s.data() + %s", state, offset)
+    }
   }
 }
 
