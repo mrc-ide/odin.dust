@@ -40,4 +40,4 @@ VignetteBuilder: knitr
 Remotes:
     mrc-ide/dust,
     mrc-ide/mode,
-    mrc-ide/odin@mrc-3305
+    mrc-ide/odin
