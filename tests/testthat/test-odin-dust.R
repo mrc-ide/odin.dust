@@ -537,7 +537,6 @@ test_that("correctly compiles logistic model", {
 })
 
 
-<<<<<<< HEAD
 test_that("correctly compiles compartmental model", {
   gen <- odin_dust_("examples/age.R")
   mod <- gen$new(list(IO = 1), 0, 1)
@@ -545,7 +544,9 @@ test_that("correctly compiles compartmental model", {
   y_mode <- mod$run(10)
   y_odin <- cmp$run(c(0, 10))[2, -1]
   expect_equal(drop(y_mode), unname(y_odin))
-=======
+})
+
+
 test_that("Can compile mixed deterministic/stochastic model", {
   gen <- odin_dust({
     initial(x) <- 0
@@ -572,5 +573,4 @@ test_that("Can compile mixed deterministic/stochastic model", {
 
   expect_equal(t(apply(cbind(0, out[1, , ]), 1, diff)),
                out[2, , ])
->>>>>>> Add simple test of compilation
 })
