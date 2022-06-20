@@ -1,15 +1,16 @@
-generate_dust_equations <- function(dat, rewrite, which = NULL, gpu = FALSE) {
+generate_dust_equations <- function(dat, rewrite, which = NULL, gpu = FALSE,
+                                    mixed = FALSE) {
   if (is.null(which)) {
     eqs <- dat$equations
   } else {
     eqs <- dat$equations[which]
   }
 
-  lapply(eqs, generate_dust_equation, dat, rewrite, gpu)
+  lapply(eqs, generate_dust_equation, dat, rewrite, gpu, mixed)
 }
 
 
-generate_dust_equation <- function(eq, dat, rewrite, gpu) {
+generate_dust_equation <- function(eq, dat, rewrite, gpu, mixed) {
   f <- switch(
     eq$type,
     expression_scalar = generate_dust_equation_scalar,
@@ -30,6 +31,11 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu) {
     dat$data$gpu <- collector()
     rewrite <- function(x, gpu = FALSE) {
       generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, TRUE)
+    }
+  } else if (isTRUE(mixed)) {
+    dat$meta$result <- dat$meta$dust$update_stochastic_result
+    rewrite <- function(x, gpu = FALSE) {
+      generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
     }
   }
 

@@ -2,13 +2,14 @@ generate_dust <- function(ir, options) {
   dat <- odin::odin_ir_deserialise(ir)
   features <- vlapply(dat$features, identity)
   supported <- c("initial_time_dependent", "has_user", "has_array",
-                 "discrete", "has_stochastic", "has_include", "has_output")
+                 "discrete", "has_stochastic", "has_include", "has_output",
+                 "continuous", "mixed")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
          paste(squote(unsupported), collapse = ", "))
   }
-  if (dat$features$has_output && dat$features$discrete) {
+  if (dat$features$has_output && !dat$features$continuous) {
     stop("Using unsupported features: 'has_output'")
   }
 
@@ -54,9 +55,12 @@ generate_dust <- function(ir, options) {
   } else {
     code_gpu <- NULL
   }
+
+  discrete <- dat$features$discrete && !dat$features$mixed
+
   list(class = class, create = create, info = info, data = data, gpu = code_gpu,
        support = support, include = include, name = dat$config$base,
-       discrete = dat$features$discrete, namespace = dat$meta$namespace)
+       discrete = discrete, namespace = dat$meta$namespace)
 }
 
 
@@ -70,6 +74,7 @@ generate_dust_meta <- function(options) {
        rng_state = "rng_state",
        rng_state_type = options$rng_state_type,
        real_type = options$real_type,
+       update_stochastic_result = "state_next",
        internal_int = "internal_int",
        internal_real  = "internal_real",
        shared_int = "shared_int",
@@ -82,7 +87,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ctor <- generate_dust_core_ctor(dat)
   size <- generate_dust_core_size(dat, rewrite)
   initial <- generate_dust_core_initial(dat, rewrite)
-  if (dat$features$discrete) {
+  if (dat$features$discrete && !dat$features$continuous) {
     update <- generate_dust_core_update(eqs, dat, rewrite)
     rhs <- NULL
     output <- NULL
@@ -162,7 +167,7 @@ generate_dust_core_ctor <- function(dat) {
 
 
 generate_dust_core_size <- function(dat, rewrite) {
-  if (dat$features$discrete) {
+  if (!dat$features$continuous) {
     body <- sprintf("return %s;", rewrite(dat$data$variable$length))
     cpp_function("size_t", "size", NULL, body)
   } else {
@@ -195,7 +200,7 @@ generate_dust_core_initial <- function(dat, rewrite) {
     subs <- lapply(dat$data$variable$contents, function(x) rewrite(x$initial))
     eqs_initial <- dat$equations[dat$components$initial$equations]
     eqs_initial <- lapply(odin:::ir_substitute(eqs_initial, subs),
-                          generate_dust_equation, dat, rewrite, FALSE)
+                          generate_dust_equation, dat, rewrite, FALSE, FALSE)
   } else {
     eqs_initial <- NULL
   }
@@ -229,11 +234,21 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
 
 
 generate_dust_core_update_stochastic <- function(eqs, dat, rewrite) {
+  variables <- dat$components$update_stochastic$variables
+  equations <- dat$components$update_stochastic$equations
+
+  unpack <- lapply(variables, dust_unpack_variable,
+                   dat, dat$meta$state, rewrite)
+
+  body <- dust_flatten_eqs(
+    c(unpack,
+      generate_dust_equations(dat, rewrite, which = equations, mixed = TRUE)))
+
   args <- c("double" = dat$meta$time,
-            "std::vector<double>&" = dat$meta$state,
+            "const std::vector<double>&" = dat$meta$state,
             "rng_state_type&" = dat$meta$dust$rng_state,
-            "std::vector<double>&" = "y_next")
-  cpp_function("void", "update_stochastic", args, NULL)
+            "std::vector<double>&" = dat$meta$dust$update_stochastic_result)
+  cpp_function("void", "update_stochastic", args, body)
 }
 
 
@@ -322,7 +337,6 @@ generate_dust_core_info <- function(dat, rewrite) {
   body$add(generate_dust_core_info_dim(nms, dat, rewrite))
   body$add(generate_dust_core_info_index(nms, dat, rewrite))
   body$add(generate_dust_core_info_len(nms, dat, rewrite))
-
 
   body$add("using namespace cpp11::literals;")
   body$add("return cpp11::writable::list({")
@@ -1058,9 +1072,9 @@ transform_compare_odin_gpu <- function(code) {
 
 # This will become obsolete once mode is absorbed into dust
 namespace_name <- function(dat) {
-  if (dat$features$discrete) {
-    "dust"
-  } else {
+  if (dat$features$continuous) {
     "mode"
+  } else {
+    "dust"
   }
 }
