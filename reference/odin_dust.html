@@ -26,7 +26,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -74,10 +74,14 @@
 <dd><p>Either the name of a file to read, a text string (if
 length is greater than 1 elements will be joined with newlines)
 or an expression.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Arguments passed to <a href="odin_dust_options.html">odin_dust_options</a>,
 including <code>real_type</code>, <code>gpu</code>, <code>verbose</code>, <code>workdir</code>,
 <code>no_check_unused_equations</code> and <code>rewrite_dims</code>.</p></dd>
+
+
 <dt>options</dt>
 <dd><p>An <a href="https://rdrr.io/pkg/odin/man/odin_options.html" class="external-link">odin::odin_options</a> or <a href="odin_dust_options.html">odin_dust_options</a>
 object. If given it overrides arguments; if it is already a
@@ -85,6 +89,7 @@ object. If given it overrides arguments; if it is already a
 it is passed through to <a href="https://rdrr.io/pkg/odin/man/odin_options.html" class="external-link">odin::odin_options</a> where it will
 override arguments in <code>...</code> but respond to the <code>odin_dust</code>
 specific options (<code>real_type</code>, etc)</p></dd>
+
 </dl></div>
     <div id="details">
     <h2>Details</h2>
@@ -106,7 +111,7 @@ that odin normally uses (built on dde).</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

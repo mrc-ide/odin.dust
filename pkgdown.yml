@@ -1,7 +1,7 @@
 pandoc: 2.7.3
-pkgdown: 2.0.2
+pkgdown: 2.0.4
 pkgdown_sha: ~
 articles:
   sir_models: sir_models.html
-last_built: 2022-02-23T12:38Z
+last_built: 2022-06-20T11:00Z
 

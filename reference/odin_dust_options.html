@@ -27,7 +27,7 @@ odin::odin_options"><meta property="og:image" content="/logo.png"><!-- mathjax -
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -81,15 +81,21 @@ odin::odin_options"><meta property="og:image" content="/logo.png"><!-- mathjax -
 <dd><p>Arguments passed to <a href="https://rdrr.io/pkg/odin/man/odin_options.html" class="external-link">odin::odin_options</a>, including
 <code>verbose</code>, <code>workdir</code>, <code>no_check_unused_equations</code> and
 <code>rewrite_dims</code>.</p></dd>
+
+
 <dt>real_type</dt>
 <dd><p>C++ type to use for real (floating point)
 numbers. Defaults to <code>double</code>.</p></dd>
+
+
 <dt>rng_state_type</dt>
 <dd><p>C++ type to use for the random number
 generator. Defaults to <code>dust::random::generator&lt;real_type&gt;</code>
 which selects a generator based on your real type. The default
 prior to dust 0.10.0 was
 <code>dust::random::xoshiro256starstar_state</code>.</p></dd>
+
+
 <dt>gpu</dt>
 <dd><p><strong>Experimental!</strong> Generate support for running models
 on a GPU. This implies <code>gpu_generate</code> but <em>does</em> require a gpu
@@ -97,6 +103,8 @@ and nvcc toolchain. Currently not supported within package code.
 This argument will be passed through to <code><a href="https://rdrr.io/pkg/dust/man/dust.html" class="external-link">dust::dust()</a></code> and so to
 enable compilation for a gpu, pass either <code>TRUE</code> or the results
 of <a href="https://rdrr.io/pkg/dust/man/dust_cuda_options.html" class="external-link">dust::dust_cuda_options</a>)</p></dd>
+
+
 <dt>gpu_generate</dt>
 <dd><p><strong>Experimental</strong> Generate gpu support
 code. This does not require a gpu or nvcc toolchain, but creates
@@ -105,6 +113,8 @@ intended for testing and development as the generated code will
 be slower than the normal cpu version, and the compilation time
 will be considerably slower. Currently not supported within
 package code.</p></dd>
+
+
 <dt>options</dt>
 <dd><p>An <a href="https://rdrr.io/pkg/odin/man/odin_options.html" class="external-link">odin::odin_options</a> or odin_dust_options
 object. If given it overrides arguments; if it is already a
@@ -112,11 +122,16 @@ object. If given it overrides arguments; if it is already a
 it is passed through to <a href="https://rdrr.io/pkg/odin/man/odin_options.html" class="external-link">odin::odin_options</a> where it will
 override arguments in <code>...</code> but respond to the <code>odin_dust</code>
 specific options (<code>real_type</code>, etc)</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A list of options (class <code>odin_options</code>) to
+    
+
+<p>A list of options (class <code>odin_options</code>) to
 pass to <code><a href="odin_dust.html">odin.dust::odin_dust</a></code></p>
+
+
     </div>
 
     <div id="ref-examples">
@@ -135,7 +150,7 @@ pass to <code><a href="odin_dust.html">odin.dust::odin_dust</a></code></p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $workdir</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpdCzCLV/filec541a09ae0e"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpyenTQn/file205420da371f"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $skip_cache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -167,7 +182,7 @@ pass to <code><a href="odin_dust.html">odin.dust::odin_dust</a></code></p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     list(names = names, data = list(source = paste(readLines(filename), </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         collapse = "\n")))</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7fc6b76b95c0&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7fe56a1777e8&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: namespace:odin.dust&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $gpu</span>
@@ -203,7 +218,7 @@ pass to <code><a href="odin_dust.html">odin.dust::odin_dust</a></code></p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>
