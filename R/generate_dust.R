@@ -231,7 +231,8 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
 generate_dust_core_update_stochastic <- function(eqs, dat, rewrite) {
   args <- c("double" = dat$meta$time,
             "std::vector<double>&" = dat$meta$state,
-            "rng_state_type&" = dat$meta$dust$rng_state)
+            "rng_state_type&" = dat$meta$dust$rng_state,
+            "std::vector<double>&" = "y_next")
   cpp_function("void", "update_stochastic", args, NULL)
 }
 
