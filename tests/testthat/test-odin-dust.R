@@ -540,5 +540,8 @@ test_that("correctly compiles logistic model", {
 test_that("correctly compiles compartmental model", {
   gen <- odin_dust_("examples/age.R")
   mod <- gen$new(list(IO = 1), 0, 1)
-  expect_silent(mod$run(1))
+  cmp <- odin::odin("examples/age.R", target = "c")$new(I0 = 1, use_dde = TRUE)
+  y_mode <- mod$run(10)
+  y_odin <- cmp$run(c(0, 10))[2, -1]
+  expect_equal(drop(y_mode), unname(y_odin))
 })
