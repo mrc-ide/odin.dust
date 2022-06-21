@@ -6,9 +6,9 @@ test_that("sir model smoke test", {
   gen_odin <- odin::odin_("examples/sir.R")
 
   n <- 10000
-  y0 <- c(1000, 10, 0)
+  y0 <- c(1000, 10, 0, 1000)
   mod <- gen$new(list(I_ini = 10), 0L, n)
-  expect_equal(mod$state(), matrix(y0, 3, n))
+  expect_equal(mod$state(), matrix(y0, 4, n))
   expect_equal(mod$step(), 0)
   expect_identical(mod$info(),
                    list(dim = list(S = 1L, I = 1L, R = 1L),
@@ -540,6 +540,11 @@ test_that("correctly compiles logistic model", {
 test_that("correctly compiles compartmental model", {
   gen <- odin_dust_("examples/age.R")
   mod <- gen$new(list(IO = 1), 0, 1)
+  expect_identical(mod$info(),
+                   list(dim = list(y = c(5L, 3L), prev = 1L),
+                        len = 16L,
+                        index = list(y = 1L:15L, prev = 16L)))
+
   cmp <- odin::odin("examples/age.R", target = "c")$new(I0 = 1, use_dde = TRUE)
   y_mode <- mod$run(10)
   y_odin <- cmp$run(c(0, 10))[2, -1]

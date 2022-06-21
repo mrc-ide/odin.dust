@@ -57,7 +57,7 @@ generate_dust <- function(ir, options) {
   }
 
   discrete <- dat$features$discrete && !dat$features$mixed
-
+ # browser()
   list(class = class, create = create, info = info, data = data, gpu = code_gpu,
        support = support, include = include, name = dat$config$base,
        discrete = discrete, namespace = dat$meta$namespace)
@@ -319,10 +319,12 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
 
 generate_dust_core_info <- function(dat, rewrite) {
   nms <- names(dat$data$variable$contents)
+  nms_output <- names(dat$data$output$contents)
   args <- dat$meta$dust$pars
   names(args) <- sprintf("const %s::pars_type<%s>&",
                          dat$meta$namespace, dat$config$base)
 
+ # browser()
   body <- collector()
   body$add("const %s::internal_type %s = %s.%s;",
            dat$config$base, dat$meta$internal, dat$meta$dust$pars,
@@ -332,11 +334,11 @@ generate_dust_core_info <- function(dat, rewrite) {
            dat$meta$dust$shared)
 
   body$add("cpp11::writable::strings nms({%s});",
-           paste(dquote(nms), collapse = ", "))
+           paste(dquote(c(nms, nms_output)), collapse = ", "))
 
-  body$add(generate_dust_core_info_dim(nms, dat, rewrite))
-  body$add(generate_dust_core_info_index(nms, dat, rewrite))
-  body$add(generate_dust_core_info_len(nms, dat, rewrite))
+  body$add(generate_dust_core_info_dim(c(nms, nms_output), dat, rewrite))
+  body$add(generate_dust_core_info_index(nms, nms_output, dat, rewrite))
+  body$add(generate_dust_core_info_len(nms, nms_output, dat, rewrite))
 
   body$add("using namespace cpp11::literals;")
   body$add("return cpp11::writable::list({")
@@ -345,7 +347,7 @@ generate_dust_core_info <- function(dat, rewrite) {
   body$add('         "index"_nm = index});')
 
   name <- sprintf("%s_info<%s>", dat$meta$namespace, dat$config$base)
-
+  #browser()
   c("template <>",
     cpp_function("cpp11::sexp", name, args, body$get()))
 }
@@ -371,25 +373,39 @@ generate_dust_core_info_dim <- function(nms, dat, rewrite) {
 }
 
 
-generate_dust_core_info_index <- function(nms, dat, rewrite) {
+generate_dust_core_info_index <- function(nms, nms_output, dat, rewrite) {
+  last <- NULL
   index1 <- function(nm) {
     start <- dust_plus_1(dat$data$variable$contents[[nm]]$offset, rewrite)
     el <- dat$data$elements[[nm]]
     if (el$rank == 0) {
+      last <<- start
       sprintf("cpp11::writable::integers({%s})", start)
     } else {
+      last <<- sprintf("%s + %s", start, rewrite(el$dimnames$length))
       sprintf("integer_sequence(%s, %s)", start, rewrite(el$dimnames$length))
     }
   }
 
+  index2 <- function(nm) {
+    start <- dust_plus_y(dat$data$output$contents[[nm]]$offset, last, rewrite)
+    el <- dat$data$elements[[nm]]
+    if (el$rank == 0) {
+      sprintf("cpp11::writable::integers({%s})", start)
+    } else {
+      sprintf("integer_sequence(%s, %s)",  start, rewrite(el$dimnames$length))
+    }
+  }
+  #browser()
   index <- vcapply(nms, index1, USE.NAMES = FALSE)
+  index <- c(index, vcapply(nms_output, index2, USE.NAMES = FALSE))
   c(sprintf("cpp11::writable::list index(%d);", length(index)),
     sprintf("index[%d] = %s;", seq_along(index) - 1L, index),
     sprintf("index.names() = nms;"))
 }
 
 
-generate_dust_core_info_len <- function(nms, dat, rewrite) {
+generate_dust_core_info_len <- function(nms, nms_output, dat, rewrite) {
   last <- nms[[length(nms)]]
   last_offset <- dat$data$variable$contents[[last]]$offset
   if (dat$data$elements[[last]]$rank == 0) {
@@ -398,7 +414,20 @@ generate_dust_core_info_len <- function(nms, dat, rewrite) {
     last_length <- dat$data$elements[[last]]$dimnames$length
     len <- sprintf("%s + %s", rewrite(last_offset), rewrite(last_length))
   }
-  sprintf("size_t len = %s;", len)
+  if (length(nms_output) > 0) {
+    last <- nms_output[[length(nms_output)]]
+    last_offset <- dat$data$output$contents[[last]]$offset
+    if (dat$data$elements[[last]]$rank == 0) {
+      len_output <- dust_plus_1(last_offset, rewrite)
+    } else {
+      last_length <- dat$data$elements[[last]]$dimnames$length
+      len_output <- sprintf("%s + %s", rewrite(last_offset), rewrite(last_length))
+    }
+    sprintf("size_t len = %s + %s;", len, len_output)
+  } else {
+    sprintf("size_t len = %s;", len)
+  }
+
 }
 
 
