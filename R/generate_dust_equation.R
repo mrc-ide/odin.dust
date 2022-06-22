@@ -94,7 +94,6 @@ generate_dust_equation_alloc <- function(eq, data_info, dat, rewrite, gpu) {
 
 
 generate_dust_equation_copy <- function(eq, data_info, dat, rewrite, gpu) {
-  #browser()
   x <- dat$data$output$contents[[data_info$name]]
   if (data_info$rank == 0L) {
     sprintf("output[%s] = %s;", rewrite(x$offset), rewrite(eq$lhs))

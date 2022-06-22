@@ -24,7 +24,6 @@ generate_dust <- function(ir, options) {
   eqs <- generate_dust_equations(dat, rewrite)
 
   class <- generate_dust_core_class(eqs, dat, rewrite)
-  browser()
   create <- generate_dust_core_create(eqs, dat, rewrite)
   info <- generate_dust_core_info(dat, rewrite)
   data <- generate_dust_core_data(dat)
