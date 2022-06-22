@@ -579,3 +579,33 @@ test_that("Can compile mixed deterministic/stochastic model", {
   expect_equal(t(apply(cbind(0, out[1, , ]), 1, diff)),
                out[2, , ])
 })
+
+
+test_that("Can compile a mixed model that includes a vector variable", {
+  gen <- odin_dust({
+    initial(x) <- 0
+    deriv(x) <- a
+    initial(y[]) <- 0
+    deriv(y[]) <- a
+    dim(y) <- 5
+    initial(a) <- 0
+    update(a) <- a + rnorm(0, 1)
+  }, verbose = TRUE)
+
+  mod <- gen$new(list(), 0, 10, seed = 1)
+  info <- mod$info()
+  mod$set_stochastic_schedule(0:3)
+  y <- array(NA_real_, c(7, 10, 4))
+  for (i in seq_len(4)) {
+    y[, , i] <- mod$run(i)
+  }
+
+  cmp <- dust::dust_rng$new(seed = 1, n_streams = 10)$normal(4, 0, 1)
+  expect_equal(t(apply(cmp, 2, cumsum)), y[info$index$a, , ],
+               tolerance = 1e-15)
+  expect_equal(t(apply(cbind(0, y[info$index$x, , ]), 1, diff)),
+               y[info$index$a, , ])
+  expect_equal(
+    y[info$index$y, , ],
+    y[rep(info$index$x, 5), , ])
+})

@@ -123,14 +123,14 @@ odin_dust_wrapper <- function(ir, srcdir, options) {
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
-  if (dat$discrete) {
-    generator <- dust::dust(path, quiet = !options$verbose,
-                            workdir = options$workdir,
-                            gpu = options$gpu$compile)
-  } else {
+  if (dat$continuous) {
     generator <- mode::mode(path,
                             quiet = !options$verbose,
                             workdir = options$workdir)
+  } else {
+    generator <- dust::dust(path, quiet = !options$verbose,
+                            workdir = options$workdir,
+                            gpu = options$gpu$compile)
   }
   if (!("transform_variables" %in% names(generator$public_methods))) {
     generator$set("public", "transform_variables",
