@@ -2,13 +2,13 @@ context("odin.dust")
 
 test_that("sir model smoke test", {
   skip_if_not_installed("dde")
-  gen <- odin_dust_("examples/sir.R")
+  gen <- odin_dust_("examples/sir.R", options = list(verbose = TRUE, skip_cache = TRUE))
   gen_odin <- odin::odin_("examples/sir.R")
 
   n <- 10000
-  y0 <- c(1000, 10, 0, 1000)
+  y0 <- c(1000, 10, 0)
   mod <- gen$new(list(I_ini = 10), 0L, n)
-  expect_equal(mod$state(), matrix(y0, 4, n))
+  expect_equal(mod$state(), matrix(y0, 3, n))
   expect_equal(mod$step(), 0)
   expect_identical(mod$info(),
                    list(dim = list(S = 1L, I = 1L, R = 1L),
@@ -538,7 +538,7 @@ test_that("correctly compiles logistic model", {
 
 
 test_that("correctly compiles compartmental model", {
-  gen <- odin_dust_("examples/age.R")
+  gen <- odin_dust_("examples/age.R", verbose = TRUE)
   mod <- gen$new(list(IO = 1), 0, 1)
   expect_identical(mod$info(),
                    list(dim = list(y = c(5L, 3L), prev = 1L),
