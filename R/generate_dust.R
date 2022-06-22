@@ -56,11 +56,11 @@ generate_dust <- function(ir, options) {
     code_gpu <- NULL
   }
 
-  discrete <- dat$features$discrete && !dat$features$mixed
+  continuous <- dat$features$continuous
 
   list(class = class, create = create, info = info, data = data, gpu = code_gpu,
        support = support, include = include, name = dat$config$base,
-       discrete = discrete, namespace = dat$meta$namespace)
+       continuous = continuous, namespace = dat$meta$namespace)
 }
 
 
@@ -87,14 +87,14 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ctor <- generate_dust_core_ctor(dat)
   size <- generate_dust_core_size(dat, rewrite)
   initial <- generate_dust_core_initial(dat, rewrite)
-  if (dat$features$discrete && !dat$features$continuous) {
-    update <- generate_dust_core_update(eqs, dat, rewrite)
-    rhs <- NULL
-    output <- NULL
-  } else {
+  if (dat$features$continuous) {
     update <- generate_dust_core_update_stochastic(eqs, dat, rewrite)
     rhs <- generate_dust_core_rhs(eqs, dat, rewrite)
     output <- generate_dust_core_output(eqs, dat, rewrite)
+  } else {
+    update <- generate_dust_core_update(eqs, dat, rewrite)
+    rhs <- NULL
+    output <- NULL
   }
   attributes <- generate_dust_core_attributes(dat)
   compare <- generate_dust_compare_method(dat)
@@ -449,7 +449,7 @@ dust_unpack_variable <- function(name, dat, state, rewrite) {
   x <- dat$data$variable$contents[[name]]
   data_info <- dat$data$elements[[name]]
   rhs <- dust_extract_variable(x, dat$data$elements, state, rewrite,
-                                dat$features$discrete)
+                                dat$features$continuous)
   if (data_info$rank == 0L) {
     fmt <- "const %s %s = %s;"
   } else {
@@ -459,17 +459,18 @@ dust_unpack_variable <- function(name, dat, state, rewrite) {
 }
 
 
-dust_extract_variable <- function(x, data_elements, state, rewrite, discrete) {
+dust_extract_variable <- function(x, data_elements, state, rewrite,
+                                  continuous) {
   d <- data_elements[[x$name]]
   if (d$rank == 0L) {
     sprintf("%s[%s]", state, rewrite(x$offset))
   } else {
     ## Using a wrapper here would be more C++'ish but is it needed?
     offset <- rewrite(x$offset)
-    if (discrete) {
-      sprintf("%s + %s", state, offset)
-    } else {
+    if (continuous) {
       sprintf("%s.data() + %s", state, offset)
+    } else {
+      sprintf("%s + %s", state, offset)
     }
   }
 }
