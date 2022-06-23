@@ -98,10 +98,7 @@ generate_dust_equation_copy <- function(eq, data_info, dat, rewrite, gpu) {
   if (data_info$rank == 0L) {
     sprintf("output[%s] = %s;", rewrite(x$offset), rewrite(eq$lhs))
   } else {
-    c(sprintf("for (size_t i = 0; i < %s; ++i) {",
-              rewrite(data_info$dimnames$length)),
-      sprintf("  output[%s + i] = %s[i];", rewrite(x$offset), rewrite(eq$lhs)),
-      "}")
+    sprintf("std::copy_n(%s.begin(), %s, %s.begin() + %s);", rewrite(eq$lhs), rewrite(data_info$dimnames$length), dat$meta$output, rewrite(x$offset))
   }
 }
 
