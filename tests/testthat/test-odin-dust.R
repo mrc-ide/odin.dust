@@ -604,3 +604,20 @@ test_that("Can compile a mixed model that includes a vector variable", {
     y[info$index$y, , ],
     y[rep(info$index$x, 5), , ])
 })
+
+
+test_that("Can compile model with copy output equation", {
+  gen <- odin_dust({
+    initial(x) <- 0
+    deriv(x) <- 1
+    y <- x + 1
+    output(y) <- y
+    z[1] <- 1
+    z[2] <- 2
+    dim(z) <- 2
+    output(z) <- z
+  })
+
+  mod <- gen$new(list(), 0, 1, seed = 1)
+  expect_equal(mod$state()[, 1], c(0, 1, 1, 2))
+})

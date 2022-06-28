@@ -17,6 +17,7 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu, mixed) {
     expression_array = generate_dust_equation_array,
     alloc = generate_dust_equation_alloc,
     user = generate_dust_equation_user,
+    copy = generate_dust_equation_copy,
     stop("Unknown type"))
 
   data_info <- dat$data$elements[[eq$lhs]]
@@ -89,6 +90,18 @@ generate_dust_equation_alloc <- function(eq, data_info, dat, rewrite, gpu) {
   ctype <- dust_type(data_info$storage_type)
   len <- rewrite(data_info$dimnames$length)
   sprintf("%s = std::vector<%s>(%s);", lhs, ctype, len)
+}
+
+
+generate_dust_equation_copy <- function(eq, data_info, dat, rewrite, gpu) {
+  x <- dat$data$output$contents[[data_info$name]]
+  if (data_info$rank == 0L) {
+    sprintf("output[%s] = %s;", rewrite(x$offset), rewrite(eq$lhs))
+  } else {
+    sprintf("std::copy_n(%s.begin(), %s, %s.begin() + %s);",
+             rewrite(eq$lhs), rewrite(data_info$dimnames$length),
+            dat$meta$output, rewrite(x$offset))
+  }
 }
 
 
