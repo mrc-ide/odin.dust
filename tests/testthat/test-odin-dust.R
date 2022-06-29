@@ -538,8 +538,13 @@ test_that("correctly compiles logistic model", {
 
 
 test_that("correctly compiles compartmental model", {
-  gen <- odin_dust_("examples/age.R")
+  gen <- odin_dust_("examples/age.R", verbose = FALSE)
   mod <- gen$new(list(IO = 1), 0, 1)
+  expect_identical(mod$info(),
+                   list(dim = list(y = c(5L, 3L), prev = 1L),
+                        len = 16L,
+                        index = list(y = 1L:15L, prev = 16L)))
+
   cmp <- odin::odin("examples/age.R", target = "c")$new(I0 = 1, use_dde = TRUE)
   y_mode <- mod$run(10)
   y_odin <- cmp$run(c(0, 10))[2, -1]
@@ -606,6 +611,27 @@ test_that("Can compile a mixed model that includes a vector variable", {
 })
 
 
+test_that("info is returned correctly", {
+  gen <- odin_dust({
+    initial(x) <- 1
+    deriv(x) <- 1
+    initial(y[]) <- 1
+    deriv(y[]) <- 1
+    dim(y) <- 10
+    output(a) <- 1
+    output(b[]) <- 1
+    dim(b) <- 5
+  })
+
+  mod <- gen$new(list(), 0, 1)
+  idx <- mod$info()$index
+  expect_equal(idx$x, 1)
+  expect_equal(idx$y, 2:11)
+  expect_equal(idx$a, 12)
+  expect_equal(idx$b, 13:17)
+})
+    
+    
 test_that("Can compile model with copy output equation", {
   gen <- odin_dust({
     initial(x) <- 0
