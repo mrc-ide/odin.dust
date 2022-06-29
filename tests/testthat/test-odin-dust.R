@@ -538,7 +538,7 @@ test_that("correctly compiles logistic model", {
 
 
 test_that("correctly compiles compartmental model", {
-  gen <- odin_dust_("examples/age.R", verbose = TRUE)
+  gen <- odin_dust_("examples/age.R", verbose = FALSE)
   mod <- gen$new(list(IO = 1), 0, 1)
   expect_identical(mod$info(),
                    list(dim = list(y = c(5L, 3L), prev = 1L),
