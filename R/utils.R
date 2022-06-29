@@ -69,28 +69,16 @@ dust_minus_1 <- function(x, protect, data, meta, supported, gpu) {
 
 
 dust_plus_y <- function(x, y, rewrite) {
-  if (is.numeric(x)) {
-    if (is.numeric(y)) {
-      rewrite(x + y)
-    } else {
-      sprintf("%s + %s", x, rewrite(y))
-    }
+  if (is.numeric(x) && is.numeric(y)) {
+    rewrite(x + y)
   } else {
-    if (is.numeric(y)) {
-      sprintf("%s + %s", rewrite(x), y)
-    } else {
-      sprintf("%s + %s", rewrite(x), y)
-    }
+    sprintf("%s + %s", rewrite(x), rewrite(y))
   }
 }
 
 
 dust_plus_1 <- function(x, rewrite) {
-  if (is.numeric(x)) {
-    rewrite(x + 1)
-  } else {
-    sprintf("%s + 1", rewrite(x))
-  }
+  dust_plus_y(x, 1, rewrite)
 }
 
 
