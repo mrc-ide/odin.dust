@@ -630,3 +630,20 @@ test_that("info is returned correctly", {
   expect_equal(idx$a, 12)
   expect_equal(idx$b, 13:17)
 })
+    
+    
+test_that("Can compile model with copy output equation", {
+  gen <- odin_dust({
+    initial(x) <- 0
+    deriv(x) <- 1
+    y <- x + 1
+    output(y) <- y
+    z[1] <- 1
+    z[2] <- 2
+    dim(z) <- 2
+    output(z) <- z
+  })
+
+  mod <- gen$new(list(), 0, 1, seed = 1)
+  expect_equal(mod$state()[, 1], c(0, 1, 1, 2))
+})
