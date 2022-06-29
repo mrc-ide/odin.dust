@@ -609,3 +609,24 @@ test_that("Can compile a mixed model that includes a vector variable", {
     y[info$index$y, , ],
     y[rep(info$index$x, 5), , ])
 })
+
+
+test_that("info is returned correctly", {
+  gen <- odin_dust({
+    initial(x) <- 1
+    deriv(x) <- 1
+    initial(y[]) <- 1
+    deriv(y[]) <- 1
+    dim(y) <- 10
+    output(a) <- 1
+    output(b[]) <- 1
+    dim(b) <- 5
+  })
+
+  mod <- gen$new(list(), 0, 1)
+  idx <- mod$info()$index
+  expect_equal(idx$x, 1)
+  expect_equal(idx$y, 2:11)
+  expect_equal(idx$a, 12)
+  expect_equal(idx$b, 13:17)
+})
