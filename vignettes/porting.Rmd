@@ -1,0 +1,81 @@
+---
+title: "Porting from odin"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Porting from odin}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+loadNamespace("pkgbuild") # keeps things quiet
+options(odin.verbose = FALSE)
+```
+
+`odin.dust` is built on odin, and so many models will work without modification, however there are some differences.
+
+* discrete-time models may not use `output()` (this is allowed for ODE models)
+* models may not use `interpolate()`
+* not all stochastic distributions are supported
+* delays are not supported
+* custom code must be C++, not C, with a few tweaks
+
+In addition there are is one important new feature not supported by odin:
+
+* models may include *both* discrete-time stochastic processes and ordinary differential equations
+
+There are also some important interface tweaks
+
+* model size cannot change after initialisation
+* time is specified on creation
+* compilation is much slower
+
+## Avoiding output()
+
+*(This section applies only to discrete time models, you can use `output()` freely in ODE models as in odin)*
+
+In odin you can write:
+
+```r
+gen <- odin::odin({
+  initial(x) <- 1
+  update(x) <- x + 1
+  output(y) <- x / 2
+})
+```
+
+and use this to create a model where you have one input variable (on which the system depends) and one output variable (entirely derived from the inputs).
+
+```
+gen$new()$run(0:5)
+```
+
+This is important in ODE models because there are often things that you want to observe that are functions of the system but for which you can't write out equations to describe them in terms of their rates - the sum over a set of variables for example.
+
+Note here how the `x` used in the calculation is really the `x` at the *end* of a step, not the `x` on inputs, which means that the output column satisfies `y == x / 2`.  This turns out to be very hard to get right and reason about, and involves some fairly unpleasant bookkeeping in `dde`; in effect we run an additional step at the end of the run in order to compute these `output` variables, and that is inefficient for dust's use within a particle filter.
+
+More importantly, there is no great need for `output` for discrete time models, as we can treat `y` above as just another variable.  This also allows us to be more explicit about when within the step this output is being computed:
+
+```r
+gen <- odin.dust::odin_dust({
+  initial(x) <- 1
+  new_x <- x + 1
+  update(x) <- new_x
+  initial(y1) <- 0
+  initial(y2) <- 0
+  update(y1) <- x / 2
+  update(y2) <- new_x / 2
+})
+```
+
+We will probably deprecate these in odin for discrete time model because these turned out to be hard to get right - we need to compute the output variables at the end of the step, which lead to confusion about which `x` was being read - the `x` at the beginning of the step or the `x` at the end. This is implemented by some fairly unpleasant bookkeeping that we would like to drop.
+
+```{r}
+t(drop(gen$new(list(), 0, 1)$simulate(0:5)))
+```
+
+Here, the first column is `x` as in the first column. The second column computes the relationship with the `x` at the beginning of the step, while the third is most equivalent to our previous `output` command and requires storing the that will become the updated `x` in order to use that value to both update `x` and `y2`.
