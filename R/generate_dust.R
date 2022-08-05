@@ -13,6 +13,11 @@ generate_dust <- function(ir, options) {
     stop("Using unsupported features: 'has_output'")
   }
 
+  ## There's no feature flag on "in place" expressions, though there
+  ## really should be. This will throw a nice error if the user tries
+  ## to use one though.
+  check_no_inplace(dat)
+
   dat$meta$dust <- generate_dust_meta(options)
   dat$meta$namespace <- namespace_name(dat)
 
@@ -1103,5 +1108,21 @@ namespace_name <- function(dat) {
     "mode"
   } else {
     "dust"
+  }
+}
+
+
+check_no_inplace <- function(dat) {
+  err <- vcapply(dat$equations, "[[", "type") == "expression_inplace"
+  if (any(err)) {
+    ## Be nice to the user and try and format this error well:
+    eqs <- dat$equations[err]
+    line <- vapply(eqs, function(x) x$source[[1]], 1)
+    expr <- vcapply(dat$source[line], paste, collapse = "\n")
+    str <- sprintf("%s # (line %s)", expr, line)
+    msg <- paste0("odin.dust does not support 'in-place' expressions:",
+                  paste0("\n\t", str, collapse = ""),
+                  "\nPlease see vignette('porting')")
+    stop(msg, call. = FALSE)
   }
 }

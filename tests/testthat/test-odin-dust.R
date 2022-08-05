@@ -647,3 +647,23 @@ test_that("Can compile model with copy output equation", {
   mod <- gen$new(list(), 0, 1, seed = 1)
   expect_equal(mod$state()[, 1], c(0, 1, 1, 2))
 })
+
+
+test_that("prevent inplace functions", {
+  expect_error(
+    odin_dust({
+      q[] <- user()
+      p[] <- q[i] / sum(q)
+      initial(x[]) <- 0
+      update(x[]) <- y[i]
+      y[] <- rmultinom(5, p)
+      dim(p) <- 5
+      dim(q) <- 5
+      dim(x) <- 5
+      dim(y) <- 5
+    }),
+    paste("odin.dust does not support 'in-place' expressions:",
+          "\ty[] <- rmultinom(5, p) # (line 5)",
+          "Please see vignette('porting')", sep = "\n"),
+    fixed = TRUE)
+})
