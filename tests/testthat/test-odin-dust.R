@@ -538,7 +538,7 @@ test_that("correctly compiles logistic model", {
 
 
 test_that("correctly compiles compartmental model", {
-  gen <- odin_dust_("examples/age.R", verbose = FALSE)
+  gen <- odin_dust_("examples/age.R")
   mod <- gen$new(list(IO = 1), 0, 1)
   expect_identical(mod$info(),
                    list(dim = list(y = c(5L, 3L), prev = 1L),
@@ -590,7 +590,7 @@ test_that("Can compile a mixed model that includes a vector variable", {
     dim(y) <- 5
     initial(a) <- 0
     update(a) <- a + rnorm(0, 1)
-  }, verbose = TRUE)
+  })
 
   mod <- gen$new(list(), 0, 10, seed = 1)
   info <- mod$info()
