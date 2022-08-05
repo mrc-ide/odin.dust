@@ -21,7 +21,7 @@ Imports:
     brio,
     cpp11,
     decor,
-    dust (>= 0.11.14),
+    dust (>= 0.11.30),
     mode (>= 0.1.6),
     odin (>= 1.3.5),
     tibble,
@@ -38,6 +38,6 @@ RoxygenNote: 7.1.2
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
 Remotes:
-    mrc-ide/dust,
+    mrc-ide/dust@mrc-3476,
     mrc-ide/mode,
     mrc-ide/odin

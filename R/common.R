@@ -19,6 +19,7 @@ FUNCTIONS_STDLIB <- c( # nolint
 FUNCTIONS_STOCHASTIC <- c( # nolint
   runif = "uniform",
   rnorm = "normal",
+  rhyper = "hypergeometric",
   rpois = "poisson",
   rbinom = "binomial",
   rexp = "exponential")
