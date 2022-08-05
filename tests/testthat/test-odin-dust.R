@@ -667,3 +667,15 @@ test_that("prevent inplace functions", {
           "Please see vignette('porting')", sep = "\n"),
     fixed = TRUE)
 })
+
+
+test_that("compile model with rhyper", {
+  gen <- odin_dust({
+    initial(x) <- 0
+    update(x) <- rhyper(8, 15, 7)
+  })
+  mod <- gen$new(list(), 0, 1, seed = 1L)
+  y <- drop(mod$simulate(1:100))
+  cmp <- dust::dust_rng$new(1, seed = 1L)$hypergeometric(100, 8, 15, 7)
+  expect_equal(y, cmp)
+})
