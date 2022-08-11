@@ -538,7 +538,7 @@ test_that("correctly compiles logistic model", {
 
 
 test_that("correctly compiles compartmental model", {
-  gen <- odin_dust_("examples/age.R", verbose = FALSE)
+  gen <- odin_dust_("examples/age.R")
   mod <- gen$new(list(IO = 1), 0, 1)
   expect_identical(mod$info(),
                    list(dim = list(y = c(5L, 3L), prev = 1L),
@@ -590,7 +590,7 @@ test_that("Can compile a mixed model that includes a vector variable", {
     dim(y) <- 5
     initial(a) <- 0
     update(a) <- a + rnorm(0, 1)
-  }, verbose = TRUE)
+  })
 
   mod <- gen$new(list(), 0, 10, seed = 1)
   info <- mod$info()
@@ -646,4 +646,36 @@ test_that("Can compile model with copy output equation", {
 
   mod <- gen$new(list(), 0, 1, seed = 1)
   expect_equal(mod$state()[, 1], c(0, 1, 1, 2))
+})
+
+
+test_that("prevent inplace functions", {
+  expect_error(
+    odin_dust({
+      q[] <- user()
+      p[] <- q[i] / sum(q)
+      initial(x[]) <- 0
+      update(x[]) <- y[i]
+      y[] <- rmultinom(5, p)
+      dim(p) <- 5
+      dim(q) <- 5
+      dim(x) <- 5
+      dim(y) <- 5
+    }),
+    paste("odin.dust does not support 'in-place' expressions:",
+          "\ty[] <- rmultinom(5, p) # (line 5)",
+          "Please see vignette('porting')", sep = "\n"),
+    fixed = TRUE)
+})
+
+
+test_that("compile model with rhyper", {
+  gen <- odin_dust({
+    initial(x) <- 0
+    update(x) <- rhyper(8, 15, 7)
+  })
+  mod <- gen$new(list(), 0, 1, seed = 1L)
+  y <- drop(mod$simulate(1:100))
+  cmp <- dust::dust_rng$new(1, seed = 1L)$hypergeometric(100, 8, 15, 7)
+  expect_equal(y, cmp)
 })
