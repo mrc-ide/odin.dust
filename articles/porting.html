@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.22</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.23</span>
       </span>
     </div>
 
@@ -85,7 +85,7 @@
 
       
 
-      </header><script src="porting_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Porting from odin</h1>
@@ -98,27 +98,37 @@
 
     
     
-<p><code>odin.dust</code> is built on odin, and so many models will work without modification, however there are some differences.</p>
+<p><code>odin.dust</code> is built on odin, and so many models will work
+without modification, however there are some differences.</p>
 <ul>
-<li>discrete-time models may not use <code>output()</code> (this is allowed for ODE models)</li>
+<li>discrete-time models may not use <code>output()</code> (this is
+allowed for ODE models)</li>
 <li>models may not use <code>interpolate()</code>
 </li>
 <li>delays are not supported</li>
 <li>not all stochastic distributions are supported</li>
-<li>there are some interface tweaks that follow from using <code>dust</code> as the engine</li>
+<li>there are some interface tweaks that follow from using
+<code>dust</code> as the engine</li>
 </ul>
-<p>There are some big advantages though in using odin.dust instead of the stochastic model support in odin:</p>
+<p>There are some big advantages though in using odin.dust instead of
+the stochastic model support in odin:</p>
 <ul>
-<li>models can run in parallel, which provides a near linear speed up in the number of cores</li>
-<li>your model can be easily used in the particle filter and pmcmc machinery of mcstate</li>
-<li>dust provides machinery for working with multiple realisations at once</li>
-<li>odin.dust allows “mixed” models where most of the dynamics come from a set of ODEs but with periodic stochastic perturbations</li>
+<li>models can run in parallel, which provides a near linear speed up in
+the number of cores</li>
+<li>your model can be easily used in the particle filter and pmcmc
+machinery of mcstate</li>
+<li>dust provides machinery for working with multiple realisations at
+once</li>
+<li>odin.dust allows “mixed” models where most of the dynamics come from
+a set of ODEs but with periodic stochastic perturbations</li>
 </ul>
-<p>Below, we describe how to address the most common issues when updating dust models to use odin.dust</p>
+<p>Below, we describe how to address the most common issues when
+updating dust models to use odin.dust</p>
 <div class="section level2">
 <h2 id="avoiding-output">Avoiding <code>output()</code><a class="anchor" aria-label="anchor" href="#avoiding-output"></a>
 </h2>
-<p><em>(This section applies only to discrete time models, you can use <code>output()</code> freely in ODE models as in odin)</em></p>
+<p><em>(This section applies only to discrete time models, you can use
+<code>output()</code> freely in ODE models as in odin)</em></p>
 <p>In odin you can write:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gen</span> <span class="op">&lt;-</span> <span class="fu">odin</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/odin/man/odin.html" class="external-link">odin</a></span><span class="op">(</span><span class="op">{</span></span>
@@ -126,7 +136,9 @@
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">1</span></span>
 <span>  <span class="fu">output</span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op">/</span> <span class="fl">2</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<p>and use this to create a model where you have one input variable (on which the system depends) and one output variable (entirely derived from the inputs).</p>
+<p>and use this to create a model where you have one input variable (on
+which the system depends) and one output variable (entirely derived from
+the inputs).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gen</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      step x   y</span></span>
@@ -136,9 +148,22 @@
 <span><span class="co">#&gt; [4,]    3 4 2.0</span></span>
 <span><span class="co">#&gt; [5,]    4 5 2.5</span></span>
 <span><span class="co">#&gt; [6,]    5 6 3.0</span></span></code></pre></div>
-<p>This is important in ODE models because there are often things that you want to observe that are functions of the system but for which you can’t write out equations to describe them in terms of their rates - the sum over a set of variables for example.</p>
-<p>Note here how the <code>x</code> used in the calculation is really the <code>x</code> at the <em>end</em> of a step, not the <code>x</code> on inputs, which means that the output column satisfies <code>y == x / 2</code>. This turns out to be very hard to get right and reason about, and involves some fairly unpleasant bookkeeping in <code>dde</code>; in effect we run an additional step at the end of the run in order to compute these <code>output</code> variables, and that is inefficient for dust’s use within a particle filter.</p>
-<p>More importantly, there is no great need for <code>output</code> for discrete time models, as we can treat <code>y</code> above as just another variable. This also allows us to be more explicit about when within the step this output is being computed:</p>
+<p>This is important in ODE models because there are often things that
+you want to observe that are functions of the system but for which you
+can’t write out equations to describe them in terms of their rates - the
+sum over a set of variables for example.</p>
+<p>Note here how the <code>x</code> used in the calculation is really
+the <code>x</code> at the <em>end</em> of a step, not the <code>x</code>
+on inputs, which means that the output column satisfies
+<code>y == x / 2</code>. This turns out to be very hard to get right and
+reason about, and involves some fairly unpleasant bookkeeping in
+<code>dde</code>; in effect we run an additional step at the end of the
+run in order to compute these <code>output</code> variables, and that is
+inefficient for dust’s use within a particle filter.</p>
+<p>More importantly, there is no great need for <code>output</code> for
+discrete time models, as we can treat <code>y</code> above as just
+another variable. This also allows us to be more explicit about when
+within the step this output is being computed:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gen</span> <span class="op">&lt;-</span> <span class="fu">odin.dust</span><span class="fu">::</span><span class="fu"><a href="../reference/odin_dust.html">odin_dust</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>  <span class="fu">initial</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
@@ -149,7 +174,13 @@
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">y1</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op">/</span> <span class="fl">2</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">y2</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">new_x</span> <span class="op">/</span> <span class="fl">2</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<p>We will probably deprecate these in odin for discrete time model because these turned out to be hard to get right - we need to compute the output variables at the end of the step, which lead to confusion about which <code>x</code> was being read - the <code>x</code> at the beginning of the step or the <code>x</code> at the end. This is implemented by some fairly unpleasant bookkeeping that we would like to drop.</p>
+<p>We will probably deprecate these in odin for discrete time model
+because these turned out to be hard to get right - we need to compute
+the output variables at the end of the step, which lead to confusion
+about which <code>x</code> was being read - the <code>x</code> at the
+beginning of the step or the <code>x</code> at the end. This is
+implemented by some fairly unpleasant bookkeeping that we would like to
+drop.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">gen</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">$</span><span class="fu">simulate</span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3]</span></span>
@@ -159,19 +190,36 @@
 <span><span class="co">#&gt; [4,]    4  1.5  2.0</span></span>
 <span><span class="co">#&gt; [5,]    5  2.0  2.5</span></span>
 <span><span class="co">#&gt; [6,]    6  2.5  3.0</span></span></code></pre></div>
-<p>Here, the first column is <code>x</code> as in the first column. The second column computes the relationship with the <code>x</code> at the beginning of the step, while the third is most equivalent to our previous <code>output</code> command and requires storing the that will become the updated <code>x</code> in order to use that value to both update <code>x</code> and <code>y2</code>.</p>
+<p>Here, the first column is <code>x</code> as in the first column. The
+second column computes the relationship with the <code>x</code> at the
+beginning of the step, while the third is most equivalent to our
+previous <code>output</code> command and requires storing the that will
+become the updated <code>x</code> in order to use that value to both
+update <code>x</code> and <code>y2</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="avoiding-interpolate">Avoiding <code>interpolate()</code><a class="anchor" aria-label="anchor" href="#avoiding-interpolate"></a>
 </h2>
-<p><em>We may support this in future for ODE models, but are undecided as to if this makes sense for discrete-time models.</em></p>
-<p>For ODE models, unfortunately there’s nothing you can do at present. Get in touch if this is a limitation that you would like to overcome as we will need to implement support both in this package and in <code>mode</code>.</p>
-<p>For discrete-time models we recommend doing the interpolation as part of your parameter preparation and passing in an expanded vector which you then look up. This also makes it (somewhat) more obvious how time is being treated in your model.</p>
-<p>For an example, here’s a model of logistic growth in discrete time, where the carrying capacity varies seasonally, implemented as a piecewise-constant interpolation between some points. It’s easy enough to create some sort of time varying time series to use:</p>
+<p><em>We may support this in future for ODE models, but are undecided
+as to if this makes sense for discrete-time models.</em></p>
+<p>For ODE models, unfortunately there’s nothing you can do at present.
+Get in touch if this is a limitation that you would like to overcome as
+we will need to implement support both in this package and in
+<code>mode</code>.</p>
+<p>For discrete-time models we recommend doing the interpolation as part
+of your parameter preparation and passing in an expanded vector which
+you then look up. This also makes it (somewhat) more obvious how time is
+being treated in your model.</p>
+<p>For an example, here’s a model of logistic growth in discrete time,
+where the carrying capacity varies seasonally, implemented as a
+piecewise-constant interpolation between some points. It’s easy enough
+to create some sort of time varying time series to use:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">t_capacity</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">100</span>, by <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="va">y_capacity</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">t_capacity</span><span class="op">)</span>, <span class="fl">100</span>, <span class="fl">200</span><span class="op">)</span></span></code></pre></div>
-<p>Somewhat awkwardly, the step number here will be used as the “time” variable (vs within an ODE model where there’s much more of a concept of time).</p>
+<p>Somewhat awkwardly, the step number here will be used as the “time”
+variable (vs within an ODE model where there’s much more of a concept of
+time).</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gen</span> <span class="op">&lt;-</span> <span class="fu">odin</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/odin/man/odin.html" class="external-link">odin</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>  <span class="fu">initial</span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
@@ -190,8 +238,11 @@
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mod</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"s"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">t_capacity</span>, <span class="va">y_capacity</span>, type <span class="op">=</span> <span class="st">"s"</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="porting_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
-<p>Everything is unambiguous for a continuous time model, but here it’s not so clear - when we do the lookup with step, what are we finding?</p>
-<p>The other complication arises when you want to rescale time, so that each step has a size of <code>dt</code> and then you want to think about interpolation in this new time variable; for example</p>
+<p>Everything is unambiguous for a continuous time model, but here it’s
+not so clear - when we do the lookup with step, what are we finding?</p>
+<p>The other complication arises when you want to rescale time, so that
+each step has a size of <code>dt</code> and then you want to think about
+interpolation in this new time variable; for example</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gen</span> <span class="op">&lt;-</span> <span class="fu">odin</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/odin/man/odin.html" class="external-link">odin</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>  <span class="fu">initial</span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
@@ -206,25 +257,44 @@
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">t_capacity</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">y_capacity</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<p>Here, we scale the rate of change <code>r</code> by our <code>dt</code> parameter, and we output a new variable <code>time</code> which keeps track of our rescaling. Once we do this we need to also rescale the times used in the interpolation.</p>
-<p>Our current workaround is to create a full set of interpolated values by step as a parameter, using one of R’s interpolation functions. To look up the value, we use</p>
+<p>Here, we scale the rate of change <code>r</code> by our
+<code>dt</code> parameter, and we output a new variable
+<code>time</code> which keeps track of our rescaling. Once we do this we
+need to also rescale the times used in the interpolation.</p>
+<p>Our current workaround is to create a full set of interpolated values
+by step as a parameter, using one of R’s interpolation functions. To
+look up the value, we use</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">K_step</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">K_step</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">K</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">step</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">K</span><span class="op">)</span><span class="op">)</span> <span class="va">K</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">K</span><span class="op">)</span><span class="op">]</span> <span class="kw">else</span> <span class="va">K</span><span class="op">[</span><span class="va">step</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span></span></code></pre></div>
-<p>which looks up the value of <code>K</code> from a fully expanded set, falling back on returning the last value for any steps beyond the end of the series. Here, <code>step</code> can be translated into time by <code>step * dt</code> and at the <em>end</em> of the step time will have this value (so this value of <code>K</code> is used in the move from <code>step - 1</code> to <code>step</code>).</p>
+<p>which looks up the value of <code>K</code> from a fully expanded set,
+falling back on returning the last value for any steps beyond the end of
+the series. Here, <code>step</code> can be translated into time by
+<code>step * dt</code> and at the <em>end</em> of the step time will
+have this value (so this value of <code>K</code> is used in the move
+from <code>step - 1</code> to <code>step</code>).</p>
 </div>
 <div class="section level2">
 <h2 id="delays-are-not-supported">Delays are not supported<a class="anchor" aria-label="anchor" href="#delays-are-not-supported"></a>
 </h2>
-<p>Delays have never really been supported for discrete time models in odin, but they are useful for ODE models. Our DDE solver is extremely basic and is unlikely to do well with ODEs that use stochasticity (see below), so we have chosen not to expose it in dust.</p>
-<p>One potential use of delays in discrete time models is to allow computing incidence from prevalence. Suppose that you have some cumulative variable (say, number of total infections) and you want to compute the number of infections over some time period, you could compute this by doing</p>
+<p>Delays have never really been supported for discrete time models in
+odin, but they are useful for ODE models. Our DDE solver is extremely
+basic and is unlikely to do well with ODEs that use stochasticity (see
+below), so we have chosen not to expose it in dust.</p>
+<p>One potential use of delays in discrete time models is to allow
+computing incidence from prevalence. Suppose that you have some
+cumulative variable (say, number of total infections) and you want to
+compute the number of infections over some time period, you could
+compute this by doing</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">total</span> <span class="op">&lt;-</span> <span class="va">total</span> <span class="op">+</span> <span class="va">new</span>           <span class="co"># accumulating variable</span></span>
 <span><span class="va">total_lag</span> <span class="op">&lt;-</span> <span class="fu">delay</span><span class="op">(</span><span class="va">total</span>, <span class="fl">10</span><span class="op">)</span>  <span class="co"># lag of the variable total by 10 time steps</span></span>
 <span><span class="va">incidence</span> <span class="op">&lt;-</span> <span class="va">total</span> <span class="op">-</span> <span class="va">total_lag</span> <span class="co"># number of events in the last 10 time steps</span></span></code></pre></div>
-<p>This is particularly useful for models where you are fitting to incidence data.</p>
-<p>Our suggested workaround to this is to use an accumulator variable that you reset based on a modulo of step with your interval</p>
+<p>This is particularly useful for models where you are fitting to
+incidence data.</p>
+<p>Our suggested workaround to this is to use an accumulator variable
+that you reset based on a modulo of step with your interval</p>
 <pre><code><span><span class="va">total</span> <span class="op">&lt;-</span> <span class="va">total</span> <span class="op">+</span> <span class="va">new</span></span>
 <span><span class="fu">initial</span><span class="op">(</span><span class="va">incidence</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">incidence</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="va">step</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">10</span><span class="op">)</span> <span class="va">new</span> <span class="kw">else</span> <span class="va">incidence</span> <span class="op">+</span> <span class="va">new</span></span></code></pre>
@@ -232,7 +302,11 @@
 <div class="section level2">
 <h2 id="not-all-distributions-are-supported">Not all distributions are supported<a class="anchor" aria-label="anchor" href="#not-all-distributions-are-supported"></a>
 </h2>
-<p>For stochastic models, <code>odin.dust</code> uses <code>dust</code> for random numbers, which has the big advantage that they can be computed in parallel. The disadvantage is that it does not support the full set of distributions implemented in R and therefore available to odin</p>
+<p>For stochastic models, <code>odin.dust</code> uses <code>dust</code>
+for random numbers, which has the big advantage that they can be
+computed in parallel. The disadvantage is that it does not support the
+full set of distributions implemented in R and therefore available to
+odin</p>
 <p>Supported distributions:</p>
 <ul>
 <li>binomial (<code>rbinom</code>)</li>
@@ -262,26 +336,62 @@
 <li>Wilcoxon rank sum (<code>rwilcox</code>)</li>
 <li>Wilcoxon signed rank (<code>rsignrank</code>)</li>
 </ul>
-<p>There are two special cases, for the multinomial (<code>rmultinom</code>) and the multivariate hypergeometric (<code>rmhyper</code>; not available in R but available in odin). These are both available in a limited form in odin, where you can use them where the left hand side is a vector</p>
+<p>There are two special cases, for the multinomial
+(<code>rmultinom</code>) and the multivariate hypergeometric
+(<code>rmhyper</code>; not available in R but available in odin). These
+are both available in a limited form in odin, where you can use them
+where the left hand side is a vector</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prob</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">y</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Multinom.html" class="external-link">rmultinom</a></span><span class="op">(</span><span class="va">size</span>, <span class="va">prob</span><span class="op">)</span></span></code></pre></div>
-<p>where <code>size</code> is the number of trials and <code>prob</code> is a normalised vector of probabilities of success in each of the <code>length(prob)</code> classes. Note that <code>y</code>, the outcome, must have the same length of <code>prob</code>.</p>
-<p>This is quite limiting as you cannot assign a sample as a row into a matrix or higher-dimensional structure. We have plans to improve this in odin itself (see <a href="https://github.com/mrc-ide/odin/issues/134" class="external-link">#134</a>, <a href="https://github.com/mrc-ide/odin/issues/213" class="external-link">#213</a> and <a href="https://github.com/mrc-ide/odin/issues/255" class="external-link">#255</a>) but do not anticipate that this will be implemented in the short term.</p>
-<p>In the binomial case you can rewrite the multinomial sampling as a series of binomials, for example the above expression could be rewritten</p>
+<p>where <code>size</code> is the number of trials and <code>prob</code>
+is a normalised vector of probabilities of success in each of the
+<code>length(prob)</code> classes. Note that <code>y</code>, the
+outcome, must have the same length of <code>prob</code>.</p>
+<p>This is quite limiting as you cannot assign a sample as a row into a
+matrix or higher-dimensional structure. We have plans to improve this in
+odin itself (see <a href="https://github.com/mrc-ide/odin/issues/134" class="external-link">#134</a>, <a href="https://github.com/mrc-ide/odin/issues/213" class="external-link">#213</a> and <a href="https://github.com/mrc-ide/odin/issues/255" class="external-link">#255</a>) but do not
+anticipate that this will be implemented in the short term.</p>
+<p>In the binomial case you can rewrite the multinomial sampling as a
+series of binomials, for example the above expression could be
+rewritten</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">size</span>, <span class="va">prob</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">y</span><span class="op">[</span><span class="fl">2</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">size</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="op">(</span><span class="va">i</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span><span class="op">]</span><span class="op">)</span>, <span class="va">prob</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p>A similar transform is possible for the multivariate hypergeometric from the hypergeometric (see <a href="https://github.com/mrc-ide/odin/blob/f36738bb106e2f9289dbb2b94c67ffdb6cf5e0ed/inst/library.c#L358-L375" class="external-link">odin’s <code>rmhyper</code> implementation for details</a>).</p>
+<p>A similar transform is possible for the multivariate hypergeometric
+from the hypergeometric (see <a href="https://github.com/mrc-ide/odin/blob/f36738bb106e2f9289dbb2b94c67ffdb6cf5e0ed/inst/library.c#L358-L375" class="external-link">odin’s
+<code>rmhyper</code> implementation for details</a>).</p>
 </div>
 <div class="section level2">
 <h2 id="interface-differences">Interface differences<a class="anchor" aria-label="anchor" href="#interface-differences"></a>
 </h2>
 <p>These differences all follow from design decisions in dust.</p>
-<p><strong>The model is much more stateful</strong>. In <code>odin</code>, you create a model object and use that to run a simulation over some time steps. With <code>dust</code> you create a model and can advance it to a point in the simulation, then retrieve state, reorder particles (individual realisations), or update state, then continue. See <a href="https://mrc-ide.github.io/dust/articles/design.html" class="external-link">this vignette</a> for more information.</p>
-<p><strong>The model size cannot be changed after initialisation</strong>. While you can update parameters (via the <code>$update_state</code> method), it is an error if this changes the size of the state vector. This allows us to be much more efficient in terms of allocations, and is important to support the stateful interactions.</p>
-<p><strong>There is an assumption that more than one realisation is generally wanted</strong>. With discrete time and stochastic models in odin, the interface matches that of the ODE solver where we assume you’re interested in a single solution to a set of equations. With <code>odin.dust</code> (via <code>dust</code>) we assume that you are interested in a set of realisations, and so the return types have been structured with a “particle” dimension to make this easier. This also has the effect of moving time into the last dimensions of any returned data, not the first as in odin.</p>
-<p><strong>Compilation is much slower</strong>. This does make iteration over models more tedious, unfortunately. The slower compilation is a function of using C++ with a reasonable amount of template metaprogramming.</p>
+<p><strong>The model is much more stateful</strong>. In
+<code>odin</code>, you create a model object and use that to run a
+simulation over some time steps. With <code>dust</code> you create a
+model and can advance it to a point in the simulation, then retrieve
+state, reorder particles (individual realisations), or update state,
+then continue. See <a href="https://mrc-ide.github.io/dust/articles/design.html" class="external-link">this
+vignette</a> for more information.</p>
+<p><strong>The model size cannot be changed after
+initialisation</strong>. While you can update parameters (via the
+<code>$update_state</code> method), it is an error if this changes the
+size of the state vector. This allows us to be much more efficient in
+terms of allocations, and is important to support the stateful
+interactions.</p>
+<p><strong>There is an assumption that more than one realisation is
+generally wanted</strong>. With discrete time and stochastic models in
+odin, the interface matches that of the ODE solver where we assume
+you’re interested in a single solution to a set of equations. With
+<code>odin.dust</code> (via <code>dust</code>) we assume that you are
+interested in a set of realisations, and so the return types have been
+structured with a “particle” dimension to make this easier. This also
+has the effect of moving time into the last dimensions of any returned
+data, not the first as in odin.</p>
+<p><strong>Compilation is much slower</strong>. This does make iteration
+over models more tedious, unfortunately. The slower compilation is a
+function of using C++ with a reasonable amount of template
+metaprogramming.</p>
 </div>
   </div>
 

@@ -1,8 +1,8 @@
-pandoc: 2.7.3
+pandoc: 2.19.2
 pkgdown: 2.0.6
 pkgdown_sha: ~
 articles:
   porting: porting.html
   sir_models: sir_models.html
-last_built: 2022-08-11T11:25Z
+last_built: 2022-11-03T10:41Z
 

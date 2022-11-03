@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.22</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.23</span>
       </span>
     </div>
 
@@ -85,7 +85,7 @@
 
       
 
-      </header><script src="sir_models_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>SIR models</h1>
@@ -101,12 +101,17 @@
 <div class="section level2">
 <h2 id="stochastic-sir-model-definition">Stochastic SIR model definition<a class="anchor" aria-label="anchor" href="#stochastic-sir-model-definition"></a>
 </h2>
-<p>A simple definition of the SIR model, as given in the <a href="https://mrc-ide.github.io/odin/articles/discrete.html" class="external-link">odin documentation</a> is: <span class="math display">\[\begin{align*}
+<p>A simple definition of the SIR model, as given in the <a href="https://mrc-ide.github.io/odin/articles/discrete.html" class="external-link">odin
+documentation</a> is: <span class="math display">\[\begin{align*}
 \frac{dS}{dt} &amp;= -\beta \frac{SI}{N} \\
 \frac{dI}{dt} &amp;= \beta \frac{SI}{N} - \gamma I \\
 \frac{dR}{dt} &amp;= \gamma I \\
-\end{align*}\]</span> <span class="math inline">\(S\)</span> is the number of susceptibles, <span class="math inline">\(I\)</span> is the number of infected and <span class="math inline">\(R\)</span> is the number recovered; the total population size <span class="math inline">\(N = S + I + R\)</span> is constant. <span class="math inline">\(\beta\)</span> is the infection rate, <span class="math inline">\(\gamma\)</span> is the recovery rate.</p>
-<p>Discretising this model in time steps of width <span class="math inline">\(dt\)</span> gives the following update equations for each time step:</p>
+\end{align*}\]</span> <span class="math inline">\(S\)</span> is the
+number of susceptibles, <span class="math inline">\(I\)</span> is the
+number of infected and <span class="math inline">\(R\)</span> is the
+number recovered; the total population size <span class="math inline">\(N = S + I + R\)</span> is constant. <span class="math inline">\(\beta\)</span> is the infection rate, <span class="math inline">\(\gamma\)</span> is the recovery rate.</p>
+<p>Discretising this model in time steps of width <span class="math inline">\(dt\)</span> gives the following update equations
+for each time step:</p>
 <p><span class="math display">\[\begin{align*}
 S_{t+1} &amp;= S_t - n_{SI} \\
 I_{t+1} &amp;= I_t + n_{SI} - n_{IR} \\
@@ -119,7 +124,8 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <div class="section level3">
 <h3 id="implementing-the-sir-model-using-odin-dust">Implementing the SIR model using <a href="https://mrc-ide.github.io/odin.dust/" class="external-link"><code>odin.dust</code></a><a class="anchor" aria-label="anchor" href="#implementing-the-sir-model-using-odin-dust"></a>
 </h3>
-<p>The above equations can straightforwardly be written out using the odin DSL:</p>
+<p>The above equations can straightforwardly be written out using the
+odin DSL:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Definition of the time-step and output as "time"</span></span>
 <span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
@@ -153,7 +159,10 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="va">I_ini</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
 <span><span class="va">beta</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span></span>
 <span><span class="va">gamma</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">0.1</span><span class="op">)</span></span></code></pre></div>
-<p>This is converted to a C++ dust model, and compiled into a library in a single step, using <a href="https://mrc-ide.github.io/odin.dust/" class="external-link"><code>odin.dust</code></a>. Save the above code as a file named <code>sir.R</code>. File names must not contain special characters.</p>
+<p>This is converted to a C++ dust model, and compiled into a library in
+a single step, using <a href="https://mrc-ide.github.io/odin.dust/" class="external-link"><code>odin.dust</code></a>.
+Save the above code as a file named <code>sir.R</code>. File names must
+not contain special characters.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mrc-ide/odin.dust" class="external-link">odin.dust</a></span><span class="op">)</span></span>
 <span><span class="va">gen_sir</span> <span class="op">&lt;-</span> <span class="fu">odin.dust</span><span class="fu">::</span><span class="fu"><a href="../reference/odin_dust.html">odin_dust</a></span><span class="op">(</span><span class="st">"sir.R"</span><span class="op">)</span></span>
@@ -165,17 +174,14 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="co">#&gt; * installing *source* package ‘sirb906c7e5’ ...</span></span>
 <span><span class="co">#&gt; ** using staged installation</span></span>
 <span><span class="co">#&gt; ** libs</span></span>
-<span><span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG  -I'/Users/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/Users/runner/work/_temp/Library/dust/include -DHAVE_INLINE  -fPIC  -Wall -g -O2  -Wall -pedantic -fdiagnostics-color=always -c cpp11.cpp -o cpp11.o</span></span>
-<span><span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG  -I'/Users/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/Users/runner/work/_temp/Library/dust/include -DHAVE_INLINE  -fPIC  -Wall -g -O2  -Wall -pedantic -fdiagnostics-color=always -c dust.cpp -o dust.o</span></span>
-<span><span class="co">#&gt; <span style="font-weight: bold;">dust.cpp:298:28: </span><span style="color: #BB00BB; font-weight: bold;">warning: </span><span style="font-weight: bold;">unused variable 'internal' [-Wunused-variable]</span></span></span>
-<span><span class="co">#&gt;   const sir::internal_type internal = pars.internal;</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00; font-weight: bold;">                           ^</span></span></span>
-<span><span class="co"><span style="color: #00BB00; font-weight: bold;">#&gt; </span><span style="font-weight: bold;">dust.cpp:57:17: </span><span style="color: #BB00BB; font-weight: bold;">warning: </span><span style="font-weight: bold;">private field 'internal' is not used [-Wunused-private-field]</span></span></span>
-<span><span class="co">#&gt;   internal_type internal;</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00; font-weight: bold;">                ^</span></span></span>
-<span><span class="co"><span style="color: #00BB00; font-weight: bold;">#&gt; </span>2 warnings generated.</span></span>
-<span><span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -single_module -multiply_defined suppress -L/Library/Frameworks/R.framework/Resources/lib -L/usr/local/lib -o sirb906c7e5.so cpp11.o dust.o -F/Library/Frameworks/R.framework/.. -framework R -Wl,-framework -Wl,CoreFoundation</span></span>
-<span><span class="co">#&gt; installing to /private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/RtmpQ8Z3u8/devtools_install_243d45c8271f/00LOCK-file243d1db8fb3a/00new/sirb906c7e5/libs</span></span>
+<span><span class="co">#&gt; g++ -std=gnu++11 -I"/opt/R/4.2.2/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/home/runner/work/_temp/Library/dust/include -DHAVE_INLINE -fopenmp -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always -c cpp11.cpp -o cpp11.o</span></span>
+<span><span class="co">#&gt; g++ -std=gnu++11 -I"/opt/R/4.2.2/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/home/runner/work/_temp/Library/dust/include -DHAVE_INLINE -fopenmp -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always -c dust.cpp -o dust.o</span></span>
+<span><span class="co">#&gt; <span style="font-weight: bold;">dust.cpp:</span> In function ‘<span style="font-weight: bold;">cpp11::sexp dust::dust_info(const dust::pars_type&lt;T&gt;&amp;) [with T = sir]</span>’:</span></span>
+<span><span class="co">#&gt; <span style="font-weight: bold;">dust.cpp:298:28:</span> <span style="color: #BB00BB; font-weight: bold;">warning: </span>variable ‘<span style="font-weight: bold;">internal</span>’ set but not used [<span style="color: #BB00BB; font-weight: bold;">-Wunused-but-set-variable</span>]</span></span>
+<span><span class="co">#&gt;   298 |   const sir::internal_type <span style="color: #BB00BB; font-weight: bold;">internal</span> = pars.internal;</span></span>
+<span><span class="co">#&gt;       |                            <span style="color: #BB00BB; font-weight: bold;">^~~~~~~~</span></span></span>
+<span><span class="co">#&gt; g++ -std=gnu++11 -shared -L/opt/R/4.2.2/lib/R/lib -L/usr/local/lib -o sirb906c7e5.so cpp11.o dust.o -fopenmp -L/opt/R/4.2.2/lib/R/lib -lR</span></span>
+<span><span class="co">#&gt; installing to /tmp/RtmpDZIjyh/devtools_install_21063feb153/00LOCK-file210620cac128/00new/sirb906c7e5/libs</span></span>
 <span><span class="co">#&gt; ** checking absolute paths in shared objects and dynamic libraries</span></span>
 <span><span class="co">#&gt; * DONE (sirb906c7e5)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">sirb906c7e5</span></span></span></code></pre></div>
@@ -183,7 +189,14 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <div class="section level3">
 <h3 id="saving-a-model-into-a-package">Saving a model into a package<a class="anchor" aria-label="anchor" href="#saving-a-model-into-a-package"></a>
 </h3>
-<p>If you want to distribute your model in an R package, rather than building it locally, you will want to use the <code><a href="../reference/odin_dust_package.html">odin_dust_package()</a></code> function instead. This will write the transpiled C++ dust code into <code>src</code> and its R interface in <code>R/dust.R</code>. Package users are not required to regenerate the dust code, and their compiler will build the library when they install the package. You may also wish to add a file <code>R/zzz.R</code> to your package <code>myrpackage</code> with the following lines:</p>
+<p>If you want to distribute your model in an R package, rather than
+building it locally, you will want to use the
+<code><a href="../reference/odin_dust_package.html">odin_dust_package()</a></code> function instead. This will write the
+transpiled C++ dust code into <code>src</code> and its R interface in
+<code>R/dust.R</code>. Package users are not required to regenerate the
+dust code, and their compiler will build the library when they install
+the package. You may also wish to add a file <code>R/zzz.R</code> to
+your package <code>myrpackage</code> with the following lines:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">##' @useDynLib myrpackage, .registration = TRUE</span></span>
 <span><span class="cn">NULL</span></span></code></pre></div>
@@ -193,9 +206,22 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <div class="section level2">
 <h2 id="running-the-sir-model-with-dust">Running the SIR model with <a href="https://mrc-ide.github.io/dust/" class="external-link"><code>dust</code></a><a class="anchor" aria-label="anchor" href="#running-the-sir-model-with-dust"></a>
 </h2>
-<p>Now we can use the <code>new</code> method on the generator to make <code>dust</code> objects. <code>dust</code> can be driven directly from R, and also interfaces with the <a href="https://mrc-ide.github.io/mcstate/" class="external-link"><code>mcstate</code></a> package to allow parameter inference and forecasting.</p>
-<p><a href="https://mrc-ide.github.io/dust/reference/dust.html#method-new" class="external-link"><code>new()</code></a> takes the data needed to run the model i.e. a list with any parameters defined as <code>user</code> in the odin code above, the value of the initial step <span class="math inline">\(t_0\)</span>, and the number of particles, each for now can simply be thought of as an independent stochastic realisation of the model, but in the next step will be used when inferring model parameters.</p>
-<p>Additional arguments include the number of threads to parallelise the particles over, and the seed for the random number generator. The seed must be an integer, and using the same seed will ensure reproducible results for all particles. To use this to directly create a new dust object with 10 particles, run using 4 threads:</p>
+<p>Now we can use the <code>new</code> method on the generator to make
+<code>dust</code> objects. <code>dust</code> can be driven directly from
+R, and also interfaces with the <a href="https://mrc-ide.github.io/mcstate/" class="external-link"><code>mcstate</code></a>
+package to allow parameter inference and forecasting.</p>
+<p><a href="https://mrc-ide.github.io/dust/reference/dust.html#method-new" class="external-link"><code>new()</code></a>
+takes the data needed to run the model i.e. a list with any parameters
+defined as <code>user</code> in the odin code above, the value of the
+initial step <span class="math inline">\(t_0\)</span>, and the number of
+particles, each for now can simply be thought of as an independent
+stochastic realisation of the model, but in the next step will be used
+when inferring model parameters.</p>
+<p>Additional arguments include the number of threads to parallelise the
+particles over, and the seed for the random number generator. The seed
+must be an integer, and using the same seed will ensure reproducible
+results for all particles. To use this to directly create a new dust
+object with 10 particles, run using 4 threads:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sir_model</span> <span class="op">&lt;-</span> <span class="va">gen_sir</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                                     S_ini <span class="op">=</span> <span class="fl">1000</span>,</span>
@@ -228,7 +254,10 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="co">#&gt; [2,]  937  907  898  870  897  881  870  917  933   867</span></span>
 <span><span class="co">#&gt; [3,]   36   54   69   79   66   74   71   38   41    71</span></span>
 <span><span class="co">#&gt; [4,]   37   49   43   61   47   55   69   55   36    72</span></span></code></pre></div>
-<p>We can change the parameters, say by increasing the infection rate and the population size, by reinitalising the model with <code>reset()</code>. We will also use a smaller time step to calculate multiple transitions per unit time:</p>
+<p>We can change the parameters, say by increasing the infection rate
+and the population size, by reinitalising the model with
+<code>reset()</code>. We will also use a smaller time step to calculate
+multiple transitions per unit time:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fl">0.25</span></span>
 <span><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">10L</span></span>
@@ -263,23 +292,42 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <div class="section level3">
 <h3 id="adding-age-structure-to-the-model">Adding age structure to the model<a class="anchor" aria-label="anchor" href="#adding-age-structure-to-the-model"></a>
 </h3>
-<p>Adding age structure to the model consists of the following steps, which turn variables into arrays:</p>
+<p>Adding age structure to the model consists of the following steps,
+which turn variables into arrays:</p>
 <ul>
-<li>Define the number of age categories as a user parameter <code>N_age</code>.</li>
-<li>Add age structure to each compartment, by adding square brackets to the lvalues.</li>
-<li>Modify the rvalues to use quantities from the appropriate compartment, by adding an <code>i</code> index to the rvalues. These will automatically be looped over.</li>
-<li>Where an age compartment needs to be reduced into a single compartment/variable, use <code>sum</code> (or another array function from <a href="https://mrc-ide.github.io/odin/articles/functions.html" class="external-link uri">https://mrc-ide.github.io/odin/articles/functions.html</a> as appropriate)</li>
-<li>Define the dimensions of all arrays, for example by setting <code>dim(S) &lt;- N_age</code>.</li>
+<li>Define the number of age categories as a user parameter
+<code>N_age</code>.</li>
+<li>Add age structure to each compartment, by adding square brackets to
+the lvalues.</li>
+<li>Modify the rvalues to use quantities from the appropriate
+compartment, by adding an <code>i</code> index to the rvalues. These
+will automatically be looped over.</li>
+<li>Where an age compartment needs to be reduced into a single
+compartment/variable, use <code>sum</code> (or another array function
+from <a href="https://mrc-ide.github.io/odin/articles/functions.html" class="external-link uri">https://mrc-ide.github.io/odin/articles/functions.html</a>
+as appropriate)</li>
+<li>Define the dimensions of all arrays, for example by setting
+<code>dim(S) &lt;- N_age</code>.</li>
 </ul>
-<p>This would simply give <code>N_age</code> independent processes equivalent to the first model, scaled by the size of the population in each age category. To actually make this useful, you likely want to add some interaction or transitions between the compartments. An example of this would be to add an age-specific contact matrix, demonstrated below, which defines a different force of infection <span class="math inline">\(\lambda\)</span> for each age group. This is calculated by <span class="math display">\[\lambda_i = \frac{\beta}{N} \cdot \sum_{j=1}^{N_{\mathrm{age}}} I_j m_{ij}\]</span> In the odin code:</p>
+<p>This would simply give <code>N_age</code> independent processes
+equivalent to the first model, scaled by the size of the population in
+each age category. To actually make this useful, you likely want to add
+some interaction or transitions between the compartments. An example of
+this would be to add an age-specific contact matrix, demonstrated below,
+which defines a different force of infection <span class="math inline">\(\lambda\)</span> for each age group. This is
+calculated by <span class="math display">\[\lambda_i = \frac{\beta}{N}
+\cdot \sum_{j=1}^{N_{\mathrm{age}}} I_j m_{ij}\]</span> In the odin
+code:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m</span><span class="op">[</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span> <span class="co"># age-structured contact matrix</span></span>
 <span><span class="va">s_ij</span><span class="op">[</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="va">m</span><span class="op">[</span><span class="va">i</span>, <span class="va">j</span><span class="op">]</span> <span class="op">*</span> <span class="va">I</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span>
 <span><span class="va">lambda</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">beta</span> <span class="op">/</span> <span class="va">N</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">s_ij</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p>The probability of infection of a susceptible is then indexed by this force of infection:</p>
+<p>The probability of infection of a susceptible is then indexed by this
+force of infection:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_SI</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">lambda</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">*</span> <span class="va">dt</span><span class="op">)</span></span></code></pre></div>
-<p>Putting this all together, the age structured SIR model is as follows:</p>
+<p>Putting this all together, the age structured SIR model is as
+follows:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Definition of the time-step and output as "time"</span></span>
 <span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="op">)</span></span>
@@ -343,7 +391,8 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">N_age</span>, <span class="va">N_age</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">s_ij</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">N_age</span>, <span class="va">N_age</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">lambda</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">N_age</span></span></code></pre></div>
-<p>As before, save the file, and use <code>odin.dust</code> to compile the model:</p>
+<p>As before, save the file, and use <code>odin.dust</code> to compile
+the model:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gen_age</span> <span class="op">&lt;-</span> <span class="fu">odin.dust</span><span class="fu">::</span><span class="fu"><a href="../reference/odin_dust.html">odin_dust</a></span><span class="op">(</span><span class="st">"sirage.R"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 18 functions decorated with [[cpp11::register]]</span></span>
@@ -353,14 +402,15 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="co">#&gt; * installing *source* package ‘siraged3f65e02’ ...</span></span>
 <span><span class="co">#&gt; ** using staged installation</span></span>
 <span><span class="co">#&gt; ** libs</span></span>
-<span><span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG  -I'/Users/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/Users/runner/work/_temp/Library/dust/include -DHAVE_INLINE  -fPIC  -Wall -g -O2  -Wall -pedantic -fdiagnostics-color=always -c cpp11.cpp -o cpp11.o</span></span>
-<span><span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG  -I'/Users/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/Users/runner/work/_temp/Library/dust/include -DHAVE_INLINE  -fPIC  -Wall -g -O2  -Wall -pedantic -fdiagnostics-color=always -c dust.cpp -o dust.o</span></span>
-<span><span class="co">#&gt; clang++ -mmacosx-version-min=10.13 -std=gnu++11 -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -single_module -multiply_defined suppress -L/Library/Frameworks/R.framework/Resources/lib -L/usr/local/lib -o siraged3f65e02.so cpp11.o dust.o -F/Library/Frameworks/R.framework/.. -framework R -Wl,-framework -Wl,CoreFoundation</span></span>
-<span><span class="co">#&gt; installing to /private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/RtmpQ8Z3u8/devtools_install_243d5efc0e4b/00LOCK-file243d6c78c933/00new/siraged3f65e02/libs</span></span>
+<span><span class="co">#&gt; g++ -std=gnu++11 -I"/opt/R/4.2.2/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/home/runner/work/_temp/Library/dust/include -DHAVE_INLINE -fopenmp -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always -c cpp11.cpp -o cpp11.o</span></span>
+<span><span class="co">#&gt; g++ -std=gnu++11 -I"/opt/R/4.2.2/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/home/runner/work/_temp/Library/dust/include -DHAVE_INLINE -fopenmp -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always -c dust.cpp -o dust.o</span></span>
+<span><span class="co">#&gt; g++ -std=gnu++11 -shared -L/opt/R/4.2.2/lib/R/lib -L/usr/local/lib -o siraged3f65e02.so cpp11.o dust.o -fopenmp -L/opt/R/4.2.2/lib/R/lib -lR</span></span>
+<span><span class="co">#&gt; installing to /tmp/RtmpDZIjyh/devtools_install_2106378d82b2/00LOCK-file21061439e55a/00new/siraged3f65e02/libs</span></span>
 <span><span class="co">#&gt; ** checking absolute paths in shared objects and dynamic libraries</span></span>
 <span><span class="co">#&gt; * DONE (siraged3f65e02)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">siraged3f65e02</span></span></span></code></pre></div>
-<p>We can generate an age-structured contact matrix based on the <a href="https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074" class="external-link">POLYMOD</a> survey by using the <a href="https://github.com/sbfnk/socialmixr" class="external-link">socialmixr</a> package:</p>
+<p>We can generate an age-structured contact matrix based on the <a href="https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074" class="external-link">POLYMOD</a>
+survey by using the <a href="https://github.com/sbfnk/socialmixr" class="external-link">socialmixr</a> package:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">polymod</span>, package <span class="op">=</span> <span class="st">"socialmixr"</span><span class="op">)</span></span>
 <span></span>
@@ -368,7 +418,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="va">age.limits</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">70</span>, <span class="fl">10</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Get the contact matrix from socialmixr</span></span>
-<span><span class="va">contact</span> <span class="op">&lt;-</span> <span class="fu">socialmixr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/socialmixr/man/contact_matrix.html" class="external-link">contact_matrix</a></span><span class="op">(</span></span>
+<span><span class="va">contact</span> <span class="op">&lt;-</span> <span class="fu">socialmixr</span><span class="fu">::</span><span class="fu"><a href="https://epiforecasts.io/socialmixr/reference/contact_matrix.html" class="external-link">contact_matrix</a></span><span class="op">(</span></span>
 <span>  survey <span class="op">=</span> <span class="va">polymod</span>,</span>
 <span>  countries <span class="op">=</span> <span class="st">"United Kingdom"</span>,</span>
 <span>  age.limits <span class="op">=</span> <span class="va">age.limits</span>,</span>
@@ -384,25 +434,27 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="va">transmission</span></span>
 <span><span class="co">#&gt;       contact.age.group</span></span>
 <span><span class="co">#&gt;              [0,10)      [10,20)      [20,30)      [30,40)      [40,50)</span></span>
-<span><span class="co">#&gt;   [1,] 7.351697e-07 1.681349e-07 1.623038e-07 2.523168e-07 1.257326e-07</span></span>
-<span><span class="co">#&gt;   [2,] 1.681349e-07 1.036281e-06 1.692542e-07 1.697777e-07 2.181730e-07</span></span>
-<span><span class="co">#&gt;   [3,] 1.623038e-07 1.692542e-07 4.704750e-07 2.056299e-07 2.070420e-07</span></span>
-<span><span class="co">#&gt;   [4,] 2.523168e-07 1.697777e-07 2.056299e-07 3.117035e-07 2.231807e-07</span></span>
-<span><span class="co">#&gt;   [5,] 1.257326e-07 2.181730e-07 2.070420e-07 2.231807e-07 3.354107e-07</span></span>
-<span><span class="co">#&gt;   [6,] 8.037308e-08 1.039198e-07 1.799980e-07 1.678511e-07 1.757299e-07</span></span>
-<span><span class="co">#&gt;   [7,] 8.154532e-08 6.991192e-08 1.165298e-07 1.498801e-07 1.457821e-07</span></span>
-<span><span class="co">#&gt;   [8,] 2.994231e-08 7.542364e-08 5.972715e-08 4.640225e-08 1.250247e-07</span></span>
+<span><span class="co">#&gt;   [1,] 7.347226e-07 1.680174e-07 1.621901e-07 2.521672e-07 1.256518e-07</span></span>
+<span><span class="co">#&gt;   [2,] 1.680174e-07 1.035454e-06 1.691176e-07 1.696640e-07 2.180115e-07</span></span>
+<span><span class="co">#&gt;   [3,] 1.621901e-07 1.691176e-07 4.700903e-07 2.054877e-07 2.068876e-07</span></span>
+<span><span class="co">#&gt;   [4,] 2.521672e-07 1.696640e-07 2.054877e-07 3.115246e-07 2.230430e-07</span></span>
+<span><span class="co">#&gt;   [5,] 1.256518e-07 2.180115e-07 2.068876e-07 2.230430e-07 3.351858e-07</span></span>
+<span><span class="co">#&gt;   [6,] 8.032478e-08 1.038464e-07 1.798672e-07 1.677531e-07 1.756190e-07</span></span>
+<span><span class="co">#&gt;   [7,] 8.147558e-08 6.984139e-08 1.164168e-07 1.497579e-07 1.456498e-07</span></span>
+<span><span class="co">#&gt;   [8,] 2.987539e-08 7.531256e-08 5.961167e-08 4.627471e-08 1.247385e-07</span></span>
 <span><span class="co">#&gt;       contact.age.group</span></span>
 <span><span class="co">#&gt;             [50,60)      [60,70)          70+</span></span>
-<span><span class="co">#&gt;   [1,] 8.037308e-08 8.154532e-08 2.994231e-08</span></span>
-<span><span class="co">#&gt;   [2,] 1.039198e-07 6.991192e-08 7.542364e-08</span></span>
-<span><span class="co">#&gt;   [3,] 1.799980e-07 1.165298e-07 5.972715e-08</span></span>
-<span><span class="co">#&gt;   [4,] 1.678511e-07 1.498801e-07 4.640225e-08</span></span>
-<span><span class="co">#&gt;   [5,] 1.757299e-07 1.457821e-07 1.250247e-07</span></span>
-<span><span class="co">#&gt;   [6,] 2.473517e-07 1.652266e-07 1.076856e-07</span></span>
-<span><span class="co">#&gt;   [7,] 1.652266e-07 2.010654e-07 1.431130e-07</span></span>
-<span><span class="co">#&gt;   [8,] 1.076856e-07 1.431130e-07 1.941792e-07</span></span></code></pre></div>
-<p>This can be given as a parameter to the model by adding the argument <code>pars = list(m = transmission)</code> when using the <code>new()</code> method on the <code>gen_age</code> generator.</p>
+<span><span class="co">#&gt;   [1,] 8.032478e-08 8.147558e-08 2.987539e-08</span></span>
+<span><span class="co">#&gt;   [2,] 1.038464e-07 6.984139e-08 7.531256e-08</span></span>
+<span><span class="co">#&gt;   [3,] 1.798672e-07 1.164168e-07 5.961167e-08</span></span>
+<span><span class="co">#&gt;   [4,] 1.677531e-07 1.497579e-07 4.627471e-08</span></span>
+<span><span class="co">#&gt;   [5,] 1.756190e-07 1.456498e-07 1.247385e-07</span></span>
+<span><span class="co">#&gt;   [6,] 2.472049e-07 1.650819e-07 1.074040e-07</span></span>
+<span><span class="co">#&gt;   [7,] 1.650819e-07 2.008121e-07 1.427706e-07</span></span>
+<span><span class="co">#&gt;   [8,] 1.074040e-07 1.427706e-07 1.931392e-07</span></span></code></pre></div>
+<p>This can be given as a parameter to the model by adding the argument
+<code>pars = list(m = transmission)</code> when using the
+<code>new()</code> method on the <code>gen_age</code> generator.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">N_age</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">age.limits</span><span class="op">)</span></span>
 <span><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">5L</span></span>
@@ -449,8 +501,15 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Number of individuals"</span>, side<span class="op">=</span><span class="fl">2</span>,line<span class="op">=</span><span class="fl">1</span>, outer<span class="op">=</span><span class="cn">T</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Time"</span>, side <span class="op">=</span> <span class="fl">1</span>, line <span class="op">=</span> <span class="fl">0</span>, outer <span class="op">=</span><span class="cn">T</span><span class="op">)</span></span></code></pre></div>
 <p><img src="sir_models_files/figure-html/unnamed-chunk-10-1.png" width="672"></p>
-<p>Note that a scale factor is introduced for beta so that <span class="math inline">\(R_0\)</span> remains at 2, offsetting the scaling of the contact matrix <code>m</code>. This is calculated using the next-generation matrix. See <a href="https://doi.org/10.1016/j.idm.2017.06.002" class="external-link">Driessche</a> and <a href="https://dx.doi.org/10.1016/j.mbs.2012.07.007" class="external-link">Towers and Feng</a>.</p>
-<p>Many other methods are available on the dust object to support inference, but typically you may want to use the <a href="https://mrc-ide.github.io/mcstate/" class="external-link"><code>mcstate</code></a> package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from <a href="https://mrc-ide.github.io/dust/" class="external-link"><code>dust</code></a>.</p>
+<p>Note that a scale factor is introduced for beta so that <span class="math inline">\(R_0\)</span> remains at 2, offsetting the scaling
+of the contact matrix <code>m</code>. This is calculated using the
+next-generation matrix. See <a href="https://doi.org/10.1016/j.idm.2017.06.002" class="external-link">Driessche</a> and <a href="https://dx.doi.org/10.1016/j.mbs.2012.07.007" class="external-link">Towers and
+Feng</a>.</p>
+<p>Many other methods are available on the dust object to support
+inference, but typically you may want to use the <a href="https://mrc-ide.github.io/mcstate/" class="external-link"><code>mcstate</code></a>
+package instead of calling these directly. However, if you wish to
+simulate state space models with set parameters, this can be done
+entirely using the commands above from <a href="https://mrc-ide.github.io/dust/" class="external-link"><code>dust</code></a>.</p>
 </div>
 </div>
   </div>
