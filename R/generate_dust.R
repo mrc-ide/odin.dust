@@ -37,8 +37,9 @@ generate_dust <- function(ir, options) {
     generate_dust_include(dat$config$include$data),
     dat$compare$include)
 
-  used <- unique(unlist(lapply(dat$equations, function(x)
-    x$depends$functions), FALSE, FALSE))
+  used <- unique(unlist(lapply(dat$equations, function(x) {
+    x$depends$functions
+  }), FALSE, FALSE))
   support <- NULL
   if (any(c("sum", "odin_sum") %in% used)) {
     ranks <- sort(unique(viapply(dat$data$elements, "[[", "rank")))
@@ -864,9 +865,9 @@ generate_dust_gpu_copy <- function(dat, rewrite) {
 generate_dust_gpu_storage <- function(dat) {
   equations <- dat$components$rhs$equations
   used <- unique(unlist(
-    lapply(dat$equations[equations], function(x)
-      c(x$depends$variables, x$lhs)),
-    FALSE, FALSE))
+    lapply(dat$equations[equations], function(x) {
+      c(x$depends$variables, x$lhs)
+    }), FALSE, FALSE))
 
   if (!is.null(dat$compare)) {
     used <- union(used, dat$compare$used)
@@ -891,8 +892,9 @@ generate_dust_gpu_storage <- function(dat) {
   ## We could use is.recursive (compound expressions) or is.language
   ## (any lookup) here. I think that the latter will involve the
   ## fewest reads at a small increase in memory usage.
-  extra <- lapply(info, function(el)
-    names(which(vlapply(el$unpack, function(x) is.language(x$offset)))))
+  extra <- lapply(info, function(el) {
+    names(which(vlapply(el$unpack, function(x) is.language(x$offset))))
+  })
 
   ## What we have to do here is write these out to new offset
   ## variables, replace the value in info with the symbol *and* ensure
@@ -909,8 +911,9 @@ generate_dust_gpu_storage <- function(dat) {
     info$shared_int <-
       dust_gpu_storage_pack(used, "shared", "int", dat, extra_offsets)
 
-    extra_exprs <- unlist(lapply(seq_along(extra), function(i)
-      lapply(info[[i]]$unpack[extra[[i]]], "[[", "offset")), FALSE)
+    extra_exprs <- unlist(lapply(seq_along(extra), function(i) {
+      lapply(info[[i]]$unpack[extra[[i]]], "[[", "offset")
+    }), FALSE)
     names(extra_exprs) <- extra_offsets
 
     ## Then we need to go and replace these elements within the
@@ -990,8 +993,9 @@ dust_gpu_storage_pack <- function(used, location, type, dat, extra = NULL) {
 
   names <- intersect(names_if(vlapply(dat$data$elements, include)), used)
   rank <- viapply(dat$data$elements[names], "[[", "rank")
-  len <- lapply(dat$data$elements[names], function(x)
-    x$dimnames$length %||% 1L)
+  len <- lapply(dat$data$elements[names], function(x) {
+    x$dimnames$length %||% 1L
+  })
 
   if (length(extra) > 0) {
     names <- c(names, extra)
