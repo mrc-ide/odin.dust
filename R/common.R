@@ -22,6 +22,8 @@ FUNCTIONS_STOCHASTIC <- c( # nolint
   rhyper = "hypergeometric",
   rpois = "poisson",
   rbinom = "binomial",
+  rgamma = "gamma",
+  rnbinom = "nbinomial",
   rexp = "exponential")
 
 gpu_mode <- function(generate, compile) {

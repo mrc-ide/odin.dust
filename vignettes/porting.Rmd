@@ -185,11 +185,13 @@ Supported distributions:
 * binomial (`rbinom`)
 * exponential (`rexp`)
 * normal (`rnorm`)
+* gamma (`rgamma`)
 * hypergeometric (`rhyper`)
+* negative binomial (`rnbinom`)
 * Poisson (`rpois`)
 * uniform (`unif`)
 
-Unsupported distributions
+Unsupported distributions:
 
 * beta (`rbeta`)
 * non-central beta (`rnbeta`)
@@ -198,11 +200,9 @@ Unsupported distributions
 * non-central chi-squared (`rnchisq`)
 * F (`rf`)
 * non-central F (`rnf`)
-* gamma (`rgamma`)
 * geometric (`rgeom`)
 * logistic (`rlogis`)
 * lognormal (`rlnorm`)
-* negative binomial (`rnbinom`)
 * Student’s t (`rt`)
 * non-central t (`rnt`)
 * Weibull (`rweibull`)

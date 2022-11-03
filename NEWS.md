@@ -1,3 +1,7 @@
+# odin.dust 0.2.24
+
+* Add support for `rgamma` and `rnbinom`, using new dust
+
 # odin.dust 0.2.15
 
 * Avoid stack overflow when generating very long expressions

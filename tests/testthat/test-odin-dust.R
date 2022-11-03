@@ -679,3 +679,27 @@ test_that("compile model with rhyper", {
   cmp <- dust::dust_rng$new(1, seed = 1L)$hypergeometric(100, 8, 15, 7)
   expect_equal(y, cmp)
 })
+
+
+test_that("compile model with rnbinom", {
+  gen <- odin_dust({
+    initial(x) <- 0
+    update(x) <- rnbinom(15, 0.3)
+  })
+  mod <- gen$new(list(), 0, 1, seed = 1L)
+  y <- drop(mod$simulate(1:100))
+  cmp <- dust::dust_rng$new(1, seed = 1L)$nbinomial(100, 15, 0.3)
+  expect_equal(y, cmp)
+})
+
+
+test_that("compile model with rgamma", {
+  gen <- odin_dust({
+    initial(x) <- 0
+    update(x) <- rgamma(3, 2.6)
+  })
+  mod <- gen$new(list(), 0, 1, seed = 1L)
+  y <- drop(mod$simulate(1:100))
+  cmp <- dust::dust_rng$new(1, seed = 1L)$gamma(100, 3, 2.6)
+  expect_equal(y, cmp)
+})
