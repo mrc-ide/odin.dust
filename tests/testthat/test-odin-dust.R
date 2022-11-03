@@ -630,8 +630,8 @@ test_that("info is returned correctly", {
   expect_equal(idx$a, 12)
   expect_equal(idx$b, 13:17)
 })
-    
-    
+
+
 test_that("Can compile model with copy output equation", {
   gen <- odin_dust({
     initial(x) <- 0
