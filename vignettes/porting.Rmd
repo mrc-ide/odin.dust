@@ -173,7 +173,7 @@ Our suggested workaround to this is to use an accumulator variable that you rese
 ```
 total <- total + new
 initial(incidence) <- 0
-update(incidence) <- if (step %% 10) new else incidence + new
+update(incidence) <- if (step %% 10 == 0) new else incidence + new
 ```
 
 ## Not all distributions are supported
