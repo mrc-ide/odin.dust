@@ -152,7 +152,7 @@ test_that("use compiled compare function in package", {
 
   t <- seq(0, 20, by = 2)
   d <- dust::dust_data(
-    data.frame(step = t,
+    data.frame(time = t,
                observed = runif(length(t), 0, sqrt(t)),
                another = 1L))
   mod$set_data(d)
