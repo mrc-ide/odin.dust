@@ -55,9 +55,9 @@ gen$new()$run(0:5)
 
 This is important in ODE models because there are often things that you want to observe that are functions of the system but for which you can't write out equations to describe them in terms of their rates - the sum over a set of variables for example.
 
-Note here how the `x` used in the calculation is really the `x` at the *end* of a step, not the `x` on inputs, which means that the output column satisfies `y == x / 2`.  This turns out to be very hard to get right and reason about, and involves some fairly unpleasant bookkeeping in `dde`; in effect we run an additional step at the end of the run in order to compute these `output` variables, and that is inefficient for dust's use within a particle filter.
+Note here how the `x` used in the calculation is really the `x` at the *end* of a time step, not the `x` on inputs, which means that the output column satisfies `y == x / 2`.  This turns out to be very hard to get right and reason about, and involves some fairly unpleasant bookkeeping in `dde`; in effect we run an additional time step at the end of the run in order to compute these `output` variables, and that is inefficient for dust's use within a particle filter.
 
-More importantly, there is no great need for `output` for discrete time models, as we can treat `y` above as just another variable.  This also allows us to be more explicit about when within the step this output is being computed:
+More importantly, there is no great need for `output` for discrete time models, as we can treat `y` above as just another variable.  This also allows us to be more explicit about when within the time step this output is being computed:
 
 ```{r}
 gen <- odin.dust::odin_dust({
@@ -71,13 +71,13 @@ gen <- odin.dust::odin_dust({
 })
 ```
 
-We will probably deprecate these in odin for discrete time model because these turned out to be hard to get right - we need to compute the output variables at the end of the step, which lead to confusion about which `x` was being read - the `x` at the beginning of the step or the `x` at the end. This is implemented by some fairly unpleasant bookkeeping that we would like to drop.
+We will probably deprecate these in odin for discrete time model because these turned out to be hard to get right - we need to compute the output variables at the end of the time step, which lead to confusion about which `x` was being read - the `x` at the beginning of the time step or the `x` at the end. This is implemented by some fairly unpleasant bookkeeping that we would like to drop.
 
 ```{r}
 t(drop(gen$new(list(), 0, 1)$simulate(0:5)))
 ```
 
-Here, the first column is `x` as in the first column. The second column computes the relationship with the `x` at the beginning of the step, while the third is most equivalent to our previous `output` command and requires storing the that will become the updated `x` in order to use that value to both update `x` and `y2`.
+Here, the first column is `x` as in the first column. The second column computes the relationship with the `x` at the beginning of the time step, while the third is most equivalent to our previous `output` command and requires storing the that will become the updated `x` in order to use that value to both update `x` and `y2`.
 
 ## Avoiding `interpolate()`
 

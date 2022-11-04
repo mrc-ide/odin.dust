@@ -74,7 +74,7 @@ to help automate the compilation of the model.
 
 Now we can use the `new` method on the generator to make `dust` objects. `dust` can be driven directly from R, and also interfaces with the [`mcstate`](https://mrc-ide.github.io/mcstate/) package to allow parameter inference and forecasting.
 
-[`new()`](https://mrc-ide.github.io/dust/reference/dust.html#method-new) takes the data needed to run the model i.e. a list with any parameters defined as `user` in the odin code above, the value of the initial step $t_0$, and the number of particles, each for now can simply be thought of as an independent stochastic realisation of the model, but in the next step will be used when inferring model parameters.
+[`new()`](https://mrc-ide.github.io/dust/reference/dust.html#method-new) takes the data needed to run the model i.e. a list with any parameters defined as `user` in the odin code above, the value of the initial time step $t_0$, and the number of particles, each for now can simply be thought of as an independent stochastic realisation of the model, but in the next time step will be used when inferring model parameters.
 
 Additional arguments include the number of threads to parallelise the particles over, and the seed for the random number generator. The seed must be an integer, and using the same seed will ensure reproducible results for all particles. To use this to directly create a new dust object with 10 particles, run using 4 threads:
 
@@ -84,7 +84,7 @@ sir_model <- gen_sir$new(pars = list(dt = 1,
                                      I_ini = 10,
                                      beta = 0.2,
                                      gamma = 0.1),
-                         step = 1,
+                         time = 1,
                          n_particles = 10L,
                          n_threads = 4L,
                          seed = 1L)
@@ -96,7 +96,7 @@ The initial state is ten particles wide, four states deep ($t$, $S$, $I$, $R$):
 sir_model$state()
 ```
 
-Run the particles (repeats) forward 10 steps of length $dt$, followed by another 10 steps:
+Run the particles (repeats) forward 10 time steps of length $dt$, followed by another 10 time steps:
 
 ```{r}
 sir_model$run(10)
@@ -109,17 +109,17 @@ We can change the parameters, say by increasing the infection rate and the popul
 dt <- 0.25
 n_particles <- 10L
 p_new <- list(dt = dt, S_ini = 2000, I_ini = 10, beta = 0.4, gamma = 0.1)
-sir_model$update_state(pars = p_new, step = 0)
+sir_model$update_state(pars = p_new, time = 0)
 sir_model$state()
 ```
 
 Let's run this epidemic forward, and plot the trajectories:
 
 ```{r fig.height=5, fig.width=7}
-n_steps <- 200
-x <- array(NA, dim = c(sir_model$info()$len, n_particles, n_steps))
+n_times <- 200
+x <- array(NA, dim = c(sir_model$info()$len, n_particles, n_times))
 
-for (t in seq_len(n_steps)) {
+for (t in seq_len(n_times)) {
   x[ , , t] <- sir_model$run(t)
 }
 time <- x[1, 1, ]
@@ -209,21 +209,21 @@ model <- gen_age$new(pars = list(dt = dt,
                                  gamma = 0.1,
                                  m = transmission,
                                  N_age = N_age),
-                     step = 1,
+                     time = 1,
                      n_particles = n_particles,
                      n_threads = 1L,
                      seed = 1L)
 
-# Define how long the model runs for, number of steps
-n_steps <- 1000
+# Define how long the model runs for, number of time steps
+n_times <- 1000
 
 # Create an array to contain outputs after looping the model.
 # Array contains 35 rows = Total S, I, R (3), and
 # in each age compartment (24) as well as the cumulative incidence (8)
-x <- array(NA, dim = c(model$info()$len, n_particles, n_steps))
+x <- array(NA, dim = c(model$info()$len, n_particles, n_times))
 
 # For loop to run the model iteratively
-for (t in seq_len(n_steps)) {
+for (t in seq_len(n_times)) {
   x[ , , t] <- model$run(t)
 }
 time <- x[1, 1, ]
