@@ -39,6 +39,6 @@ RoxygenNote: 7.2.1
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
 Remotes:
-    mrc-ide/dust@mrc-3502,
-    mrc-ide/mode@mrc-3773,
+    mrc-ide/dust,
+    mrc-ide/mode,
     mrc-ide/odin
