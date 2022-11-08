@@ -9,21 +9,21 @@ test_that("sir model smoke test", {
   y0 <- c(1000, 10, 0)
   mod <- gen$new(list(I_ini = 10), 0L, n)
   expect_equal(mod$state(), matrix(y0, 3, n))
-  expect_equal(mod$step(), 0)
+  expect_equal(mod$time(), 0)
   expect_identical(mod$info(),
                    list(dim = list(S = 1L, I = 1L, R = 1L),
                         len = 3L,
                         index = list(S = 1L, I = 2L, R = 3L)))
-  nstep <- 200
-  res <- array(NA_real_, c(3, n, nstep + 1))
+  ntime <- 200
+  res <- array(NA_real_, c(3, n, ntime + 1))
   res[, , 1] <- y0
-  for (i in seq_len(nstep)) {
+  for (i in seq_len(ntime)) {
     mod$run(i)
     res[, , i + 1] <- mod$state()
   }
 
   set.seed(1) # odin code is stochastic with R's generators
-  tt <- 0:nstep
+  tt <- 0:ntime
   cmp <- gen_odin$new(I_ini = 10)$run(tt, y0, replicate = n)
 
   expect_equal(colMeans(res[2, , ]), rowMeans(cmp[, 3, ]), tolerance = 0.01)
@@ -50,7 +50,7 @@ test_that("vector handling test", {
 
   mod <- gen$new(list(), 0L, np, seed = 1L)
   expect_equal(mod$state(), matrix(0, ns, np))
-  expect_equal(mod$step(), 0)
+  expect_equal(mod$time(), 0)
   expect_identical(mod$info(), list(dim = list(x = 3L),
                                     len = 3L,
                                     index = list(x = seq_len(3))))
@@ -81,7 +81,7 @@ test_that("user-vector handling test", {
                                     index = list(x = seq_len(10))))
 
   expect_equal(mod$state(), matrix(c(x0)))
-  expect_equal(mod$step(), 0)
+  expect_equal(mod$time(), 0)
 
   mod$run(1)
   expect_equal(mod$state(), matrix(c(x0 + r)))
