@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.25</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.26</span>
       </span>
     </div>
 
@@ -153,17 +153,17 @@ you want to observe that are functions of the system but for which you
 can’t write out equations to describe them in terms of their rates - the
 sum over a set of variables for example.</p>
 <p>Note here how the <code>x</code> used in the calculation is really
-the <code>x</code> at the <em>end</em> of a step, not the <code>x</code>
-on inputs, which means that the output column satisfies
+the <code>x</code> at the <em>end</em> of a time step, not the
+<code>x</code> on inputs, which means that the output column satisfies
 <code>y == x / 2</code>. This turns out to be very hard to get right and
 reason about, and involves some fairly unpleasant bookkeeping in
-<code>dde</code>; in effect we run an additional step at the end of the
-run in order to compute these <code>output</code> variables, and that is
-inefficient for dust’s use within a particle filter.</p>
+<code>dde</code>; in effect we run an additional time step at the end of
+the run in order to compute these <code>output</code> variables, and
+that is inefficient for dust’s use within a particle filter.</p>
 <p>More importantly, there is no great need for <code>output</code> for
 discrete time models, as we can treat <code>y</code> above as just
 another variable. This also allows us to be more explicit about when
-within the step this output is being computed:</p>
+within the time step this output is being computed:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gen</span> <span class="op">&lt;-</span> <span class="fu">odin.dust</span><span class="fu">::</span><span class="fu"><a href="../reference/odin_dust.html">odin_dust</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>  <span class="fu">initial</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
@@ -176,11 +176,11 @@ within the step this output is being computed:</p>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 <p>We will probably deprecate these in odin for discrete time model
 because these turned out to be hard to get right - we need to compute
-the output variables at the end of the step, which lead to confusion
-about which <code>x</code> was being read - the <code>x</code> at the
-beginning of the step or the <code>x</code> at the end. This is
-implemented by some fairly unpleasant bookkeeping that we would like to
-drop.</p>
+the output variables at the end of the time step, which lead to
+confusion about which <code>x</code> was being read - the <code>x</code>
+at the beginning of the time step or the <code>x</code> at the end. This
+is implemented by some fairly unpleasant bookkeeping that we would like
+to drop.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">gen</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">$</span><span class="fu">simulate</span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3]</span></span>
@@ -192,7 +192,7 @@ drop.</p>
 <span><span class="co">#&gt; [6,]    6  2.5  3.0</span></span></code></pre></div>
 <p>Here, the first column is <code>x</code> as in the first column. The
 second column computes the relationship with the <code>x</code> at the
-beginning of the step, while the third is most equivalent to our
+beginning of the time step, while the third is most equivalent to our
 previous <code>output</code> command and requires storing the that will
 become the updated <code>x</code> in order to use that value to both
 update <code>x</code> and <code>y2</code>.</p>
@@ -297,7 +297,7 @@ incidence data.</p>
 that you reset based on a modulo of step with your interval</p>
 <pre><code><span><span class="va">total</span> <span class="op">&lt;-</span> <span class="va">total</span> <span class="op">+</span> <span class="va">new</span></span>
 <span><span class="fu">initial</span><span class="op">(</span><span class="va">incidence</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">incidence</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="va">step</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">10</span><span class="op">)</span> <span class="va">new</span> <span class="kw">else</span> <span class="va">incidence</span> <span class="op">+</span> <span class="va">new</span></span></code></pre>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/update.html" class="external-link">update</a></span><span class="op">(</span><span class="va">incidence</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="va">step</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">10</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="va">new</span> <span class="kw">else</span> <span class="va">incidence</span> <span class="op">+</span> <span class="va">new</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="not-all-distributions-are-supported">Not all distributions are supported<a class="anchor" aria-label="anchor" href="#not-all-distributions-are-supported"></a>

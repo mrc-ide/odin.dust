@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.25</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.26</span>
       </span>
     </div>
 
@@ -181,7 +181,7 @@ not contain special characters.</p>
 <span><span class="co">#&gt;   298 |   const sir::internal_type <span style="color: #BB00BB; font-weight: bold;">internal</span> = pars.internal;</span></span>
 <span><span class="co">#&gt;       |                            <span style="color: #BB00BB; font-weight: bold;">^~~~~~~~</span></span></span>
 <span><span class="co">#&gt; g++ -std=gnu++11 -shared -L/opt/R/4.2.2/lib/R/lib -L/usr/local/lib -o sirb906c7e5.so cpp11.o dust.o -fopenmp -L/opt/R/4.2.2/lib/R/lib -lR</span></span>
-<span><span class="co">#&gt; installing to /tmp/RtmpspcsuX/devtools_install_19d9194c5846/00LOCK-file19d951fc6213/00new/sirb906c7e5/libs</span></span>
+<span><span class="co">#&gt; installing to /tmp/RtmpKgO5IS/devtools_install_1c1771a757c4/00LOCK-file1c175cdb6de1/00new/sirb906c7e5/libs</span></span>
 <span><span class="co">#&gt; ** checking absolute paths in shared objects and dynamic libraries</span></span>
 <span><span class="co">#&gt; * DONE (sirb906c7e5)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">sirb906c7e5</span></span></span></code></pre></div>
@@ -213,10 +213,10 @@ package to allow parameter inference and forecasting.</p>
 <p><a href="https://mrc-ide.github.io/dust/reference/dust.html#method-new" class="external-link"><code>new()</code></a>
 takes the data needed to run the model i.e. a list with any parameters
 defined as <code>user</code> in the odin code above, the value of the
-initial step <span class="math inline">\(t_0\)</span>, and the number of
-particles, each for now can simply be thought of as an independent
-stochastic realisation of the model, but in the next step will be used
-when inferring model parameters.</p>
+initial time step <span class="math inline">\(t_0\)</span>, and the
+number of particles, each for now can simply be thought of as an
+independent stochastic realisation of the model, but in the next time
+step will be used when inferring model parameters.</p>
 <p>Additional arguments include the number of threads to parallelise the
 particles over, and the seed for the random number generator. The seed
 must be an integer, and using the same seed will ensure reproducible
@@ -228,7 +228,7 @@ object with 10 particles, run using 4 threads:</p>
 <span>                                     I_ini <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>                                     beta <span class="op">=</span> <span class="fl">0.2</span>,</span>
 <span>                                     gamma <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>,</span>
-<span>                         step <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                         time <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                         n_particles <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>                         n_threads <span class="op">=</span> <span class="fl">4L</span>,</span>
 <span>                         seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span></code></pre></div>
@@ -240,7 +240,8 @@ object with 10 particles, run using 4 threads:</p>
 <span><span class="co">#&gt; [2,] 1000 1000 1000 1000 1000 1000 1000 1000 1000  1000</span></span>
 <span><span class="co">#&gt; [3,]   10   10   10   10   10   10   10   10   10    10</span></span>
 <span><span class="co">#&gt; [4,]    0    0    0    0    0    0    0    0    0     0</span></span></code></pre></div>
-<p>Run the particles (repeats) forward 10 steps of length <span class="math inline">\(dt\)</span>, followed by another 10 steps:</p>
+<p>Run the particles (repeats) forward 10 time steps of length <span class="math inline">\(dt\)</span>, followed by another 10 time
+steps:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sir_model</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span></span>
@@ -262,7 +263,7 @@ multiple transitions per unit time:</p>
 <code class="sourceCode R"><span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fl">0.25</span></span>
 <span><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">10L</span></span>
 <span><span class="va">p_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="va">dt</span>, S_ini <span class="op">=</span> <span class="fl">2000</span>, I_ini <span class="op">=</span> <span class="fl">10</span>, beta <span class="op">=</span> <span class="fl">0.4</span>, gamma <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
-<span><span class="va">sir_model</span><span class="op">$</span><span class="fu">update_state</span><span class="op">(</span>pars <span class="op">=</span> <span class="va">p_new</span>, step <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="va">sir_model</span><span class="op">$</span><span class="fu">update_state</span><span class="op">(</span>pars <span class="op">=</span> <span class="va">p_new</span>, time <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="va">sir_model</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span></span>
 <span><span class="co">#&gt; [1,]    0    0    0    0    0    0    0    0    0     0</span></span>
@@ -271,10 +272,10 @@ multiple transitions per unit time:</p>
 <span><span class="co">#&gt; [4,]    0    0    0    0    0    0    0    0    0     0</span></span></code></pre></div>
 <p>Let’s run this epidemic forward, and plot the trajectories:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">n_steps</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="cn">NA</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sir_model</span><span class="op">$</span><span class="fu">info</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">len</span>, <span class="va">n_particles</span>, <span class="va">n_steps</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">n_times</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="cn">NA</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sir_model</span><span class="op">$</span><span class="fu">info</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">len</span>, <span class="va">n_particles</span>, <span class="va">n_times</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">t</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_steps</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">t</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_times</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">x</span><span class="op">[</span> , , <span class="va">t</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sir_model</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">t</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="va">time</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="op">]</span></span>
@@ -405,7 +406,7 @@ the model:</p>
 <span><span class="co">#&gt; g++ -std=gnu++11 -I"/opt/R/4.2.2/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/home/runner/work/_temp/Library/dust/include -DHAVE_INLINE -fopenmp -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always -c cpp11.cpp -o cpp11.o</span></span>
 <span><span class="co">#&gt; g++ -std=gnu++11 -I"/opt/R/4.2.2/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/home/runner/work/_temp/Library/dust/include -DHAVE_INLINE -fopenmp -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always -c dust.cpp -o dust.o</span></span>
 <span><span class="co">#&gt; g++ -std=gnu++11 -shared -L/opt/R/4.2.2/lib/R/lib -L/usr/local/lib -o siraged3f65e02.so cpp11.o dust.o -fopenmp -L/opt/R/4.2.2/lib/R/lib -lR</span></span>
-<span><span class="co">#&gt; installing to /tmp/RtmpspcsuX/devtools_install_19d977f8d21b/00LOCK-file19d96dad4752/00new/siraged3f65e02/libs</span></span>
+<span><span class="co">#&gt; installing to /tmp/RtmpKgO5IS/devtools_install_1c1728000f85/00LOCK-file1c173cfb65/00new/siraged3f65e02/libs</span></span>
 <span><span class="co">#&gt; ** checking absolute paths in shared objects and dynamic libraries</span></span>
 <span><span class="co">#&gt; * DONE (siraged3f65e02)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">siraged3f65e02</span></span></span></code></pre></div>
@@ -466,21 +467,21 @@ survey by using the <a href="https://github.com/sbfnk/socialmixr" class="externa
 <span>                                 gamma <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>                                 m <span class="op">=</span> <span class="va">transmission</span>,</span>
 <span>                                 N_age <span class="op">=</span> <span class="va">N_age</span><span class="op">)</span>,</span>
-<span>                     step <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                     time <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                     n_particles <span class="op">=</span> <span class="va">n_particles</span>,</span>
 <span>                     n_threads <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>                     seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Define how long the model runs for, number of steps</span></span>
-<span><span class="va">n_steps</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<span><span class="co"># Define how long the model runs for, number of time steps</span></span>
+<span><span class="va">n_times</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span></span>
 <span><span class="co"># Create an array to contain outputs after looping the model.</span></span>
 <span><span class="co"># Array contains 35 rows = Total S, I, R (3), and</span></span>
 <span><span class="co"># in each age compartment (24) as well as the cumulative incidence (8)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="cn">NA</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="fu">info</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">len</span>, <span class="va">n_particles</span>, <span class="va">n_steps</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="cn">NA</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="fu">info</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">len</span>, <span class="va">n_particles</span>, <span class="va">n_times</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># For loop to run the model iteratively</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">t</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_steps</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">t</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_times</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">x</span><span class="op">[</span> , , <span class="va">t</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">t</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="va">time</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="op">]</span></span>
