@@ -293,7 +293,6 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   internal_type <- sprintf("%s::internal_type", dat$config$base)
 
   body <- collector()
-  body$add("using real_type = typename %s::real_type;", dat$config$base)
   body$add("auto %s = std::make_shared<%s::shared_type>();",
            dat$meta$dust$shared, dat$config$base)
   body$add("%s %s;", internal_type, dat$meta$internal)
@@ -330,11 +329,18 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   body$add("return %s(%s, %s);",
            pars_type, dat$meta$dust$shared, dat$meta$internal)
 
+  body_txt <- body$get()
+  if (any(grepl("real_type", body_txt, fixed = TRUE))) {
+    body_txt <- c(
+      sprintf("using real_type = typename %s::real_type;", dat$config$base),
+      body_txt)
+  }
+
   name <- sprintf("%s_pars<%s>", dat$meta$namespace, dat$config$base)
 
   args <- c("cpp11::list" = dat$meta$user)
   c("template<>",
-    cpp_function(pars_type, name, args, body$get()))
+    cpp_function(pars_type, name, args, body_txt))
 }
 
 
@@ -348,9 +354,6 @@ generate_dust_core_info <- function(dat, rewrite) {
                          dat$meta$namespace, dat$config$base)
 
   body <- collector()
-  body$add("const %s::internal_type %s = %s.%s;",
-           dat$config$base, dat$meta$internal, dat$meta$dust$pars,
-           dat$meta$internal)
   body$add("const std::shared_ptr<const %s::shared_type> %s = %s.%s;",
            dat$config$base, dat$meta$dust$shared, dat$meta$dust$pars,
            dat$meta$dust$shared)
@@ -370,9 +373,22 @@ generate_dust_core_info <- function(dat, rewrite) {
   body$add('         "len"_nm = len,')
   body$add('         "index"_nm = index});')
 
+  ## Only add the 'internal' assignment if it looks likely we use it,
+  ## avoiding a compiler warning. This is actually fairly hard to
+  ## reason about so just use a heuristic as false positives are
+  ## harmless except the warning.
+  body_txt <- body$get()
+  if (any(grepl("internal.", body_txt, fixed = TRUE))) {
+    body_txt <- c(
+      sprintf("const %s::internal_type %s = %s.%s;",
+              dat$config$base, dat$meta$internal, dat$meta$dust$pars,
+              dat$meta$internal),
+      body_txt)
+  }
+
   name <- sprintf("%s_info<%s>", dat$meta$namespace, dat$config$base)
   c("template <>",
-    cpp_function("cpp11::sexp", name, args, body$get()))
+    cpp_function("cpp11::sexp", name, args, body_txt))
 }
 
 
