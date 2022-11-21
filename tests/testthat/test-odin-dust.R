@@ -703,3 +703,14 @@ test_that("compile model with rgamma", {
   cmp <- dust::dust_rng$new(1, seed = 1L)$gamma(100, 3, 2.6)
   expect_equal(y, cmp)
 })
+
+
+test_that("include initialisation of time-varying variables", {
+  ## A nice test here would check for compiler warnings, but that's
+  ## basically impossible to write portably.
+  tmp <- tempfile()
+  gen <- odin_dust(c("initial(time) <- step + 1", "update(time) <- step + 1"),
+                   verbose = FALSE, workdir = tmp)
+  code <- readLines(file.path(tmp, "src", "dust.cpp"))
+  expect_match(code, "internal.initial_time = 0;", fixed = TRUE, all = FALSE)
+})

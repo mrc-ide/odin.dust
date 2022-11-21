@@ -309,6 +309,22 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
     body$add(dust_flatten_eqs(user))
   }
 
+  if (dat$features$initial_time_dependent) {
+    ## Looks like there's some fight between odin and dust here with
+    ## initialisation of initial values of variables that vary with
+    ## time; they're put into internal storage for no obvious reason
+    ## (I presume so that they can be used in delay equations) but
+    ## there are no initial values for them and that upsets the
+    ## compiler which warns us. If we find all the likely culprits and
+    ## zero them we get rid of the warning.
+    pos <- names_if(vlapply(dat$data$elements, function(x) {
+      x$location == "internal" && x$rank == 0
+    }))
+    for (nm in setdiff(pos, dat$components$create$equations)) {
+      body$add(sprintf("%s.%s = 0;", dat$meta$internal, nm))
+    }
+  }
+
   body$add(dust_flatten_eqs(eqs[dat$components$user$equations]))
 
   body$add("return %s(%s, %s);",
