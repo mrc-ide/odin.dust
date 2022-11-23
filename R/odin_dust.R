@@ -193,7 +193,7 @@ read_include_dust <- function(filename) {
 
 
 odin_dust_linking_to <- function(code) {
-  if (is.null(code) || !grepl("linking_to", code)) {
+  if (is.null(code) || !any(grepl("linking_to", code))) {
     return(NULL)
   }
   tmp <- tempfile()
