@@ -714,3 +714,44 @@ test_that("include initialisation of time-varying variables", {
   code <- readLines(file.path(tmp, "src", "dust.cpp"))
   expect_match(code, "internal.initial_time = 0;", fixed = TRUE, all = FALSE)
 })
+
+
+test_that("can extract linking_to requirements", {
+  expect_null(odin_dust_linking_to(NULL))
+  expect_null(odin_dust_linking_to("code"))
+
+  expect_equal(
+    odin_dust_linking_to("// [[odin.dust::linking_to(pkg1)]]\ncode\n"),
+    "pkg1")
+  expect_equal(
+    odin_dust_linking_to("// [[odin.dust::linking_to(pkg1, pkg2)]]\ncode\n"),
+    c("pkg1", "pkg2"))
+  expect_equal(
+    odin_dust_linking_to(paste("// [[odin.dust::linking_to(pkg1, pkg2)]]",
+                               "// [[odin.dust::linking_to(pkg3)]]",
+                               "code", sep = "\n")),
+    c("pkg1", "pkg2", "pkg3"))
+})
+
+
+test_that("generate code with additional packages", {
+  tmp <- tempfile()
+  dir.create(tmp)
+  writeLines(c("// [[odin.dust::linking_to(dust)]]", readLines("include.cpp")),
+             file.path(tmp, "include.cpp"))
+  gen <- with_dir(
+    tmp,
+    odin_dust({
+      config(include) <- "include.cpp"
+      n <- 5
+      x[] <- user()
+      initial(y[]) <- 0
+      update(y[]) <- cumulative_to_i(i, x)
+      dim(x) <- n
+      dim(y) <- n
+    }, workdir = "pkg"))
+  desc <- as.list(read.dcf(file.path(tmp, "pkg", "DESCRIPTION"))[1, ])
+  expect_setequal(
+    strsplit(desc[["LinkingTo"]], ", ")[[1]],
+    c("cpp11", "dust"))
+})

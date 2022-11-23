@@ -120,6 +120,8 @@ odin_dust_wrapper <- function(ir, srcdir, options) {
     srcdir,
     generate_dust(ir, options))
   code <- odin_dust_code(dat)
+
+  linking_to <- odin_dust_linking_to(dat$include)
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
@@ -130,7 +132,8 @@ odin_dust_wrapper <- function(ir, srcdir, options) {
   } else {
     generator <- dust::dust(path, quiet = !options$verbose,
                             workdir = options$workdir,
-                            gpu = options$gpu$compile)
+                            gpu = options$gpu$compile,
+                            linking_to = linking_to)
   }
   if (!("transform_variables" %in% names(generator$public_methods))) {
     generator$set("public", "transform_variables",
@@ -186,4 +189,20 @@ read_include_dust <- function(filename) {
   }
   list(names = names,
        data = list(source = paste(readLines(filename), collapse = "\n")))
+}
+
+
+odin_dust_linking_to <- function(code) {
+  if (is.null(code) || !grepl("linking_to", code)) {
+    return(NULL)
+  }
+  tmp <- tempfile()
+  on.exit(unlink(tmp))
+  writeLines(code, tmp)
+  dat <- decor::cpp_decorations(files = tmp)
+  i <- dat$decoration == "odin.dust::linking_to"
+  if (!any(i)) {
+    return(NULL)
+  }
+  unlist(lapply(dat$params[i], as.character), TRUE, FALSE)
 }
