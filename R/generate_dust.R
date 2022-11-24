@@ -317,7 +317,7 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
     ## compiler which warns us. If we find all the likely culprits and
     ## zero them we get rid of the warning.
     pos <- names_if(vlapply(dat$data$elements, function(x) {
-      x$location == "internal" && x$rank == 0
+      x$location == "internal" && x$rank == 0 && x$stage == "time"
     }))
     for (nm in setdiff(pos, dat$components$create$equations)) {
       body$add(sprintf("%s.%s = 0;", dat$meta$internal, nm))
