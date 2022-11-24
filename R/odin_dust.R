@@ -121,7 +121,9 @@ odin_dust_wrapper <- function(ir, srcdir, options) {
     generate_dust(ir, options))
   code <- odin_dust_code(dat)
 
-  linking_to <- odin_dust_linking_to(dat$include)
+  decorations <- include_decorations(dat$include)
+  linking_to <- odin_dust_linking_to(decorations)
+  cpp_std <- odin_dust_cpp_std(decorations)
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
@@ -133,7 +135,8 @@ odin_dust_wrapper <- function(ir, srcdir, options) {
     generator <- dust::dust(path, quiet = !options$verbose,
                             workdir = options$workdir,
                             gpu = options$gpu$compile,
-                            linking_to = linking_to)
+                            linking_to = linking_to,
+                            cpp_std = cpp_std)
   }
   if (!("transform_variables" %in% names(generator$public_methods))) {
     generator$set("public", "transform_variables",
@@ -192,17 +195,61 @@ read_include_dust <- function(filename) {
 }
 
 
-odin_dust_linking_to <- function(code) {
-  if (is.null(code) || !any(grepl("linking_to", code))) {
+odin_dust_linking_to <- function(decorations) {
+  if (is.null(decorations)) {
+    return(NULL)
+  }
+  i <- decorations$decoration == "odin.dust::linking_to"
+  if (!any(i)) {
+    return(NULL)
+  }
+  unlist(lapply(decorations$params[i], as.character), TRUE, FALSE)
+}
+
+
+odin_dust_cpp_std <- function(decorations) {
+  if (is.null(decorations)) {
+    return(NULL)
+  }
+  i <- decorations$decoration == "odin.dust::cpp_std"
+  if (!any(i)) {
+    return(NULL)
+  }
+
+  check <- function(x) {
+    if (length(x) != 1L) {
+      stop("Expected exactly one argument to odin.dust::cpp_std")
+    }
+    x <- x[[1L]]
+    if (is.name(x)) {
+      x <- as.character(x)
+    } else if (is.recursive(x)) {
+      x <- gsub(" ", "", deparse(x))
+    }
+    x
+  }
+
+  cpp_std <- unique(unlist(lapply(decorations$params[i], check), TRUE, FALSE))
+  if (length(cpp_std) > 1) {
+    cpp_std_version <- sub("^c\\+\\+", "", cpp_std, ignore.case = TRUE)
+    cpp_std <- cpp_std[[which.max(cpp_std_version)]]
+    message(sprintf("More than one 'odin.dust::cpp11_std', using '%s'",
+                    cpp_std))
+  }
+  cpp_std
+}
+
+
+include_decorations <- function(code) {
+  if (is.null(code)) {
     return(NULL)
   }
   tmp <- tempfile()
   on.exit(unlink(tmp))
   writeLines(code, tmp)
   dat <- decor::cpp_decorations(files = tmp)
-  i <- dat$decoration == "odin.dust::linking_to"
-  if (!any(i)) {
+  if (nrow(dat) == 0L) {
     return(NULL)
   }
-  unlist(lapply(dat$params[i], as.character), TRUE, FALSE)
+  dat
 }
