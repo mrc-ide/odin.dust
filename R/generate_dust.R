@@ -854,7 +854,7 @@ generate_dust_gpu_size <- function(dat, rewrite) {
 
 
 generate_dust_gpu_copy <- function(dat, rewrite) {
-  name <- sprintf("dust::gpu::shared_copy<%s>", dat$config$base)
+  name <- sprintf("shared_copy<%s>", dat$config$base)
   args <- c(
     "dust::shared_ptr<%s>" = dat$meta$dust$shared,
     "int *" = dat$meta$dust$shared_int,
