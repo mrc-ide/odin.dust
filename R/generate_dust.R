@@ -329,6 +329,10 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
   body$add("return %s(%s, %s);",
            pars_type, dat$meta$dust$shared, dat$meta$internal)
 
+  ## Only add the 'real_type' type declaration if it looks likely we
+  ## use it, avoiding a compiler warning. This is actually fairly hard
+  ## to reason about so just use a heuristic as false positives are
+  ## harmless except the warning.
   body_txt <- body$get()
   if (any(grepl("real_type", body_txt, fixed = TRUE))) {
     body_txt <- c(
@@ -373,22 +377,9 @@ generate_dust_core_info <- function(dat, rewrite) {
   body$add('         "len"_nm = len,')
   body$add('         "index"_nm = index});')
 
-  ## Only add the 'internal' assignment if it looks likely we use it,
-  ## avoiding a compiler warning. This is actually fairly hard to
-  ## reason about so just use a heuristic as false positives are
-  ## harmless except the warning.
-  body_txt <- body$get()
-  if (any(grepl("internal.", body_txt, fixed = TRUE))) {
-    body_txt <- c(
-      sprintf("const %s::internal_type %s = %s.%s;",
-              dat$config$base, dat$meta$internal, dat$meta$dust$pars,
-              dat$meta$internal),
-      body_txt)
-  }
-
   name <- sprintf("%s_info<%s>", dat$meta$namespace, dat$config$base)
   c("template <>",
-    cpp_function("cpp11::sexp", name, args, body_txt))
+    cpp_function("cpp11::sexp", name, args, body$get()))
 }
 
 
