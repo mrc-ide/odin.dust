@@ -87,7 +87,17 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
       x
     }
   } else if (is.numeric(x)) {
-    deparse(x, control = "digits17")
+    if (x %% 1 == 0) {
+      format(x)
+    } else {
+      ## When compiling for float we want to cast all literal real
+      ## values (e.g., 1.2) as floats. The two ways of doing this are
+      ## either to write out a single precision literal (e.g., 1.2f)
+      ## or we can put these ugly casts everywhere and ensure that it
+      ## works nicely if we recompile and change the precision only in
+      ## dust.
+      sprintf("static_cast<real_type>(%s)", deparse(x, control = "digits17"))
+    }
   }
 }
 

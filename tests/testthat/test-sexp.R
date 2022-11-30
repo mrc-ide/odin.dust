@@ -219,3 +219,15 @@ test_that("Can cope with overflow", {
     generate_dust_sexp(quote(a + b), NULL, NULL, NULL, FALSE),
     "a + b")
 })
+
+
+test_that("cast numeric values to real_type", {
+  expect_equal(
+    generate_dust_sexp(quote(1.234), NULL, NULL, NULL, FALSE),
+    "static_cast<real_type>(1.234)")
+  expect_equal(
+    generate_dust_sexp(quote(1234), NULL, NULL, NULL, FALSE), "1234")
+  expect_match(
+    generate_dust_sexp(quote(1234 + 5.67), NULL, NULL, NULL, FALSE),
+    "1234 \\+ static_cast<real_type>\\(5\\.6[0-9]+\\)")
+})
