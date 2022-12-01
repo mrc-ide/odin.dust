@@ -12,16 +12,16 @@ test_that("Can use parens", {
 })
 
 
-test_that("^ becomes std::pow", {
+test_that("^ becomes dust::math::pow", {
   expr <- list("^", "a", "b")
   expect_equal(
     generate_dust_sexp(expr, NULL, NULL, NULL, FALSE),
-    "std::pow(a, b)")
+    "dust::math::pow(a, b)")
 
   expr <- list("^", "a", list("+", "b", "c"))
   expect_equal(
     generate_dust_sexp(expr, NULL, NULL, NULL, FALSE),
-    "std::pow(a, b + c)")
+    "dust::math::pow(a, b + c)")
 })
 
 
@@ -42,20 +42,20 @@ test_that("if/else becomes ternary", {
 test_that("Handling of log", {
   expect_equal(
     generate_dust_sexp(list("log", "a"), NULL, NULL, NULL, FALSE),
-    "std::log(a)")
+    "dust::math::log(a)")
   expect_equal(
     generate_dust_sexp(list("log", "a", "b"), NULL, NULL, NULL, FALSE),
-    "(std::log(a) / std::log(b))")
+    "(dust::math::log(a) / dust::math::log(b))")
   expect_equal(
     generate_dust_sexp(list("log10", "a"), NULL, NULL, NULL, FALSE),
-    "std::log10(a)")
+    "dust::math::log10(a)")
 })
 
 
 test_that("2-arg round is not supported", {
   expect_equal(
     generate_dust_sexp(list("round", "a"), NULL, NULL, NULL, FALSE),
-    "std::round(a)")
+    "dust::math::round(a)")
   expect_error(
     generate_dust_sexp(list("round", "a", "b"), NULL, NULL, NULL, FALSE),
     "odin.dust does not support 2-arg round",
@@ -69,10 +69,10 @@ test_that("fold min/max", {
     "a")
   expect_equal(
     generate_dust_sexp(list("min", "a", "b"), NULL, NULL, NULL, FALSE),
-    "std::min(a, b)")
+    "dust::math::min(a, b)")
   expect_equal(
     generate_dust_sexp(list("min", "a", "b", "c"), NULL, NULL, NULL, FALSE),
-    "std::min(a, std::min(b, c))")
+    "dust::math::min(a, dust::math::min(b, c))")
 
   dat <- list(gpu = collector())
   expect_equal(
@@ -80,18 +80,18 @@ test_that("fold min/max", {
     "a")
   expect_equal(
     generate_dust_sexp(list("min", "a", "b"), dat, NULL, NULL, TRUE),
-    "odin_min(a, b)")
+    "dust::math::min(a, b)")
   expect_equal(
     generate_dust_sexp(list("min", "a", "b", "c"), dat, NULL, NULL, TRUE),
-    "odin_min(a, odin_min(b, c))")
+    "dust::math::min(a, dust::math::min(b, c))")
   expect_setequal(dat$gpu$get(), c("a", "b", "c"))
 
   expect_equal(
     generate_dust_sexp(list("max", "a", "b", "c"), NULL, NULL, NULL, FALSE),
-    "std::max(a, std::max(b, c))")
+    "dust::math::max(a, dust::math::max(b, c))")
   expect_equal(
     generate_dust_sexp(list("max", "a", "b", "c"), dat, NULL, NULL, TRUE),
-    "odin_max(a, odin_max(b, c))")
+    "dust::math::max(a, dust::math::max(b, c))")
 })
 
 
@@ -171,16 +171,17 @@ test_that("renames", {
     "std::tgamma(x)")
   expect_equal(
     generate_dust_sexp(list("lgamma", "x"), NULL, NULL, NULL, FALSE),
-    "std::lgamma(x)")
+    "dust::math::lgamma(x)")
   expect_equal(
     generate_dust_sexp(list("ceiling", "x"), NULL, NULL, NULL, FALSE),
-    "std::ceil(x)")
+    "dust::math::ceil(x)")
   expect_equal(
     generate_dust_sexp(list("as.integer", "x"), NULL, NULL, NULL, FALSE),
     "static_cast<int>(x)")
   expect_equal(
     generate_dust_sexp(list("as.numeric", "x"), NULL, NULL, NULL, FALSE),
     "static_cast<real_type>(x)")
+  ## TODO: move this into the math lib
   expect_equal(
     generate_dust_sexp(list("%%", "x", "y"), NULL, NULL, NULL, FALSE),
     "fmodr<real_type>(x, y)")

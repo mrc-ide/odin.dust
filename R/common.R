@@ -1,14 +1,14 @@
 FUNCTIONS_RENAME <- c( # nolint
   gamma = "std::tgamma",
-  lgamma = "std::lgamma",
-  ceiling = "std::ceil",
+  lgamma = "dust::math::lgamma",
+  ceiling = "dust::math::ceil",
   as.integer = "static_cast<int>",
   as.numeric = "static_cast<real_type>",
   "%%" = "fmodr<real_type>")
 
-## Basically odin's FUNCTIONS_MATH:
-FUNCTIONS_STDLIB <- c( # nolint
-  "abs", "round", "floor", "trunc", "beta",
+## Basically odin's FUNCTIONS_MATH (beta requires C++17, so is excluded):
+FUNCTIONS_DUST_MATH <- c( # nolint
+  "abs", "round", "floor", "trunc",
   "sqrt",
   "exp", "expm1", "log", "log2", "log10", "log1p",
   "cos", "sin", "tan",
