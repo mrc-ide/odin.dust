@@ -1,6 +1,6 @@
 Package: odin.dust
 Title: Compile Odin to Dust
-Version: 0.2.26
+Version: 0.2.27
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("Alex", "Hill", role = "aut"),
@@ -13,7 +13,6 @@ Description: Less painful than it sounds, this package compiles an
     no interpolation and no delays).
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
 Language: en-GB
 URL: https://github.com/mrc-ide/odin.dust
 BugReports: https://github.com/mrc-ide/odin.dust/issues
