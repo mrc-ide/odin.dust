@@ -774,7 +774,7 @@ test_that("can extract cpp_std requirements", {
     "C++14")
   expect_equal(
     odin_dust_cpp_std(include_decorations(
-      '// [[odin.dust::cpp_std(lovely)]]\ncode\n')),
+      "// [[odin.dust::cpp_std(lovely)]]\ncode\n")),
     "lovely")
 
   expect_error(
