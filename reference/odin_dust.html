@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.27</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.28</span>
       </span>
     </div>
 
@@ -101,6 +101,21 @@ instead creating the more limited dust interface. However, for
 many uses this should be considerably faster than the interface
 that odin normally uses (built on dde).</p>
     </div>
+    <div id="including-custom-code">
+    <h2>Including custom code</h2>
+    
+
+
+<p>When including custom C++ code you may want to set additional
+options in order to enable compilation. You can do this by
+including pseudo-attributes</p><ul><li><p><code>// [[odin.dust::cpp_std(C++17)]]</code> - use this to change the C++
+standard used in compilation; this is passed to <code><a href="https://rdrr.io/pkg/dust/man/dust.html" class="external-link">dust::dust()</a></code>
+as the <code>cpp_std</code> option. It is only necessary to pass in values
+greater than C++11 at present as that is dust's default.</p></li>
+<li><p><code>// [[odin.dust::linking_to(pkg)]]</code> - use this to make include
+files present in an R package (e.g., BH) available. You can use
+as many of these attributes as you need.</p></li>
+</ul></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
