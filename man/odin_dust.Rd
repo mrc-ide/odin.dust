@@ -34,3 +34,20 @@ instead creating the more limited dust interface. However, for
 many uses this should be considerably faster than the interface
 that odin normally uses (built on dde).
 }
+\section{Including custom code}{
+
+
+When including custom C++ code you may want to set additional
+options in order to enable compilation. You can do this by
+including pseudo-attributes
+\itemize{
+\item \verb{// [[odin.dust::cpp_std(C++17)]]} - use this to change the C++
+standard used in compilation; this is passed to \code{\link[dust:dust]{dust::dust()}}
+as the \code{cpp_std} option. It is only necessary to pass in values
+greater than C++11 at present as that is dust's default.
+\item \verb{// [[odin.dust::linking_to(pkg)]]} - use this to make include
+files present in an R package (e.g., BH) available. You can use
+as many of these attributes as you need.
+}
+}
+

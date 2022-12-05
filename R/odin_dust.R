@@ -5,6 +5,20 @@
 ##' many uses this should be considerably faster than the interface
 ##' that odin normally uses (built on dde).
 ##'
+##' @section Including custom code:
+##'
+##' When including custom C++ code you may want to set additional
+##'   options in order to enable compilation. You can do this by
+##'   including pseudo-attributes
+##'
+##' * `// [[odin.dust::cpp_std(C++17)]]` - use this to change the C++
+##'   standard used in compilation; this is passed to [dust::dust()]
+##'   as the `cpp_std` option. It is only necessary to pass in values
+##'   greater than C++11 at present as that is dust's default.
+##' * `// [[odin.dust::linking_to(pkg)]]` - use this to make include
+##'   files present in an R package (e.g., BH) available. You can use
+##'   as many of these attributes as you need.
+##'
 ##' @title Create a dust odin model
 ##'
 ##' @param x Either the name of a file to read, a text string (if
@@ -120,6 +134,10 @@ odin_dust_wrapper <- function(ir, srcdir, options) {
     srcdir,
     generate_dust(ir, options))
   code <- odin_dust_code(dat)
+
+  decorations <- include_decorations(dat$include)
+  linking_to <- odin_dust_linking_to(decorations)
+  cpp_std <- odin_dust_cpp_std(decorations)
   path <- tempfile(fileext = ".cpp")
   writeLines(code, path)
 
@@ -130,7 +148,9 @@ odin_dust_wrapper <- function(ir, srcdir, options) {
   } else {
     generator <- dust::dust(path, quiet = !options$verbose,
                             workdir = options$workdir,
-                            gpu = options$gpu$compile)
+                            gpu = options$gpu$compile,
+                            linking_to = linking_to,
+                            cpp_std = cpp_std)
   }
   if (!("transform_variables" %in% names(generator$public_methods))) {
     generator$set("public", "transform_variables",
@@ -186,4 +206,62 @@ read_include_dust <- function(filename) {
   }
   list(names = names,
        data = list(source = paste(readLines(filename), collapse = "\n")))
+}
+
+
+odin_dust_linking_to <- function(decorations) {
+  if (is.null(decorations)) {
+    return(NULL)
+  }
+  i <- decorations$decoration == "odin.dust::linking_to"
+  if (!any(i)) {
+    return(NULL)
+  }
+  unlist(lapply(decorations$params[i], as.character), TRUE, FALSE)
+}
+
+
+odin_dust_cpp_std <- function(decorations) {
+  if (is.null(decorations)) {
+    return(NULL)
+  }
+  i <- decorations$decoration == "odin.dust::cpp_std"
+  if (!any(i)) {
+    return(NULL)
+  }
+
+  check <- function(x) {
+    if (length(x) != 1L) {
+      stop("Expected exactly one argument to odin.dust::cpp_std")
+    }
+    x <- x[[1L]]
+    if (is.language(x)) {
+      x <- gsub(" ", "", deparse(x))
+    }
+    x
+  }
+
+  cpp_std <- unique(unlist(lapply(decorations$params[i], check), TRUE, FALSE))
+  if (length(cpp_std) > 1) {
+    cpp_std_version <- sub("^c\\+\\+", "", cpp_std, ignore.case = TRUE)
+    cpp_std <- cpp_std[[which.max(cpp_std_version)]]
+    message(sprintf("More than one 'odin.dust::cpp11_std', using '%s'",
+                    cpp_std))
+  }
+  cpp_std
+}
+
+
+include_decorations <- function(code) {
+  if (is.null(code)) {
+    return(NULL)
+  }
+  tmp <- tempfile()
+  on.exit(unlink(tmp))
+  writeLines(code, tmp)
+  dat <- decor::cpp_decorations(files = tmp)
+  if (nrow(dat) == 0L) {
+    return(NULL)
+  }
+  dat
 }

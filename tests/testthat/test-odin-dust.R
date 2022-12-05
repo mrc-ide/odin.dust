@@ -714,3 +714,113 @@ test_that("include initialisation of time-varying variables", {
   code <- readLines(file.path(tmp, "src", "dust.cpp"))
   expect_match(code, "internal.initial_time = 0;", fixed = TRUE, all = FALSE)
 })
+
+
+test_that("can extract linking_to requirements", {
+  expect_null(odin_dust_linking_to(include_decorations(NULL)))
+  expect_null(odin_dust_linking_to(include_decorations("code")))
+
+  expect_equal(
+    odin_dust_linking_to(include_decorations(
+      "// [[odin.dust::linking_to(pkg1)]]\ncode\n")),
+    "pkg1")
+  expect_equal(
+    odin_dust_linking_to(include_decorations(
+      "// [[odin.dust::linking_to(pkg1, pkg2)]]\ncode\n")),
+    c("pkg1", "pkg2"))
+  expect_equal(
+    odin_dust_linking_to(include_decorations(
+      paste("// [[odin.dust::linking_to(pkg1, pkg2)]]",
+            "// [[odin.dust::linking_to(pkg3)]]",
+            "code", sep = "\n"))),
+    c("pkg1", "pkg2", "pkg3"))
+})
+
+
+test_that("generate code with additional packages", {
+  tmp <- tempfile()
+  dir.create(tmp)
+  writeLines(c("// [[odin.dust::linking_to(dust)]]", readLines("include.cpp")),
+             file.path(tmp, "include.cpp"))
+  gen <- with_dir(
+    tmp,
+    odin_dust({
+      config(include) <- "include.cpp"
+      n <- 5
+      x[] <- user()
+      initial(y[]) <- 0
+      update(y[]) <- cumulative_to_i(i, x)
+      dim(x) <- n
+      dim(y) <- n
+    }, workdir = "pkg"))
+  desc <- as.list(read.dcf(file.path(tmp, "pkg", "DESCRIPTION"))[1, ])
+  expect_setequal(
+    strsplit(desc[["LinkingTo"]], ", ")[[1]],
+    c("cpp11", "dust"))
+})
+
+
+test_that("can extract cpp_std requirements", {
+  expect_null(odin_dust_cpp_std(include_decorations(NULL)))
+  expect_null(odin_dust_cpp_std(include_decorations("code")))
+
+  expect_equal(
+    odin_dust_cpp_std(include_decorations(
+      '// [[odin.dust::cpp_std("C++14")]]\ncode\n')),
+    "C++14")
+  expect_equal(
+    odin_dust_cpp_std(include_decorations(
+      "// [[odin.dust::cpp_std(C++14)]]\ncode\n")),
+    "C++14")
+  expect_equal(
+    odin_dust_cpp_std(include_decorations(
+      "// [[odin.dust::cpp_std(lovely)]]\ncode\n")),
+    "lovely")
+
+  expect_error(
+    odin_dust_cpp_std(include_decorations(
+      "// [[odin.dust::cpp_std()]]\ncode\n")),
+    "Expected exactly one argument to odin.dust::cpp_std")
+  expect_error(
+    odin_dust_cpp_std(include_decorations(
+      "// [[odin.dust::cpp_std(C++11, C++14)]]\ncode\n")),
+    "Expected exactly one argument to odin.dust::cpp_std")
+
+  code <- paste(
+    "// [[odin.dust::cpp_std(C++14)]]",
+    "// [[odin.dust::cpp_std(C++17)]]",
+    "code", sep = "\n")
+  expect_message(
+    res <- odin_dust_cpp_std(include_decorations(code)),
+    "More than one 'odin.dust::cpp11_std', using 'C++17'",
+    fixed = TRUE)
+  expect_equal(res, "C++17")
+
+  code <- paste(
+    "// [[odin.dust::cpp_std(C++17)]]",
+    "// [[odin.dust::cpp_std(C++17)]]",
+    "code", sep = "\n")
+  expect_silent(res <- odin_dust_cpp_std(include_decorations(code)))
+  expect_equal(res, "C++17")
+})
+
+
+test_that("generate code that uses different c++ version", {
+  tmp <- tempfile()
+  dir.create(tmp)
+  writeLines(c("// [[odin.dust::cpp_std(C++17)]]", readLines("include.cpp")),
+             file.path(tmp, "include.cpp"))
+  gen <- with_dir(
+    tmp,
+    odin_dust({
+      config(include) <- "include.cpp"
+      n <- 5
+      x[] <- user()
+      initial(y[]) <- 0
+      update(y[]) <- cumulative_to_i(i, x)
+      dim(x) <- n
+      dim(y) <- n
+    }, workdir = "pkg"))
+  desc <- as.list(read.dcf(file.path(tmp, "pkg", "DESCRIPTION"))[1, ])
+  expect_equal(desc[["SystemRequirements"]], "C++17")
+})
