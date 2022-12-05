@@ -235,9 +235,7 @@ odin_dust_cpp_std <- function(decorations) {
       stop("Expected exactly one argument to odin.dust::cpp_std")
     }
     x <- x[[1L]]
-    if (is.name(x)) {
-      x <- as.character(x)
-    } else if (is.recursive(x)) {
+    if (is.language(x)) {
       x <- gsub(" ", "", deparse(x))
     }
     x
