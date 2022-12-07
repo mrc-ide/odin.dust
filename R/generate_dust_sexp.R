@@ -19,7 +19,7 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
       pos <- dust_array_access(args[[1L]], args[-1], data, meta, supported, gpu)
       ret <- sprintf("%s[%s]", values[[1L]], pos)
     } else if (fn == "^") {
-      ret <- sprintf("std::pow(%s, %s)", values[[1]], values[[2]])
+      ret <- sprintf("dust::math::pow(%s, %s)", values[[1]], values[[2]])
     } else if (fn == "+") {
       ret <- paste(values, collapse = " + ")
     } else if (n == 2L && fn %in% odin:::FUNCTIONS_INFIX) {
@@ -44,10 +44,10 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
       dim <- data$elements[[args[[1L]]]]$dimnames$dim[[args[[2]]]]
       ret <- generate_dust_sexp(dim, data, meta, supported, gpu)
     } else if (fn == "log" && length(values) == 2L) {
-      ret <- sprintf("(std::log(%s) / std::log(%s))",
+      ret <- sprintf("(dust::math::log(%s) / dust::math::log(%s))",
                      values[[1L]], values[[2L]])
     } else if (fn == "min" || fn == "max") {
-      fn <- paste0(if (gpu) "odin_" else "std::", fn)
+      fn <- sprintf("dust::math::%s", fn)
       ret <- dust_fold_call(fn, values)
     } else if (fn == "sum" || fn == "odin_sum") {
       ret <- generate_dust_sexp_sum(args, data, meta, supported, gpu)
@@ -58,11 +58,11 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
     } else {
       if (any(names(FUNCTIONS_RENAME) == fn)) {
         fn <- FUNCTIONS_RENAME[[fn]]
-      } else if (any(FUNCTIONS_STDLIB == fn)) {
+      } else if (any(FUNCTIONS_DUST_MATH == fn)) {
         if (fn == "round" && length(values) == 2) {
           stop("odin.dust does not support 2-arg round")
         }
-        fn <- sprintf("std::%s", fn)
+        fn <- sprintf("dust::math::%s", fn)
       } else if (!(fn %in% supported)) {
         stop(sprintf("unsupported function '%s'", fn))
       }
@@ -87,7 +87,17 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
       x
     }
   } else if (is.numeric(x)) {
-    deparse(x, control = "digits17")
+    if (x %% 1 == 0) {
+      format(x)
+    } else {
+      ## When compiling for float we want to cast all literal real
+      ## values (e.g., 1.2) as floats. The two ways of doing this are
+      ## either to write out a single precision literal (e.g., 1.2f)
+      ## or we can put these ugly casts everywhere and ensure that it
+      ## works nicely if we recompile and change the precision only in
+      ## dust.
+      sprintf("static_cast<real_type>(%s)", deparse(x, control = "digits17"))
+    }
   }
 }
 
