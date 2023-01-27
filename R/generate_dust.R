@@ -19,7 +19,6 @@ generate_dust <- function(ir, options) {
   check_no_inplace(dat)
 
   dat$meta$dust <- generate_dust_meta(options)
-  dat$meta$namespace <- namespace_name(dat)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
@@ -65,7 +64,7 @@ generate_dust <- function(ir, options) {
   continuous <- dat$features$continuous
   list(class = class, create = create, info = info, data = data, gpu = code_gpu,
        support = support, include = include, name = dat$config$base,
-       continuous = continuous, namespace = dat$meta$namespace)
+       continuous = continuous)
 }
 
 
@@ -140,7 +139,7 @@ generate_dust_core_struct <- function(dat) {
   i_internal <- vcapply(dat$data$elements[i], "[[", "stage") == "time"
 
   if (is.null(dat$compare)) {
-    data_type <- sprintf("using data_type = %s::no_data;", dat$meta$namespace)
+    data_type <- "using data_type = dust::no_data;"
   } else {
     data_type <- c(
       "struct __align__(16) data_type {",
@@ -161,8 +160,8 @@ generate_dust_core_struct <- function(dat) {
 
 
 generate_dust_core_ctor <- function(dat) {
-  c(sprintf("%s(const %s::pars_type<%s>& %s) :",
-            dat$config$base, dat$meta$namespace,
+  c(sprintf("%s(const dust::pars_type<%s>& %s) :",
+            dat$config$base,
             dat$config$base, dat$meta$dust$pars),
     sprintf("  %s(%s.shared), %s(%s.internal) {",
             dat$meta$dust$shared, dat$meta$dust$pars,
@@ -177,10 +176,10 @@ generate_dust_core_size <- function(dat, rewrite) {
     cpp_function("size_t", "size", NULL, body)
   } else {
     body <- sprintf("return %s;", rewrite(dat$data$variable$length))
-    n_var <- cpp_function("size_t", "n_variables", NULL, body)
+    n_var <- cpp_function("size_t", "n_variables", NULL, body, TRUE)
 
     body <- sprintf("return %s;", rewrite(dat$data$output$length))
-    n_output <- cpp_function("size_t", "n_output", NULL, body)
+    n_output <- cpp_function("size_t", "n_output", NULL, body, TRUE)
 
     c(n_var, n_output)
   }
@@ -288,8 +287,7 @@ generate_dust_core_rhs <- function(eqs, dat, rewrite) {
 
 generate_dust_core_create <- function(eqs, dat, rewrite) {
   pars_name <- dat$meta$dust$pars
-  pars_type <- sprintf("%s::pars_type<%s>",
-                       dat$meta$namespace, dat$config$base)
+  pars_type <- sprintf("dust::pars_type<%s>", dat$config$base)
   internal_type <- sprintf("%s::internal_type", dat$config$base)
 
   body <- collector()
@@ -340,7 +338,7 @@ generate_dust_core_create <- function(eqs, dat, rewrite) {
       body_txt)
   }
 
-  name <- sprintf("%s_pars<%s>", dat$meta$namespace, dat$config$base)
+  name <- sprintf("dust_pars<%s>", dat$config$base)
 
   args <- c("cpp11::list" = dat$meta$user)
   c("template<>",
@@ -354,8 +352,8 @@ generate_dust_core_info <- function(dat, rewrite) {
   nms <- c(nms_variable, nms_output)
 
   args <- dat$meta$dust$pars
-  names(args) <- sprintf("const %s::pars_type<%s>&",
-                         dat$meta$namespace, dat$config$base)
+  names(args) <- sprintf("const dust::pars_type<%s>&",
+                         dat$config$base)
 
   body <- collector()
   body$add("const std::shared_ptr<const %s::shared_type> %s = %s.%s;",
@@ -377,7 +375,7 @@ generate_dust_core_info <- function(dat, rewrite) {
   body$add('         "len"_nm = len,')
   body$add('         "index"_nm = index});')
 
-  name <- sprintf("%s_info<%s>", dat$meta$namespace, dat$config$base)
+  name <- sprintf("dust_info<%s>", dat$config$base)
   c("template <>",
     cpp_function("cpp11::sexp", name, args, body$get()))
 }
@@ -1127,15 +1125,6 @@ transform_compare_odin_gpu <- function(code) {
 
   ## Actual transformation is trivial here:
   gsub("odin\\(\\s*([^) ]+)\\s*\\)", "\\1", code)
-}
-
-# This will become obsolete once mode is absorbed into dust
-namespace_name <- function(dat) {
-  if (dat$features$continuous) {
-    "mode"
-  } else {
-    "dust"
-  }
 }
 
 
