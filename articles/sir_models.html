@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.29</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.30</span>
       </span>
     </div>
 
@@ -167,7 +167,7 @@ not contain special characters.</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mrc-ide/odin.dust" class="external-link">odin.dust</a></span><span class="op">)</span></span>
 <span><span class="va">gen_sir</span> <span class="op">&lt;-</span> <span class="fu">odin.dust</span><span class="fu">::</span><span class="fu"><a href="../reference/odin_dust.html">odin_dust</a></span><span class="op">(</span><span class="st">"sir.R"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required namespace: pkgbuild</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 18 functions decorated with [[cpp11::register]]</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 20 functions decorated with [[cpp11::register]]</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> generated file <span style="color: #0000BB;">cpp11.R</span></span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> generated file <span style="color: #0000BB;">cpp11.cpp</span></span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Re-compiling <span style="color: #0000BB;">sir3a25fe3b</span></span></span>
@@ -178,7 +178,7 @@ not contain special characters.</p>
 <span><span class="co">#&gt; g++ -std=gnu++11 -I"/opt/R/4.2.2/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/home/runner/work/_temp/Library/dust/include -DHAVE_INLINE -fopenmp -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always -c cpp11.cpp -o cpp11.o</span></span>
 <span><span class="co">#&gt; g++ -std=gnu++11 -I"/opt/R/4.2.2/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/home/runner/work/_temp/Library/dust/include -DHAVE_INLINE -fopenmp -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always -c dust.cpp -o dust.o</span></span>
 <span><span class="co">#&gt; g++ -std=gnu++11 -shared -L/opt/R/4.2.2/lib/R/lib -L/usr/local/lib -o sir3a25fe3b.so cpp11.o dust.o -fopenmp -L/opt/R/4.2.2/lib/R/lib -lR</span></span>
-<span><span class="co">#&gt; installing to /tmp/RtmplcwyJu/devtools_install_1c3b6498f5f7/00LOCK-file1c3b7ce8aebe/00new/sir3a25fe3b/libs</span></span>
+<span><span class="co">#&gt; installing to /tmp/Rtmp7lNnqT/devtools_install_24467edd08e8/00LOCK-file24465176a698/00new/sir3a25fe3b/libs</span></span>
 <span><span class="co">#&gt; ** checking absolute paths in shared objects and dynamic libraries</span></span>
 <span><span class="co">#&gt; * DONE (sir3a25fe3b)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">sir3a25fe3b</span></span></span></code></pre></div>
@@ -393,7 +393,7 @@ follows:</p>
 the model:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gen_age</span> <span class="op">&lt;-</span> <span class="fu">odin.dust</span><span class="fu">::</span><span class="fu"><a href="../reference/odin_dust.html">odin_dust</a></span><span class="op">(</span><span class="st">"sirage.R"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 18 functions decorated with [[cpp11::register]]</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 20 functions decorated with [[cpp11::register]]</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> generated file <span style="color: #0000BB;">cpp11.R</span></span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> generated file <span style="color: #0000BB;">cpp11.cpp</span></span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Re-compiling <span style="color: #0000BB;">siragef4536946</span></span></span>
@@ -404,7 +404,7 @@ the model:</p>
 <span><span class="co">#&gt; g++ -std=gnu++11 -I"/opt/R/4.2.2/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/home/runner/work/_temp/Library/dust/include -DHAVE_INLINE -fopenmp -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always -c cpp11.cpp -o cpp11.o</span></span>
 <span><span class="co">#&gt; g++ -std=gnu++11 -I"/opt/R/4.2.2/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I/usr/local/include  -I/home/runner/work/_temp/Library/dust/include -DHAVE_INLINE -fopenmp -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always -c dust.cpp -o dust.o</span></span>
 <span><span class="co">#&gt; g++ -std=gnu++11 -shared -L/opt/R/4.2.2/lib/R/lib -L/usr/local/lib -o siragef4536946.so cpp11.o dust.o -fopenmp -L/opt/R/4.2.2/lib/R/lib -lR</span></span>
-<span><span class="co">#&gt; installing to /tmp/RtmplcwyJu/devtools_install_1c3b64137a0d/00LOCK-file1c3b2c04de64/00new/siragef4536946/libs</span></span>
+<span><span class="co">#&gt; installing to /tmp/Rtmp7lNnqT/devtools_install_2446f9ec450/00LOCK-file2446303d0cd2/00new/siragef4536946/libs</span></span>
 <span><span class="co">#&gt; ** checking absolute paths in shared objects and dynamic libraries</span></span>
 <span><span class="co">#&gt; * DONE (siragef4536946)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">siragef4536946</span></span></span></code></pre></div>
@@ -530,7 +530,7 @@ entirely using the commands above from <a href="https://mrc-ide.github.io/dust/"
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer>
