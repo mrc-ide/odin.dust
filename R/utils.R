@@ -82,15 +82,16 @@ dust_plus_1 <- function(x, rewrite) {
 }
 
 
-cpp_function <- function(return_type, name, args, body) {
-  c(cpp_args(return_type, name, args), paste0("  ", body), "}")
+cpp_function <- function(return_type, name, args, body, const = FALSE) {
+  c(cpp_args(return_type, name, args, const), paste0("  ", body), "}")
 }
 
 
-cpp_args <- function(return_type, name, args) {
+cpp_args <- function(return_type, name, args, const) {
   args_str <- paste(sprintf("%s %s", names(args), unname(args)),
                     collapse = ", ")
-  sprintf("%s %s(%s) {", return_type, name, args_str)
+  sprintf("%s %s(%s)%s {",
+          return_type, name, args_str, if (const) " const" else "")
 }
 
 
