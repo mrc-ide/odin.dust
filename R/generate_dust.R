@@ -63,8 +63,7 @@ generate_dust <- function(ir, options) {
 
   continuous <- dat$features$continuous
   list(class = class, create = create, info = info, data = data, gpu = code_gpu,
-       support = support, include = include, name = dat$config$base,
-       continuous = continuous)
+       support = support, include = include, name = dat$config$base)
 }
 
 
@@ -485,6 +484,8 @@ generate_dust_core_attributes <- function(dat) {
   default <- vcapply(default_value, deparse_str)
 
   attr_class <- sprintf("// [[dust::class(%s)]]", dat$config$base)
+  time_type <- if (dat$features$continuous) "continuous" else "discrete"
+  attr_time <- sprintf("// [[dust::time_type(%s)]]", time_type)
 
   ## We need the param attribute in one line only, so some faffery
   ## required here:
@@ -494,7 +495,7 @@ generate_dust_core_attributes <- function(dat) {
     sprintf("rank = %d, min = %s, max = %s, integer = %s)]]",
             rank, min, max, integer))
 
-  c(attr_class, attr_param)
+  c(attr_class, attr_time, attr_param)
 }
 
 
