@@ -100,6 +100,11 @@ cpp_block <- function(body) {
 }
 
 
+cpp_when <- function(condition, body) {
+  c(sprintf("if (%s) {", condition), paste0("  ", body), "}")
+}
+
+
 cpp_namespace <- function(name, code) {
   c(sprintf("namespace %s {", name), code, "}")
 }

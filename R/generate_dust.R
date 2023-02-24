@@ -1,7 +1,7 @@
 generate_dust <- function(ir, options) {
   dat <- odin::odin_ir_deserialise(ir)
   features <- vlapply(dat$features, identity)
-  supported <- c("initial_time_dependent", "has_user", "has_array",
+  supported <- c("initial_time_dependent", "has_user", "has_array", "has_debug",
                  "discrete", "has_stochastic", "has_include", "has_output",
                  "continuous", "mixed")
   unsupported <- setdiff(names(features)[features], supported)
@@ -18,6 +18,7 @@ generate_dust <- function(ir, options) {
   ## to use one though.
   check_no_inplace(dat)
 
+  dat$options <- options
   dat$meta$dust <- generate_dust_meta(options)
 
   rewrite <- function(x) {
@@ -226,7 +227,8 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
 
   unpack <- lapply(variables, dust_unpack_variable,
                    dat, dat$meta$state, rewrite)
-  body <- dust_flatten_eqs(c(unpack, eqs[equations]))
+  debug <- generate_dust_debug(dat$debug, dat, rewrite)
+  body <- dust_flatten_eqs(c(unpack, eqs[equations], debug))
 
   args <- c("size_t" = dat$meta$time,
             "const real_type *" = dat$meta$state,
@@ -1142,4 +1144,46 @@ check_no_inplace <- function(dat) {
                   "\nPlease see vignette('porting')")
     stop(msg, call. = FALSE)
   }
+}
+
+
+generate_dust_debug <- function(debug, dat, rewrite) {
+  if (!dat$features$has_debug || !dat$options$debug_enable) {
+    return(NULL)
+  }
+
+  ret <- collector()
+
+  msg <- intersect(setdiff(names(dat$data$variable$contents),
+                           dat$components$rhs$variables),
+                   unlist(lapply(debug, function(x) x$depends$variables)))
+  if (length(msg) > 0) {
+    ret$add(dust_flatten_eqs(
+      lapply(msg, dust_unpack_variable, dat, dat$meta$state, rewrite)))
+  }
+
+  time_fmt <- if (dat$features$continuous) "%f" else "%d"
+  time_name <- dat$meta$time
+
+  ret$add("#ifdef _OPENMP")
+  ret$add("  const bool dust_is_single_threaded = !omp_in_parallel();")
+  ret$add("#else")
+  ret$add("  const bool dust_is_single_threaded = true;")
+  ret$add("#endif")
+
+  for (eq in debug) {
+    if (eq$type == "print") {
+      eq_args <- paste(vcapply(eq$args, rewrite), collapse = ", ")
+      eq_str <- sprintf('Rprintf("[%s] %s\\n", %s, %s);',
+                        time_fmt, eq$format, time_name, eq_args)
+      eq_str <- cpp_when("dust_is_single_threaded", eq_str)
+      if (is.null(eq$when)) {
+        ret$add(eq_str)
+      } else {
+        ret$add(cpp_when(rewrite(eq$when), eq_str))
+      }
+    }
+  }
+
+  ret$get()
 }

@@ -1,3 +1,11 @@
+# odin.dust 0.3.1
+
+* Support for odin's new `print()` based debugging
+
+# odin.dust 0.3.0
+
+* Complete support for continuous time models; these can contain both ODEs and discretely-timed stochastic updates (using recent dust)
+
 # odin.dust 0.2.24
 
 * Add support for `rgamma` and `rnbinom`, using new dust
