@@ -824,3 +824,47 @@ test_that("generate code that uses different c++ version", {
   desc <- as.list(read.dcf(file.path(tmp, "pkg", "DESCRIPTION"))[1, ])
   expect_equal(desc[["SystemRequirements"]], "C++17")
 })
+
+
+test_that("generate model with debug information", {
+  gen <- odin_dust({
+    initial(x) <- 1
+    update(x) <- x + 1
+    print("x: {x; .0f}")
+  }, debug_enable = TRUE)
+
+  mod <- gen$new(list(), 0, 1)
+  out <- capture_output(y <- mod$run(10))
+  expect_equal(
+    strsplit(out, "\n")[[1]],
+    sprintf("[%d] x: %d", 0:9, 1:10))
+
+  mod <- gen$new(list(), 0, 2)
+  out <- capture_output(y <- mod$run(10))
+  expect_equal(
+    strsplit(out, "\n")[[1]],
+    rep(sprintf("[%d] x: %d", 0:9, 1:10), 2))
+
+  if (mod$has_openmp()) {
+    mod <- gen$new(list(), 0, 2, n_threads = 2)
+    out <- capture_output(y <- mod$run(10))
+    expect_identical(out, "")
+  }
+})
+
+
+test_that("generate model with conditional debugging", {
+  gen <- odin_dust({
+    initial(x) <- 1
+    update(x) <- x + 1
+    initial(y) <- 5
+    update(y) <- 5
+    print("x: {x; .2f}, y: {y; .0f}", when = x >= y)
+  }, debug_enable = TRUE)
+
+  mod <- gen$new(list(), 0, 1)
+  out <- capture_output(y <- mod$run(10))
+  expect_equal(
+    strsplit(out, "\n")[[1]],
+    sprintf("[%d] x: %.2f, y: %d", 4:9, 5:10, 5))
+})
