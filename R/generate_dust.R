@@ -173,7 +173,7 @@ generate_dust_core_ctor <- function(dat) {
 generate_dust_core_size <- function(dat, rewrite) {
   if (!dat$features$continuous) {
     body <- sprintf("return %s;", rewrite(dat$data$variable$length))
-    cpp_function("size_t", "size", NULL, body)
+    cpp_function("size_t", "size", NULL, body, TRUE)
   } else {
     body <- sprintf("return %s;", rewrite(dat$data$variable$length))
     n_var <- cpp_function("size_t", "n_variables", NULL, body, TRUE)
@@ -211,7 +211,8 @@ generate_dust_core_initial <- function(dat, rewrite) {
 
   initial <- dust_flatten_eqs(lapply(dat$data$variable$contents, set_initial))
 
-  args <- c("size_t" = dat$meta$time)
+  args <- c("size_t" = dat$meta$time,
+            "rng_state_type&" = dat$meta$dust$rng_state)
   body <- c(sprintf("std::vector<real_type> %s(%s);",
                     dat$meta$state, rewrite(dat$data$variable$length)),
             dust_flatten_eqs(eqs_initial),

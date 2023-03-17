@@ -868,3 +868,16 @@ test_that("generate model with conditional debugging", {
     strsplit(out, "\n")[[1]],
     sprintf("[%d] x: %.2f, y: %d", 4:9, 5:10, 5))
 })
+
+
+test_that("Can use random numbers in initial conditions", {
+  gen <- odin_dust({
+    initial(x) <- rnorm(0, sd * 5)
+    update(x) <- rnorm(x, sd)
+    sd <- user(1)
+  })
+  mod <- gen$new(list(sd = 2), 0, 10, seed = 1)
+  rng <- dust::dust_rng$new(seed = 1, n_streams = 10)
+  y_cmp <- rng$normal(1, 0, 10)
+  expect_equal(mod$state(), y_cmp)
+})
