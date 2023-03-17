@@ -19,7 +19,7 @@ generate_dust <- function(ir, options) {
   check_no_inplace(dat)
 
   dat$options <- options
-  dat$meta$dust <- generate_dust_meta(options)
+  dat$meta$dust <- generate_dust_meta(options, dat$features$continuous)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
@@ -71,13 +71,14 @@ generate_dust <- function(ir, options) {
 ## NOTE that none of these names are protected by odin; we probably
 ## should try and move to names where we are sure that we won't
 ## collide.
-generate_dust_meta <- function(options) {
+generate_dust_meta <- function(options, continuous) {
   list(pars = "pars",
        data = "data",
        shared = "shared",
        rng_state = "rng_state",
        rng_state_type = options$rng_state_type,
        real_type = options$real_type,
+       time_type = if (continuous) "real_type" else "step_t",
        update_stochastic_result = "state_next",
        internal_int = "internal_int",
        internal_real  = "internal_real",
@@ -211,7 +212,7 @@ generate_dust_core_initial <- function(dat, rewrite) {
 
   initial <- dust_flatten_eqs(lapply(dat$data$variable$contents, set_initial))
 
-  args <- c("size_t" = dat$meta$time,
+  args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
             "rng_state_type&" = dat$meta$dust$rng_state)
   body <- c(sprintf("std::vector<real_type> %s(%s);",
                     dat$meta$state, rewrite(dat$data$variable$length)),
@@ -231,7 +232,7 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
   debug <- generate_dust_debug(dat$debug, dat, rewrite)
   body <- dust_flatten_eqs(c(unpack, eqs[equations], debug))
 
-  args <- c("size_t" = dat$meta$time,
+  args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
             "const real_type *" = dat$meta$state,
             "rng_state_type&" = dat$meta$dust$rng_state,
             "real_type *" = dat$meta$result)
@@ -788,7 +789,7 @@ generate_dust_gpu_update <- function(dat) {
   name <- sprintf("update_gpu<%s>", dat$config$base)
 
   args <- c(
-    "size_t" = dat$meta$time,
+    set_names(dat$meta$time, dat$meta$dust$time_type),
     "const dust::gpu::interleaved<%s::real_type>" = dat$meta$state,
     "dust::gpu::interleaved<int>" = dat$meta$dust$internal_int,
     "dust::gpu::interleaved<%s::real_type>" = dat$meta$dust$internal_real,

@@ -493,11 +493,32 @@ test_that("can compile deterministic model", {
   })
 
   mod <- gen$new(list(beta = 1), 1, 2)
-  mod$run(10)
+  y <- mod$run(10)
+  expect_equal(y, mod$state())
 
   expect_equal(mod$state()[1, ], c(10, 10))
   expect_equal(mod$state()[2, ], c(20, 20))
   expect_equal(mod$pars(), list(beta = 1))
+})
+
+
+test_that("can use noninteger time", {
+  gen <- odin_dust({
+    initial(x) <- 1
+    deriv(x) <- beta
+    output(y) <- x * 2
+
+    beta <- user(0)
+  })
+
+  mod <- gen$new(list(beta = 1), 1.2, 2)
+  y <- mod$run(10.5)
+  expect_equal(mod$time(), 10.5)
+  expect_equal(y[1, ], c(10.3, 10.3))
+  expect_equal(y[2, ], c(20.6, 20.6))
+  expect_equal(
+    mod$simulate(c(11.3, 12.8)),
+    array(c(11.1, 22.2, 11.1, 22.2, 12.6, 25.2, 12.6, 25.2), c(2, 2, 2)))
 })
 
 
