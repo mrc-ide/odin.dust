@@ -211,7 +211,6 @@ generate_dust_core_initial <- function(dat, rewrite) {
 
   initial <- dust_flatten_eqs(lapply(dat$data$variable$contents, set_initial))
 
-  ## TODO: fix time type here
   args <- c("size_t" = dat$meta$time,
             "rng_state_type&" = dat$meta$dust$rng_state)
   body <- c(sprintf("std::vector<real_type> %s(%s);",
@@ -232,7 +231,6 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
   debug <- generate_dust_debug(dat$debug, dat, rewrite)
   body <- dust_flatten_eqs(c(unpack, eqs[equations], debug))
 
-  ## TODO: fix time type
   args <- c("size_t" = dat$meta$time,
             "const real_type *" = dat$meta$state,
             "rng_state_type&" = dat$meta$dust$rng_state,
@@ -789,7 +787,6 @@ generate_dust_gpu <- function(dat, rewrite) {
 generate_dust_gpu_update <- function(dat) {
   name <- sprintf("update_gpu<%s>", dat$config$base)
 
-  ## TODO: Fix time type
   args <- c(
     "size_t" = dat$meta$time,
     "const dust::gpu::interleaved<%s::real_type>" = dat$meta$state,
