@@ -78,7 +78,7 @@ generate_dust_meta <- function(options, continuous) {
        rng_state = "rng_state",
        rng_state_type = options$rng_state_type,
        real_type = options$real_type,
-       time_type = if (continuous) "real_type" else "step_t",
+       time_type = if (continuous) "real_type" else "size_t",
        update_stochastic_result = "state_next",
        internal_int = "internal_int",
        internal_real  = "internal_real",
