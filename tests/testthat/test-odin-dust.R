@@ -881,3 +881,18 @@ test_that("Can use random numbers in initial conditions", {
   y_cmp <- rng$normal(1, 0, 10)
   expect_equal(mod$state(), y_cmp)
 })
+
+
+test_that("Can use sign function", {
+  gen <- odin_dust({
+    r <- rnorm(x, 1)
+    initial(x) <- 0
+    update(x) <- r
+    initial(y) <- 0
+    update(y) <- sign(r)
+  })
+
+  mod <- gen$new(list(), 0, 10)
+  y <- mod$simulate(0:10)
+  expect_equal(y[2, , ], sign(y[1, , ]))
+})

@@ -19,3 +19,8 @@ template <typename T>
 __host__ __device__ T odin_max(T x, T y) {
   return x > y ? x : y;
 }
+
+template <typename T>
+__host__ __device__ T odin_sign(T x) {
+  return (x > 0) ? 1 : ((x < 0) ? -1 : 0);
+}

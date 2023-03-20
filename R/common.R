@@ -4,6 +4,7 @@ FUNCTIONS_RENAME <- c( # nolint
   ceiling = "dust::math::ceil",
   as.integer = "static_cast<int>",
   as.numeric = "static_cast<real_type>",
+  sign = "odin_sign",
   "%%" = "fmodr<real_type>")
 
 ## Basically odin's FUNCTIONS_MATH (beta requires C++17, so is excluded):
