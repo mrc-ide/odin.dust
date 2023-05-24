@@ -258,3 +258,14 @@ test_that("rewrite compare for gpu complains if indenting is bad", {
     transform_compare_odin_gpu(code),
     "Detected inconsistent indenting while reformatting compare function")
 })
+
+
+test_that("build compare with new interface", {
+  gen <- odin_dust({
+    initial(y) <- 0
+    update(y) <- y + rnorm(0, 1)
+    scale <- user(1)
+    d <- data()
+    compare(d) ~ normal(y, scale)
+  })
+})

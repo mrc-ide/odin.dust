@@ -78,7 +78,12 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
       data$gpu$add(x)
     }
     el <- data$elements[[x]]
-    if (!is.null(el$location) && el$location == "internal" && !gpu) {
+    if (identical(el$location, "data")) {
+      ## TODO: I'm slightly concerned that we'll hit collisions from
+      ## odin with 'data' as a name; it's not yet prevented there and
+      ## should come through our metadata really.
+      sprintf("%s.%s", meta$dust$data, x)
+    } else if (!is.null(el$location) && el$location == "internal" && !gpu) {
       if (el$stage == "time") {
         sprintf("%s.%s", meta$internal, x)
       } else {

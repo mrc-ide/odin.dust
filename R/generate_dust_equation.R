@@ -16,6 +16,7 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu, mixed) {
     expression_scalar = generate_dust_equation_scalar,
     expression_array = generate_dust_equation_array,
     alloc = generate_dust_equation_alloc,
+    compare = generate_dust_equation_compare,
     user = generate_dust_equation_user,
     copy = generate_dust_equation_copy,
     stop("Unknown type"))
@@ -103,6 +104,15 @@ generate_dust_equation_copy <- function(eq, data_info, dat, rewrite, gpu) {
              rewrite(eq$lhs), rewrite(data_info$dimnames$length),
             dat$meta$output, rewrite(x$offset))
   }
+}
+
+
+generate_dust_equation_compare <- function(eq, data_info, dat, rewrite, gpu) {
+  args <- c(rewrite(eq$lhs), vcapply(eq$compare$args, rewrite), "true")
+  sprintf("const auto %s = dust::density::%s(%s);",
+          eq$name,
+          eq$compare$distribution,
+          paste(args, collapse = ", "))
 }
 
 
