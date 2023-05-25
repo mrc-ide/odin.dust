@@ -265,7 +265,22 @@ test_that("build compare with new interface", {
     initial(y) <- 0
     update(y) <- y + rnorm(0, 1)
     scale <- user(1)
-    d <- data()
-    compare(d) ~ normal(y, scale)
+    observed <- data()
+    compare(observed) ~ normal(y, scale)
   })
+
+  t <- seq(0, 50, by = 5)[-1]
+  d <- dust::dust_data(
+    data.frame(time = t,
+               observed = rnorm(length(t), 0, sqrt(t)),
+               another = 0L))
+
+  mod <- gen$new(list(), 0, 10)
+  expect_null(mod$compare_data())
+  mod$set_data(d)
+  expect_null(mod$compare_data())
+  y <- mod$run(t[[1]])
+  expect_equal(
+    mod$compare_data(),
+    dnorm(d[[1]][[2]]$observed, drop(y), 1, TRUE))
 })
