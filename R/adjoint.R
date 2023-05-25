@@ -45,7 +45,33 @@ fold_add <- function(x) {
 }
 
 build_adjoint <- function(dat) {
+  browser()
+
+  ## This totally fries my brain, what we we trying to do here?
+
   deps <- lapply(dat$equations, function(eq) eq$depends$variables)
+
+  rhs <- dat$components$rhs$equations
+  rhs <- rev(rhs[!grepl("^update_", rhs)])
+
+  f <- function(nm) {
+    use <- names(which(vlapply(deps, function(x) nm %in% x)))
+    parts <- fold_add(lapply(dat$equations[use], function(eq) {
+      call("*", as.name(sprintf(fmt, eq$lhs)),
+           Deriv::Deriv(list_to_lang(eq$rhs$value), nm))
+    }))
+    Deriv::Simplify(parts)
+  }
+
+  variables <- names(dat$data$variable$contents)
+  
+  eqs <- c(set_names(lapply(rhs, f), rhs),
+           set_names(lapply(variables, f), variables))
+
+  ## We fail here for cases_inc due to to the calculation using
+  ## compare_cases_observed, which points at the wrong thing! Probably
+  ## does not want to be included here yet?
+  
 
   ## This is great for all the intermediate calculations, but I have
   ## it wrong for things like adj_update_S which is zero; that's
@@ -59,6 +85,58 @@ build_adjoint <- function(dat) {
     }))
     Deriv::Simplify(parts)
   }
+
+  
+  
+  ## I don't think that we can just rip through like this at all,
+  ## actually - we need to care much more about the initial conditions
+  ## etc. In fact, I think there's some nasty rewriting somewhere for
+  ## this?
+
+  ## It might be simplest to consider just the running of the update
+  ## function perhaps.
+
+  all_deps <- function(nms, deps) {
+    seen <- nms
+    while (length(nms) > 0) {
+      found <- intersect(setdiff(unlist(deps[nms], FALSE, FALSE), seen),
+                         names(deps))
+      seen <- c(seen, found)
+      nms <- found
+    }
+    intersect(intersect(names(deps), seen), names(dat$equations))
+  }
+
+  ## We can do this with a small amount of implementation dependence:
+  variables <- names(dat$data$variable$contents)
+  update <- sprintf("update_%s", variables)
+
+  all <- all_deps(update, deps)
+
+  ## Then for that equation work out what is used:
+  f <- function(nm, deps) {
+    lhs <- dat$equations[[nm]]$lhs
+    use <- names(which(vlapply(deps, function(x) lhs %in% x)))
+    parts <- fold_add(lapply(dat$equations[use], function(eq) {
+      call("*", as.name(sprintf(fmt, eq$lhs)),
+           Deriv::Deriv(list_to_lang(eq$rhs$value), lhs))
+    }))
+    Deriv::Simplify(parts)
+  }
+
+  lapply(all, f, deps)
+  
+
+  
+  dat$equations[update]
+  
+  target <- sprintf(fmt, )
+  
+
+  dat$equations$update_R
+
+  
+  nms <- vcapply(dat$equations, function(x) x$lhs)
   adjoint <- lapply(vcapply(dat$equations, function(x) x$lhs), f)
   names(adjoint) <- sprintf(fmt, names(dat$equations))
 
@@ -79,24 +157,24 @@ build_adjoint <- function(dat) {
   deps2 <- lapply(adjoint, function(x) odin:::find_symbols(x)$variables)
   unique(unlist(deps2[target], FALSE, FALSE))
 
-  
+  browser()
   
 
   
   
   
   
-  expr <- fold_add(
-    lapply(dat$equations[use], function(x) list_to_lang(x$rhs$value)))
-  Deriv::Deriv(expr, nm)
+  ## expr <- fold_add(
+  ##   lapply(dat$equations[use], function(x) list_to_lang(x$rhs$value)))
+  ## Deriv::Deriv(expr, nm)
   
-    Deriv::Deriv(list_to_lang(x$rhs$value), nm)
-  })
+  ##   Deriv::Deriv(list_to_lang(x$rhs$value), nm)
+  ## })
 
   ## We can just build these for everything now:
   
   
-  browser()
+  ## browser()
 }
 
 ## differentiate <- function(expr, nm) {
