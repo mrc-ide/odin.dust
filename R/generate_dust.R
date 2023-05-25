@@ -875,10 +875,6 @@ generate_dust_gpu_compare <- function(dat) {
 
 
 generate_dust_gpu_compare_legacy <- function(dat) {
-  if (is.null(dat$compare_legacy)) {
-    return(NULL)
-  }
-
   code <- dat$compare_legacy$function_defn
 
   base <- dat$config$base
