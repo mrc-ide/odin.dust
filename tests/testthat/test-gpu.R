@@ -253,3 +253,31 @@ test_that("Can include a pair of integer vectors in gpu shared memory", {
   y_gpu <- mod_gpu$run(1)
   expect_identical(y_cpu, y_gpu)
 })
+
+
+test_that("can generate compare function for gpu", {
+  gen <- odin_dust({
+    initial(y) <- 0
+    update(y) <- y + rnorm(0, 1)
+    scale <- user(1)
+    observed <- data()
+    compare(observed) ~ normal(y, scale)
+  },
+  options = odin_dust_options(gpu_generate = TRUE))
+  pars <- list()
+  t <- seq(0, 50, by = 5)[-1]
+  d <- dust::dust_data(
+    data.frame(time = t,
+               observed = rnorm(length(t), 0, sqrt(t)),
+               another = 0L))
+
+  mod <- gen$new(pars, 0, 10, seed = 42, gpu_config = 0L)
+
+  expect_null(mod$compare_data())
+  mod$set_data(d)
+  expect_null(mod$compare_data())
+  y <- mod$run(t[[1]])
+  expect_equal(
+    mod$compare_data(),
+    dnorm(d[[1]][[2]]$observed, drop(y), 1, TRUE))
+})
