@@ -663,8 +663,7 @@ generate_dust_core_compare <- function(eqs, dat, rewrite) {
   equations <- dat$components$compare$equations
   unpack <- lapply(variables, dust_unpack_variable,
                    dat, dat$meta$state, rewrite)
-  collect <- names(which(vcapply(dat$equations, "[[", "type") == "compare"))
-  collect <- sprintf("return %s;", paste(collect, collapse = " + "))
+  collect <- generate_dust_compare_collect(dat)
   body <- dust_flatten_eqs(c(unpack, eqs[equations], collect))
   args <- c("const real_type *" = dat$meta$state,
             "const data_type&" = dat$meta$dust$data,
@@ -673,6 +672,12 @@ generate_dust_core_compare <- function(eqs, dat, rewrite) {
                "compare_data",
                args,
                body)
+}
+
+
+generate_dust_compare_collect <- function(dat) {
+  collect <- names(which(vcapply(dat$equations, "[[", "type") == "compare"))
+  sprintf("return %s;", paste(collect, collapse = " + "))
 }
 
 
@@ -834,6 +839,39 @@ generate_dust_gpu_update <- function(dat) {
 
 
 generate_dust_gpu_compare <- function(dat) {
+  if (!is.null(dat$compare_legacy)) {
+    return(generate_dust_gpu_compare_legacy(dat))
+  }
+  if (!dat$features$has_compare) {
+    return(NULL)
+  }
+
+  base <- dat$config$base
+  return_type <- sprintf("__device__ %s::real_type", base)
+  name <- sprintf("compare_gpu<%s>", base)
+
+  args <- c(
+    "const dust::gpu::interleaved<%s::real_type>" = "state",
+    "const %s::data_type&" = "data",
+    "dust::gpu::interleaved<int>" = "internal_int",
+    "dust::gpu::interleaved<%s::real_type>" = "internal_real",
+    "const int *" = "shared_int",
+    "const %s::real_type *" = "shared_real",
+    "%s::rng_state_type&" = "rng_state")
+  names(args) <- sub("%s", base, names(args), fixed = TRUE)
+
+  eqs <- generate_dust_equations(dat, NULL, dat$components$compare$equations,
+                                 TRUE)
+  collect <- generate_dust_compare_collect(dat)
+
+  body <- c(sprintf("using real_type = %s::real_type;", dat$config$base),
+            dust_flatten_eqs(eqs))
+  c("template<>",
+    cpp_function("__device__ void", name, args, body))
+}
+
+
+generate_dust_gpu_compare_legacy <- function(dat) {
   if (is.null(dat$compare_legacy)) {
     return(NULL)
   }
