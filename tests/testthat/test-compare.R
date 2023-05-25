@@ -284,3 +284,18 @@ test_that("build compare with new interface", {
     mod$compare_data(),
     dnorm(d[[1]][[2]]$observed, drop(y), 1, TRUE))
 })
+
+
+test_that("can't use both old and new interface", {
+  expect_error(
+    odin_dust({
+      initial(y) <- 0
+      update(y) <- y + rnorm(0, 1)
+      scale <- user(1)
+      observed <- data()
+      compare(observed) ~ normal(y, scale)
+      config(compare) <- "examples/compare_simple.cpp"
+    }),
+    "Can't mix config(compare) with new compare(x) ~ y() syntax",
+    fixed = TRUE)
+})

@@ -638,7 +638,7 @@ dust_compare_info_legacy <- function(dat, rewrite) {
     stop("Only one 'config(compare)' statement is allowed")
   }
   if (dat$features$has_compare) {
-    stop("Nope partial upgrade detected...")
+    stop("Can't mix config(compare) with new compare(x) ~ y() syntax")
   }
   filename <- dat$config$custom[[which(i)]]$value
   ret <- read_compare_dust(filename)
