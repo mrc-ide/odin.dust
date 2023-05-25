@@ -860,14 +860,17 @@ generate_dust_gpu_compare <- function(dat) {
     "%s::rng_state_type&" = "rng_state")
   names(args) <- sub("%s", base, names(args), fixed = TRUE)
 
+
+  names_compare <- names_if(vcapply(dat$equations, "[[", "type") == "compare")
+  real_type <- sprintf("using real_type = %s::real_type;", dat$config$base)
+  decl <- sprintf("real_type %s = static_cast<real_type>(0);",
+                  names_compare)
   eqs <- generate_dust_equations(dat, NULL, dat$components$compare$equations,
                                  TRUE)
   collect <- generate_dust_compare_collect(dat)
-
-  body <- c(sprintf("using real_type = %s::real_type;", dat$config$base),
-            dust_flatten_eqs(eqs))
+  body <- c(real_type, decl, dust_flatten_eqs(eqs), collect)
   c("template<>",
-    cpp_function("__device__ void", name, args, body))
+    cpp_function(return_type, name, args, body))
 }
 
 
@@ -950,7 +953,8 @@ generate_dust_gpu_copy <- function(dat, rewrite) {
 
 
 generate_dust_gpu_storage <- function(dat) {
-  equations <- dat$components$rhs$equations
+  equations <- union(dat$components$rhs$equations,
+                     dat$components$compare$equations)
   used <- unique(unlist(
     lapply(dat$equations[equations], function(x) {
       c(x$depends$variables, x$lhs)

@@ -49,7 +49,12 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu, mixed) {
     if (eq$lhs != eq$name && !(eq$lhs %in% eq$depends$variables)) {
       req <- setdiff(req, eq$lhs)
     }
-    stopifnot(all(req %in% names(dat$gpu$access)))
+    if (dat$features$has_data) {
+      names_data <- names(Filter(function(x) x$location == "data",
+                                 dat$data$elements))
+      req <- setdiff(req, names_data)
+    }
+    err <- setdiff(req, names(dat$gpu$access))
     access <- sprintf("const %s", dat$gpu$access[req])
     self <- if (data_info$rank == 0) NULL else dat$gpu$access[[eq$name]]
     ret <- cpp_block(c(access, self, ret))
@@ -109,10 +114,14 @@ generate_dust_equation_copy <- function(eq, data_info, dat, rewrite, gpu) {
 
 generate_dust_equation_compare <- function(eq, data_info, dat, rewrite, gpu) {
   args <- c(rewrite(eq$lhs), vcapply(eq$compare$args, rewrite), "true")
-  sprintf("const auto %s = dust::density::%s(%s);",
-          eq$name,
-          eq$compare$distribution,
-          paste(args, collapse = ", "))
+  ret <- sprintf("%s = dust::density::%s(%s);",
+                 eq$name,
+                 eq$compare$distribution,
+                 paste(args, collapse = ", "))
+  if (!gpu) {
+    ret <- paste("const auto", ret)
+  }
+  ret
 }
 
 
