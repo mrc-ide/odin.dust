@@ -26,12 +26,16 @@ generate_dust <- function(ir, options) {
   }
 
   dat$compare_legacy <- dust_compare_info_legacy(dat, rewrite)
+  adjoint <- build_adjoint(dat)
+
+  browser()
   eqs <- generate_dust_equations(dat, rewrite)
 
   class <- generate_dust_core_class(eqs, dat, rewrite)
   create <- generate_dust_core_create(eqs, dat, rewrite)
   info <- generate_dust_core_info(dat, rewrite)
   data <- generate_dust_core_data(dat)
+  adjoint <- generate_dust_core_adjoint(eqs, dat, rewrite)
 
   include <- c(
     generate_dust_include(dat$config$include$data),
@@ -1273,4 +1277,24 @@ generate_dust_data_struct <- function(dat) {
   } else {
     "using data_type = dust::no_data;"
   }
+}
+
+
+generate_dust_core_adjoint <- function(eqs, dat, rewrite) {
+  if (!dat$options$differentiate) {
+    return(NULL)
+  }
+  rhs_eqs <- dat$components$rhs$equations
+  rhs_eqs <- rhs_eqs[!grepl("^update_", rhs_eqs)]
+
+  deps <- lapply(dat$equations, function(eq) eq$depends$variables)
+
+  browser()
+
+  differentiate("n_IR", dat$equations$update_I)
+
+  ## We start with the last one here:
+  nm <- "n_IR" # tail(rhs_eqs, 1)
+  x <- names(which(vlapply(deps, function(el) nm %in% el)))
+  differentiate(dat$equations[x], nm, rewrite)
 }

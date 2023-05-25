@@ -92,6 +92,8 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##'   will be considerably slower. Currently not supported within
 ##'   package code.
 ##'
+##' @param differentiate **Experimental** Top secret project.
+##'
 ##' @param options An [odin::odin_options] or [odin.dust::odin_dust_options]
 ##'   object. If given it overrides arguments; if it is already a
 ##'   `odin_dust_options` object it is returned unmodified. Otherwise
@@ -108,6 +110,7 @@ odin_dust_ <- function(x, ..., options = NULL) {
 odin_dust_options <- function(..., real_type = NULL,
                               rng_state_type = NULL,
                               gpu = NULL, gpu_generate = NULL,
+                              differentiate = NULL,
                               options = NULL) {
   if (inherits(options, "odin_dust_options")) {
     return(options)
@@ -122,6 +125,7 @@ odin_dust_options <- function(..., real_type = NULL,
   options$real_type <- real_type %||% "double"
   options$rng_state_type <- rng_state_type %||%
     "dust::random::generator<real_type>"
+  options$differentiate <- differentiate %||% FALSE
   options$read_include <- read_include_dust
   options$config_custom <- "compare"
   class(options) <- c("odin_dust_options", class(options))
