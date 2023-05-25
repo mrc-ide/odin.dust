@@ -25,14 +25,13 @@ generate_dust <- function(ir, options) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
   }
 
-  data <- generate_dust_core_data(dat)
-
   dat$compare_legacy <- dust_compare_info_legacy(dat, rewrite)
   eqs <- generate_dust_equations(dat, rewrite)
 
   class <- generate_dust_core_class(eqs, dat, rewrite)
   create <- generate_dust_core_create(eqs, dat, rewrite)
   info <- generate_dust_core_info(dat, rewrite)
+  data <- generate_dust_core_data(dat)
 
   include <- c(
     generate_dust_include(dat$config$include$data),
@@ -638,7 +637,7 @@ dust_compare_info_legacy <- function(dat, rewrite) {
     ## in the parse section with all the source code details.
     stop("Only one 'config(compare)' statement is allowed")
   }
-  if (dat$features$compare) {
+  if (dat$features$has_compare) {
     stop("Nope partial upgrade detected...")
   }
   filename <- dat$config$custom[[which(i)]]$value
