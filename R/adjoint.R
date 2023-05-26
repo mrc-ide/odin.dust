@@ -4,15 +4,23 @@
 ## be able to cope with poisson densities etc. It does a nice job of
 ## simplifying too and stops us having to do heaps of work.
 ##
-## However, I don't think that it copes very well with derivative equations:
+## However, I don't think that it copes very well with array equations:
 ##
 ## Deriv::Deriv(quote(x[i] * 2), "x")
 ## > 2 * 1[i]
 ##
 ## It's possible that we can just clean that up though, or contribute
-## it upstream
-differentiate <- function(expr, name) {
-  lang_to_list(Deriv::Deriv(list_to_lang(expr), name))
+## it upstream, rather than having to rewrite the whole thing (that
+## said it's not a big package)
+## differentiate <- function(expr, name) {
+##   lang_to_list(Deriv::Deriv(list_to_lang(expr), name))
+## }
+
+
+differentiate <- function(expr, nm) {
+  ## Need to avoid creating expressions that involve caching because
+  ## otherwise we'll generate code incompatible with odin.
+  Deriv::Deriv(expr, nm, cache.exp = FALSE)
 }
 
 list_to_lang <- function(expr) {
@@ -44,24 +52,121 @@ fold_add <- function(x) {
   }
 }
 
+name_adjoint <- function(nm) {
+  sprintf("adj_%s", nm) # later use adjoint_%s once we work properly
+}
+
+
+## There are two ways that we might approach this in the time/space
+## tradeoff. One is that we might try and capture all the intermediate
+## outputs into some additional structure (we already have most of
+## this via the internals, we just need to move the scalars there too)
+## and then capture that over time (not too bad). The other is the
+## graph replay version, which Marc has done.
+##
+## I think the simplest to get started with is the graph replaying
+## version - but this is just a time/space tradeoff really and it
+## might make sense to consider both options.
 build_adjoint <- function(dat) {
   browser()
 
-  ## This totally fries my brain, what we we trying to do here?
+  rewrite_compare <- function(eq) {
+    eq$rhs <- 
+    eq$lhs <- paste("compare_", eq$lhs)
+  }
 
-  deps <- lapply(dat$equations, function(eq) eq$depends$variables)
+  is_compare <- vlapply(dat$equations, function(x) x$type == "compare")
+  dat[is_compare] <- lapply(.dat[is_compare], rewrite_compare)
 
-  rhs <- dat$components$rhs$equations
-  rhs <- rev(rhs[!grepl("^update_", rhs)])
+  parameters <- c("beta", "gamma", "I0") # names(dat$user)
+  variables <- names(dat$data$variable$contents)
 
-  f <- function(nm) {
+  deps_all <- lapply(dat$equations, function(eq) eq$depends$variables)
+
+  ## Quite possibly inverting deps here will make things much easier
+  ## to work with.
+  eqs_rhs <- Filter(function(x)
+    x$type != "compare" && !grepl("^initial_", x$name), dat$equations)
+  deps_rhs <- lapply(eqs_rhs, function(eq) eq$depends$variables)
+  f <- function(nm, deps) {
     use <- names(which(vlapply(deps, function(x) nm %in% x)))
     parts <- fold_add(lapply(dat$equations[use], function(eq) {
-      call("*", as.name(sprintf(fmt, eq$lhs)),
-           Deriv::Deriv(list_to_lang(eq$rhs$value), nm))
+      if (eq$type == "compare") {
+        expr <- log_density(eq$compare$distribution, eq$lhs, eq$compare$args)
+      } else {
+        expr <- list_to_lang(eq$rhs$value)
+      }
+      call("*", as.name(name_adjoint(eq$lhs)), differentiate(expr, nm))
     }))
     Deriv::Simplify(parts)
   }
+
+  ## The rhs bit
+  rhs <- c(unname(vcapply(dat$equations[dat$components$rhs$equations],
+                          "[[", "lhs")),
+           parameters)
+  adjoint_rhs <- set_names(lapply(rhs, f, deps_rhs), name_adjoint(rhs))
+
+  ## This is still too much of a mix of things, and not the equations
+  ## that we want really. Even with the filter here we're pulling in
+  ## too much, notably adj_N etc.
+  ##
+  ## The S equation is surprising as it does not include the adj_S
+  ## part of the same equation from above, so is definitely not
+  ## correct.
+  ##
+  ## I think that issue here is that we're pulling in things based on
+  ## variables and not on data, as variables are fixed here?
+  eqs_compare <- Filter(function(x) !(x$lhs %in% variables), dat$equations)
+  deps_compare <- lapply(eqs_compare, function(eq) eq$depends$variables)
+  f("cases_inc", deps_compare)
+
+  ## Finally we also need initial conditions with respect to
+  ## parameters
+  eqs_initial <- Filter(function(x) 
+    x$type != "compare" && !grepl("^initial_", x$name), dat$equations)
+  deps_initial <- lapply(eqs_initial, function(eq) eq$depends$variables)
+
+  ## The calculation we look for here:
+
+  ## (from marc)
+  ## adj_I0 <- adj_N + p_IR * adj_n_IR + adj_p_inf * beta * dt / N + adj_I
+
+  ## (from f("I", deps_all))
+  ## adj_I0 <- adj_N + p_IR + adj_n_IR * adj_p_inf * beta * dt / N + adj_I
+
+  ## but I could apply this to anything really, so it's not clear how
+  ## we need to work with this. It's also not totally obvious to me
+  ## how we're getting I0 swept out of this; that's probably a little
+  ## rewriting needed.
+
+ 
+
+  
+  
+
+  ## What do we need to do here about initial conditions though? Does
+  ## that require the same effort? I think that user-stage etc will
+  ## come through automatically with the above and we just need to
+  ## recategorise things properly.
+  
+
+  
+
+  ## In order to do the initial conditions I think we need to rewrite
+  ## a bunch of stuff?
+  ##
+  ## TODO: why does odin not include the initial equations within the 
+  dat$components$initial$equations
+  f("initial_I")
+
+  
+
+  ## This totally fries my brain, what we we trying to do here?
+
+
+
+
 
   variables <- names(dat$data$variable$contents)
   
@@ -76,7 +181,7 @@ build_adjoint <- function(dat) {
   ## This is great for all the intermediate calculations, but I have
   ## it wrong for things like adj_update_S which is zero; that's
   ## certainly a naming issue.
-  fmt <- "adj_%s" # "adjoint_%s"
+  
   f <- function(nm) {
     use <- names(which(vlapply(deps, function(x) nm %in% x)))
     parts <- fold_add(lapply(dat$equations[use], function(eq) {
@@ -194,3 +299,14 @@ build_adjoint <- function(dat) {
 ##        lhs = lhs,
 ##        rhs = rhs)
 ## }
+
+
+log_density <- function(distribution, target, args) {
+  switch(
+    distribution,
+    poisson = substitute(
+      ## In Marc's version, kt = lambda
+      lambda * log(x) - x - lfactorial(lambda),
+      list(x = as.name(args[[1]]), lambda = as.name(target))),
+    stop(sprintf("Unsupported distribution '%s'", distribution)))
+}
