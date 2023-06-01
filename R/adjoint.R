@@ -67,65 +67,139 @@ name_adjoint <- function(nm) {
 ## I think the simplest to get started with is the graph replaying
 ## version - but this is just a time/space tradeoff really and it
 ## might make sense to consider both options.
-build_adjoint <- function(dat) {
-  browser()
-
-  rewrite_compare <- function(eq) {
-    eq$rhs <- 
-    eq$lhs <- paste("compare_", eq$lhs)
-  }
-
-  is_compare <- vlapply(dat$equations, function(x) x$type == "compare")
-  dat[is_compare] <- lapply(.dat[is_compare], rewrite_compare)
-
+build_adjoint <- function(dat, parameters) {
   parameters <- c("beta", "gamma", "I0") # names(dat$user)
   variables <- names(dat$data$variable$contents)
 
-  deps_all <- lapply(dat$equations, function(eq) eq$depends$variables)
-
-  ## Quite possibly inverting deps here will make things much easier
-  ## to work with.
-  eqs_rhs <- Filter(function(x)
-    x$type != "compare" && !grepl("^initial_", x$name), dat$equations)
-  deps_rhs <- lapply(eqs_rhs, function(eq) eq$depends$variables)
   f <- function(nm, deps) {
     use <- names(which(vlapply(deps, function(x) nm %in% x)))
     parts <- fold_add(lapply(dat$equations[use], function(eq) {
+      if (eq$type == "data") {
+        return(1)
+      }
       if (eq$type == "compare") {
         expr <- log_density(eq$compare$distribution, eq$lhs, eq$compare$args)
+        ## This is only correct if the lhs is data, which it should always be
+        nm_adjoint <- 1
       } else {
         expr <- list_to_lang(eq$rhs$value)
+        nm_adjoint <- as.name(name_adjoint(sub("^initial_", "", eq$lhs)))
       }
-      call("*", as.name(name_adjoint(eq$lhs)), differentiate(expr, nm))
+      call("*", nm_adjoint, differentiate(expr, nm))
     }))
     Deriv::Simplify(parts)
   }
 
-  ## The rhs bit
+  eqs_rhs <- Filter(function(x)
+    x$type != "compare" && !grepl("^initial_", x$name), dat$equations)
+  deps_rhs <- lapply(eqs_rhs, function(eq) eq$depends$variables)
+
+  ## TODO: work out which of these are updates, rework the lhs of
+  ## these equations!
+  rhs_nm <- c(dat$components$rhs$equations, parameters)
+  rhs_lhs <- vcapply(dat$equations[rhs_nm], "[[", "lhs", USE.NAMES = FALSE)
+  ## not quite - pars names wrong still...
+  adjoint_rhs <- set_names(lapply(rhs_lhs, f, deps_rhs),
+                           name_adjoint(rhs_nm))
+
+  ## We need to sort out storage for these; there will be one for each
+  ## equation in the first bit *not counting variables*; that's quite
+  ## annoying really.
+
+  ## It would also be nice to work out what the dependencies are of
+  ## each bit so that we could find the bits that can be computed just
+  ## once (e.g., the constant bits) but perhaps not worth optimising
+  ## for that right now?
+
+  
+
+
+  
+
+  ## The zeros here are fine, this is actually an increment to the
+  ## existing equations for the compare (so x + 0 = 0 for everything,
+  ## and the incidence one is zero'd by the update)
+  eqs_compare <- dat$equations[dat$components$compare$equations]
+  deps_compare <- lapply(eqs_compare, function(eq) eq$depends$variables)
+  nms_compare <- c(variables, parameters)
+  set_names(lapply(nms_compare, f, deps_compare), name_adjoint(nms_compare))
+
+  eqs_initial <- c(
+    dat$equations[dat$components$initial$equations],
+    dat$equations[grep("^initial_", names(dat$equations), value = TRUE)])
+  deps_initial <- lapply(eqs_initial, function(eq) eq$depends$variables)
+  lapply(c(variables, parameters), f, deps_initial)
+
+  
+
+  
+
+  dat$eqs$initial_I
+  
+  
+
+  names(eqs_initial) <- sub("^initial_", "update_", names(eqs_initial))
+  deps_initial <- lapply(eqs_initial, function(eq) eq$depends$variables)
+
+  f("I0", c(deps_rhs, deps_initial))
+
+  lapply(parameters, f, deps_initial)
+  
+
+  
+  nms_initial <- c(vcapply(eqs_initial, function(x) x$lhs), parameters)
+  set_names(lapply(nms_initial, f, deps_initial), name_adjoint(nms_initial))
+
+  
+  
+  set_names(lapply(variables, f, deps_rhs), variables)
+            
+
+  f("I", deps_all)
+  
+  
+
   rhs <- c(unname(vcapply(dat$equations[dat$components$rhs$equations],
                           "[[", "lhs")),
            parameters)
-  adjoint_rhs <- set_names(lapply(rhs, f, deps_rhs), name_adjoint(rhs))
+  
+  
 
-  ## This is still too much of a mix of things, and not the equations
-  ## that we want really. Even with the filter here we're pulling in
-  ## too much, notably adj_N etc.
-  ##
-  ## The S equation is surprising as it does not include the adj_S
-  ## part of the same equation from above, so is definitely not
-  ## correct.
-  ##
-  ## I think that issue here is that we're pulling in things based on
-  ## variables and not on data, as variables are fixed here?
+  
+
+  f("compare_cases_observed", deps_all)
+
+  
+  
   eqs_compare <- Filter(function(x) !(x$lhs %in% variables), dat$equations)
   deps_compare <- lapply(eqs_compare, function(eq) eq$depends$variables)
+
+  variables
+  set_names(list(f("cases_inc", deps_compare)), name_adjoint("cases_inc"))
+
+  nms_compare <- c(variables, parameters)
+  
+             
+  
+  
+  compare <- c(unname(vcapply(dat$equations[dat$components$compare$equations],
+                              "[[", "lhs")),
+               parameters)
+  adjoint_compare <- set_names(lapply(rhs, f, deps_compare),
+                               name_adjoint(compare))
+  
   f("cases_inc", deps_compare)
 
+
+  
   ## Finally we also need initial conditions with respect to
   ## parameters
-  eqs_initial <- Filter(function(x) 
+  eqs_initial <- Filter(function(x)
     x$type != "compare" && !grepl("^initial_", x$name), dat$equations)
   deps_initial <- lapply(eqs_initial, function(eq) eq$depends$variables)
+  dat$components$initial$equations
+  f("initial_I")
+  
 
   ## The calculation we look for here:
 
@@ -157,8 +231,6 @@ build_adjoint <- function(dat) {
   ## a bunch of stuff?
   ##
   ## TODO: why does odin not include the initial equations within the 
-  dat$components$initial$equations
-  f("initial_I")
 
   
 
@@ -309,4 +381,13 @@ log_density <- function(distribution, target, args) {
       lambda * log(x) - x - lfactorial(lambda),
       list(x = as.name(args[[1]]), lambda = as.name(target))),
     stop(sprintf("Unsupported distribution '%s'", distribution)))
+}
+
+
+invert_deps <- function(deps) {
+  vars <- unique(unlist(deps, FALSE, FALSE))
+  set_names(
+    lapply(vars, function(nm)
+      names(which(vlapply(deps, function(x) nm %in% x)))),
+    vars)
 }
