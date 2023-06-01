@@ -18,7 +18,7 @@ odin::odin_options"><meta property="og:image" content="/logo.png"><!-- mathjax -
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.4</span>
       </span>
     </div>
 
@@ -74,6 +74,8 @@ odin::odin_options"><meta property="og:image" content="/logo.png"><!-- mathjax -
 <span>  rng_state_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  gpu <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  gpu_generate <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  compiler_options <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  optimisation_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  options <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -118,6 +120,18 @@ will be considerably slower. Currently not supported within
 package code.</p></dd>
 
 
+<dt>compiler_options</dt>
+<dd><p>Additional options for the C++ compiler,
+passed to <a href="https://rdrr.io/pkg/dust/man/dust.html" class="external-link">dust::dust</a></p></dd>
+
+
+<dt>optimisation_level</dt>
+<dd><p>Shorthand control over optimisation
+level, passed to <a href="https://rdrr.io/pkg/dust/man/dust.html" class="external-link">dust::dust</a>. If provided should be one of
+<code>none</code> (slow running, fast building), <code>standard</code> or <code>max</code>
+(enables fast math)</p></dd>
+
+
 <dt>options</dt>
 <dd><p>An <a href="https://rdrr.io/pkg/odin/man/odin_options.html" class="external-link">odin::odin_options</a> or odin_dust_options
 object. If given it overrides arguments; if it is already a
@@ -153,7 +167,7 @@ pass to <code><a href="odin_dust.html">odin.dust::odin_dust</a></code></p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $workdir</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmptyMrVD/file1542172cb695"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpthHypD/file17001a25d0e2"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $skip_cache</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -188,7 +202,7 @@ pass to <code><a href="odin_dust.html">odin.dust::odin_dust</a></code></p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     list(names = names, data = list(source = paste(readLines(filename), </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         collapse = "\n")))</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x5625d97ccae8&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x5561499096a8&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: namespace:odin.dust&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $gpu</span>
