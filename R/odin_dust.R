@@ -92,6 +92,14 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##'   will be considerably slower. Currently not supported within
 ##'   package code.
 ##'
+##' @param compiler_options Additional options for the C++ compiler,
+##'   passed to [dust::dust]
+##'
+##' @param optimisation_level Shorthand control over optimisation
+##'   level, passed to [dust::dust]. If provided should be one of
+##'   `none` (slow running, fast building), `standard` or `max`
+##'   (enables fast math)
+##'
 ##' @param options An [odin::odin_options] or [odin.dust::odin_dust_options]
 ##'   object. If given it overrides arguments; if it is already a
 ##'   `odin_dust_options` object it is returned unmodified. Otherwise
@@ -108,6 +116,8 @@ odin_dust_ <- function(x, ..., options = NULL) {
 odin_dust_options <- function(..., real_type = NULL,
                               rng_state_type = NULL,
                               gpu = NULL, gpu_generate = NULL,
+                              compiler_options = NULL,
+                              optimisation_level = NULL,
                               options = NULL) {
   if (inherits(options, "odin_dust_options")) {
     return(options)
@@ -124,6 +134,8 @@ odin_dust_options <- function(..., real_type = NULL,
     "dust::random::generator<real_type>"
   options$read_include <- read_include_dust
   options$config_custom <- "compare"
+  options$compiler_options <- compiler_options
+  options$optimisation_level <- optimisation_level
   class(options) <- c("odin_dust_options", class(options))
   options
 }
@@ -145,7 +157,9 @@ odin_dust_wrapper <- function(ir, srcdir, options) {
                           workdir = options$workdir,
                           gpu = options$gpu$compile,
                           linking_to = linking_to,
-                          cpp_std = cpp_std)
+                          cpp_std = cpp_std,
+                          compiler_options = options$compiler_options,
+                          optimisation_level = options$optimisation_level)
 
   if (!("transform_variables" %in% names(generator$public_methods))) {
     generator$set("public", "transform_variables",
