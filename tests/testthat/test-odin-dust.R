@@ -917,3 +917,14 @@ test_that("Can use sign function", {
   y <- mod$simulate(0:10)
   expect_equal(y[2, , ], sign(y[1, , ]))
 })
+
+
+test_that("forward compiler and optimisation args", {
+  res <- evaluate_promise(
+    odin_dust({
+      initial(x) <- 10
+      update(x) <- 10
+    }, optimisation_level = "max", verbose = TRUE))
+  expect_match(res$output, "-O3 -ffast-math", all = FALSE)
+  expect_s3_class(res$result, "dust_generator")
+})

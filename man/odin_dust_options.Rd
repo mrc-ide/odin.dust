@@ -10,6 +10,8 @@ odin_dust_options(
   rng_state_type = NULL,
   gpu = NULL,
   gpu_generate = NULL,
+  compiler_options = NULL,
+  optimisation_level = NULL,
   options = NULL
 )
 }
@@ -41,6 +43,14 @@ intended for testing and development as the generated code will
 be slower than the normal cpu version, and the compilation time
 will be considerably slower. Currently not supported within
 package code.}
+
+\item{compiler_options}{Additional options for the C++ compiler,
+passed to \link[dust:dust]{dust::dust}}
+
+\item{optimisation_level}{Shorthand control over optimisation
+level, passed to \link[dust:dust]{dust::dust}. If provided should be one of
+\code{none} (slow running, fast building), \code{standard} or \code{max}
+(enables fast math)}
 
 \item{options}{An \link[odin:odin_options]{odin::odin_options} or \link{odin_dust_options}
 object. If given it overrides arguments; if it is already a
