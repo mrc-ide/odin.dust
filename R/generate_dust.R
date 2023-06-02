@@ -1336,18 +1336,24 @@ generate_dust_core_adjoint_update <- function(eqs, dat, rewrite) {
   unpack_adjoint <- lapply(dat$adjoint$update$depends$adjoint,
                            dust_unpack_variable,
                            dat, dat$meta$dust$adjoint_curr, rewrite)
+  ## A bit of a hack here - it might be good to add these to the main
+  ## set of equations, that would certainly be nicer, but it requires
+  ## tidying up a couple of small naming things (so that the three
+  ## different equation types don't conflict with one another - not
+  ## too hard)
+  eqs_adj <- lapply(dat$adjoint$update$equations,
+                    generate_dust_equation, dat, rewrite,
+                    gpu = FALSE, mixed = FALSE)
 
-  ## Next up, the equations!
-  dat$adjoint$update
-
-  eqs[dat$adjoint$update$order]
-
-
-  eqs <- generate_dust_equations(dat, rewrite)
-  body <- dust_flatten_eqs(c(unpack_variables, unpack_adjoint, eqs[equations]))
-
-
-
+  ## The ordering here is missing the parameter equations, otherwise
+  ## looking good.  We're also pulling in things like
+  ##
+  ## shared->p_IR = 1 - dust::math::exp(- (shared->gamma) * shared->dt);
+  ##
+  ## which we simply don't need (or want) to do - both of these are
+  ## issues with the 'order' component only.
+  equations <- c(eqs, eqs_adj)[dat$adjoint$update$order]
+  body <- dust_flatten_eqs(c(unpack_variables, unpack_adjoint, equations))
   cpp_function("void", "adjoint_update", args, body)
 }
 

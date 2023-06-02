@@ -196,3 +196,8 @@ set_names <- function(x, nms) {
 names_if <- function(x) {
   names(x)[x]
 }
+
+
+unique_unlist <- function(x) {
+  unique(unlist(x, FALSE, FALSE))
+}

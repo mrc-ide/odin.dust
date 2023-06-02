@@ -36,24 +36,30 @@ build_adjoint <- function(dat, parameters) {
 build_adjoint_data <- function(dat) {
   stopifnot(!dat$features$has_array)
 
-  variables <- names(dat$data$variable$contents)
-  nms <- name_adjoint(c(variables, dat$options$differentiate))
+  nms_adj <- unique_unlist(
+    lapply(dat$adjoint, function(x) vcapply(x$equations, "[[", "lhs")))
 
-  length <- length(nms)
-  offset <- seq_along(nms) - 1L
-  contents <- c(Map(list, name = nms, offset = seq_along(nms) - 1L))
-  elements <- lapply(nms, function(nm) {
+  variables <- names(dat$data$variable$contents)
+  nms_adj_vars <- name_adjoint(c(variables, dat$options$differentiate))
+
+  adjoint_length <- length(nms_adj_vars)
+  adjoint_contents <- Map(list,
+                          name = nms_adj_vars,
+                          offset = seq_along(nms_adj_vars) - 1L)
+
+  elements <- lapply(nms_adj, function(nm) {
+    location <- if (nm %in% nms_adj_vars) "adjoint" else "transient"
     list(name = nm,
-         location = dat$meta$dust$adjoint_curr,
+         location = location,
          storage_type = "double",
          rank = 0L,
          dimnames = NULL,
          stage = "adjoint")
   })
-  names(elements) <- nms
+  names(elements) <- nms_adj
 
   ret <- dat$data
-  ret$adjoint <- list(contents = contents, length = length)
+  ret$adjoint <- list(contents = adjoint_contents, length = adjoint_length)
   ret$elements <- c(dat$data$elements, elements)
   ret
 }
@@ -192,6 +198,7 @@ adjoint_equation <- function(name, name_lhs, deps, eqs) {
     call("*", name_adjoint, differentiate(expr, name_lhs))
   }))
   rhs_expr <- simplify(parts)
+  lang_to_list <- identity # TODO: uncomment
   rhs <- list(value = lang_to_list(rhs_expr))
 
   list(name = name_adjoint(name),

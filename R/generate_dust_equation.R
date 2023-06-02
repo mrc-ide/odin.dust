@@ -75,12 +75,20 @@ generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite, gpu) {
   } else if (location == "internal") {
     lhs <- rewrite(eq$lhs)
   } else {
+    target <- switch(location,
+                     output = dat$meta$output,
+                     variable = dat$meta$result,
+                     adjoint = dat$meta$dust$adjoint_next,
+                     stop("invalid location [odin.dust bug]")) # nocov
     offset <- dat$data[[location]]$contents[[data_info$name]]$offset
-    target <- if (location == "output") dat$meta$output else dat$meta$result
     lhs <- sprintf("%s[%s]", target, rewrite(offset))
   }
   rhs <- rewrite(eq$rhs$value)
-  sprintf("%s = %s;", lhs, rhs)
+  ret <- sprintf("%s = %s;", lhs, rhs)
+  if (identical(ret, character())) {
+    browser()
+  }
+  ret
 }
 
 
