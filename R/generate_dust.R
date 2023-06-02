@@ -20,13 +20,16 @@ generate_dust <- function(ir, options) {
 
   dat$options <- options
   dat$meta$dust <- generate_dust_meta(options, dat$features$continuous)
+  if (!is.null(dat$options$differentiate)) {
+    dat$adjoint <- build_adjoint(dat)
+    dat$data <- build_adjoint_data(dat)
+  }
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
   }
 
   dat$compare_legacy <- dust_compare_info_legacy(dat, rewrite)
-  dat$adjoint <- build_adjoint(dat)
 
   eqs <- generate_dust_equations(dat, rewrite)
 
@@ -86,7 +89,9 @@ generate_dust_meta <- function(options, continuous) {
        internal_int = "internal_int",
        internal_real  = "internal_real",
        shared_int = "shared_int",
-       shared_real = "shared_real")
+       shared_real = "shared_real",
+       adjoint_curr = "adjoint_curr",
+       adjoint_next = "adjoint_next")
 }
 
 
@@ -500,7 +505,11 @@ generate_dust_core_attributes <- function(dat) {
 
 
 dust_unpack_variable <- function(name, dat, state, rewrite) {
-  x <- dat$data$variable$contents[[name]]
+  if (state == dat$meta$dust$adjoint_curr) {
+    x <- dat$data$adjoint$contents[[name]]
+  } else {
+    x <- dat$data$variable$contents[[name]]
+  }
   data_info <- dat$data$elements[[name]]
   rhs <- dust_extract_variable(x, dat$data$elements, state, rewrite,
                                 dat$features$continuous)
@@ -642,6 +651,9 @@ dust_compare_info_legacy <- function(dat, rewrite) {
   }
   if (dat$features$has_compare) {
     stop("Can't mix config(compare) with new compare(x) ~ y() syntax")
+  }
+  if (!is.null(dat$adjoint)) {
+    stop("can't use compare_legacy with differentiate")
   }
   filename <- dat$config$custom[[which(i)]]$value
   ret <- read_compare_dust(filename)
@@ -1285,9 +1297,9 @@ generate_dust_core_adjoint <- function(eqs, dat, rewrite) {
   }
 
   list(size = generate_dust_core_adjoint_size(dat, rewrite),
-       initial = generate_dust_core_adjoint_initial(dat, rewrite),
-       update = generate_dust_core_adjoint_update(dat, rewrite),
-       compare = generate_dust_core_adjoint_compare(dat, rewrite))
+       initial = generate_dust_core_adjoint_initial(eqs, dat, rewrite),
+       update = generate_dust_core_adjoint_update(eqs, dat, rewrite),
+       compare = generate_dust_core_adjoint_compare(eqs, dat, rewrite))
 }
 
 
@@ -1299,7 +1311,7 @@ generate_dust_core_adjoint_size <- function(dat, rewrite) {
 }
 
 
-generate_dust_core_adjoint_initial <- function(dat, rewrite) {
+generate_dust_core_adjoint_initial <- function(eqs, dat, rewrite) {
   args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
             "const real_type *" = dat$meta$state,
             "const real_type *" = dat$meta$dust$adjoint_curr,
@@ -1310,24 +1322,27 @@ generate_dust_core_adjoint_initial <- function(dat, rewrite) {
 }
 
 
-generate_dust_core_adjoint_update <- function(dat, rewrite) {
+generate_dust_core_adjoint_update <- function(eqs, dat, rewrite) {
   args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
             "const real_type *" = dat$meta$state,
             "const real_type *" = dat$meta$dust$adjoint_curr,
             "const real_type *" = dat$meta$dust$adjoint_next,
             "rng_state_type&" = dat$meta$dust$rng_state)
+
   ## TODO: probably better if variables are reordered
   unpack_variables <- lapply(dat$adjoint$update$depends$variables,
                              dust_unpack_variable,
                              dat, dat$meta$state, rewrite)
-  ## TODO: this is the next bit - set up rewrite to find the
-  ## appropriate states, then make sure that the equations are all
-  ## correctly written, then copy them over and we're just about
-  ## there. The final equations need some extra work most likely.
   unpack_adjoint <- lapply(dat$adjoint$update$depends$adjoint,
                            dust_unpack_variable,
                            dat, dat$meta$dust$adjoint_curr, rewrite)
-  browser()
+
+  ## Next up, the equations!
+  dat$adjoint$update
+
+  eqs[dat$adjoint$update$order]
+
+
   eqs <- generate_dust_equations(dat, rewrite)
   body <- dust_flatten_eqs(c(unpack_variables, unpack_adjoint, eqs[equations]))
 
@@ -1337,7 +1352,7 @@ generate_dust_core_adjoint_update <- function(dat, rewrite) {
 }
 
 
-generate_dust_core_adjoint_compare <- function(dat, rewrite) {
+generate_dust_core_adjoint_compare <- function(eqs, dat, rewrite) {
   args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
             "const real_type *" = dat$meta$state,
             "const real_type *" = dat$meta$dust$adjoint_curr,

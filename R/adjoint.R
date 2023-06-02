@@ -9,17 +9,14 @@
 ## version - but this is just a time/space tradeoff really and it
 ## might make sense to consider both options.
 build_adjoint <- function(dat, parameters) {
-  if (is.null(dat$options$differentiate)) {
-    return(NULL)
-  }
-  if (!is.null(dat$compare_legacy)) {
-    stop("can't use compare_legacy with differentiate")
-  }
   if (dat$features$continuous) {
     stop("Can't use differentiate with continuous time models")
   }
   if (dat$features$has_array) {
     stop("Can't use differentiate with models that use arrays (yet)")
+  }
+  if (!dat$features$has_compare) {
+    stop("You need a compare expression to differentiate!")
   }
   parameters <- dat$differentiate
   msg <- setdiff(parameters, names(dat$user))
@@ -31,6 +28,34 @@ build_adjoint <- function(dat, parameters) {
   list(update = adjoint_update(variables, parameters, dat),
        compare = adjoint_compare(variables, parameters, dat),
        initial = adjoint_initial(variables, parameters, dat))
+}
+
+
+## Augment the real data with some additional bits; this needs lots of
+## work once we have arrays!
+build_adjoint_data <- function(dat) {
+  stopifnot(!dat$features$has_array)
+
+  variables <- names(dat$data$variable$contents)
+  nms <- name_adjoint(c(variables, dat$options$differentiate))
+
+  length <- length(nms)
+  offset <- seq_along(nms) - 1L
+  contents <- c(Map(list, name = nms, offset = seq_along(nms) - 1L))
+  elements <- lapply(nms, function(nm) {
+    list(name = nm,
+         location = dat$meta$dust$adjoint_curr,
+         storage_type = "double",
+         rank = 0L,
+         dimnames = NULL,
+         stage = "adjoint")
+  })
+  names(elements) <- nms
+
+  ret <- dat$data
+  ret$adjoint <- list(contents = contents, length = length)
+  ret$elements <- c(dat$data$elements, elements)
+  ret
 }
 
 
@@ -66,11 +91,10 @@ adjoint_update <- function(variables, parameters, dat) {
   ## We then need to get all dependencies from this set of equations;
   ## this is what the algorithm traverses through.
   deps <- lapply(eqs, function(eq) eq$depends$variables %||% character())
+  res <- Map(adjoint_equation, nms, nms_lhs, MoreArgs = list(deps, eqs))
+  names(res) <- vcapply(res, "[[", "name")
 
-  res <- set_names(lapply(nms_lhs, adjoint_equation, deps, eqs),
-                   name_adjoint(nms))
-
-  deps_adj <- lapply(res, function(eq) odin:::find_symbols(eq)$variables)
+  deps_adj <- lapply(res, function(eq) eq$depends$variables %||% character())
   deps_all <- c(deps_adj, deps)
   deps_rec <- odin:::recursive_dependencies(names(deps_all), deps_all)
 
@@ -99,10 +123,10 @@ adjoint_compare <- function(variables, parameters, dat) {
   deps <- lapply(eqs, function(eq) eq$depends$variables %||% character())
 
   nms <- c(variables, parameters)
-  res <- set_names(lapply(nms, adjoint_equation, deps, eqs),
-                   name_adjoint(nms))
+  res <- Map(adjoint_equation, nms, nms, MoreArgs = list(deps, eqs))
+  names(res) <- vcapply(res, "[[", "name")
 
-  deps_adj <- lapply(res, function(eq) odin:::find_symbols(eq)$variables)
+  deps_adj <- lapply(res, function(eq) eq$depends$variables %||% character())
   deps_all <- c(deps_adj, deps)
   deps_rec <- odin:::recursive_dependencies(names(deps_all), deps_all)
 
@@ -130,10 +154,10 @@ adjoint_initial <- function(variables, parameters, dat) {
   deps <- lapply(eqs, function(eq) eq$depends$variables)
 
   nms <- c(variables, parameters)
-  res <- set_names(lapply(nms, adjoint_equation, deps, eqs),
-                   name_adjoint(nms))
+  res <- Map(adjoint_equation, nms, nms, MoreArgs = list(deps, eqs))
+  names(res) <- vcapply(res, "[[", "name")
 
-  deps_adj <- lapply(res, function(eq) odin:::find_symbols(eq)$variables)
+  deps_adj <- lapply(res, function(eq) eq$depends$variables %||% character())
   deps_all <- c(deps_adj, deps)
   deps_rec <- odin:::recursive_dependencies(names(deps_all), deps_all)
 
@@ -150,8 +174,8 @@ adjoint_initial <- function(variables, parameters, dat) {
 }
 
 
-adjoint_equation <- function(name, deps, eqs) {
-  use <- names(which(vlapply(deps, function(x) name %in% x)))
+adjoint_equation <- function(name, name_lhs, deps, eqs) {
+  use <- names(which(vlapply(deps, function(x) name_lhs %in% x)))
   parts <- fold_add(lapply(eqs[use], function(eq) {
     if (eq$type == "data") {
       return(1)
@@ -165,9 +189,16 @@ adjoint_equation <- function(name, deps, eqs) {
       expr <- list_to_lang(eq$rhs$value)
       name_adjoint <- as.name(name_adjoint(sub("^initial_", "", eq$lhs)))
     }
-    call("*", name_adjoint, differentiate(expr, name))
+    call("*", name_adjoint, differentiate(expr, name_lhs))
   }))
-  simplify(parts)
+  rhs_expr <- simplify(parts)
+  rhs <- list(value = lang_to_list(rhs_expr))
+
+  list(name = name_adjoint(name),
+       type = "expression_scalar", # can get from parent?
+       depends = odin:::find_symbols(rhs_expr),
+       lhs = name_adjoint(name_lhs),
+       rhs = rhs)
 }
 
 
