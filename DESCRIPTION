@@ -38,4 +38,4 @@ Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
 Remotes:
     mrc-ide/dust,
-    mrc-ide/odin
+    mrc-ide/odin@mrc-4277
