@@ -26,7 +26,7 @@ generate_dust <- function(ir, options) {
   }
 
   dat$compare_legacy <- dust_compare_info_legacy(dat, rewrite)
-  adjoint <- build_adjoint(dat)
+  dat$adjoint <- build_adjoint(dat)
 
   browser()
   eqs <- generate_dust_equations(dat, rewrite)

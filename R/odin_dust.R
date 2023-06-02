@@ -120,12 +120,16 @@ odin_dust_options <- function(..., real_type = NULL,
     stop("'odin_options' object passed as unnamed argument")
   }
 
+  if (!is.null(differentiate) && !is.character(differentiate)) {
+    stop("Expected a character vector for 'differentiate' if given")
+  }
+
   options <- odin::odin_options(target = "dust", ...)
   options$gpu <- gpu_mode(gpu_generate %||% FALSE, gpu %||% FALSE)
   options$real_type <- real_type %||% "double"
   options$rng_state_type <- rng_state_type %||%
     "dust::random::generator<real_type>"
-  options$differentiate <- differentiate %||% FALSE
+  options$differentiate <- differentiate
   options$read_include <- read_include_dust
   options$config_custom <- "compare"
   class(options) <- c("odin_dust_options", class(options))
