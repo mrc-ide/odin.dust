@@ -77,13 +77,15 @@ adjoint_update <- function(variables, parameters, dat) {
   ## Then we do a prune down to the things that we care about (this
   ## contains another bad regex that it would be good to eliminate).
   include <- name_adjoint(c(grep("^update_", nms, value = TRUE), parameters))
-  order <- intersect(odin:::topological_order(deps_all),
-                     union(include, unlist(deps_rec[include], FALSE, FALSE)))
+  used <- unique(unlist(deps_rec[include], FALSE, FALSE))
+  order <- intersect(odin:::topological_order(deps_all), union(include, used))
 
   list(equations = res,
        order = order,
        depends = list(direct = deps_all[order],
-                      recursive = deps_rec[order]))
+                      recursive = deps_rec[order],
+                      variables = intersect(used, variables),
+                      adjoint = intersect(used, name_adjoint(variables))))
 }
 
 
@@ -105,13 +107,16 @@ adjoint_compare <- function(variables, parameters, dat) {
   deps_rec <- odin:::recursive_dependencies(names(deps_all), deps_all)
 
   include <- name_adjoint(c(variables, parameters))
-  order <- intersect(odin:::topological_order(deps_all),
-                     union(include, unlist(deps_rec[include], FALSE, FALSE)))
+  used <- unique(unlist(deps_rec[include], FALSE, FALSE))
+  order <- intersect(odin:::topological_order(deps_all), union(include, used))
 
   list(equations = res,
        order = order,
+       variables = intersect(unlist(deps_rec[order], FALSE, FALSE), variables),
        depends = list(direct = deps_all[order],
-                      recursive = deps_rec[order]))
+                      recursive = deps_rec[order],
+                      variables = intersect(used, variables),
+                      adjoint = intersect(used, name_adjoint(variables))))
 }
 
 
@@ -133,13 +138,15 @@ adjoint_initial <- function(variables, parameters, dat) {
   deps_rec <- odin:::recursive_dependencies(names(deps_all), deps_all)
 
   include <- name_adjoint(c(variables, parameters))
-  order <- intersect(odin:::topological_order(deps_all),
-                     union(include, unlist(deps_rec[include], FALSE, FALSE)))
+  used <- unique(unlist(deps_rec[include], FALSE, FALSE))
+  order <- intersect(odin:::topological_order(deps_all), union(include, used))
 
   list(equations = res,
        order = order,
        depends = list(direct = deps_all[order],
-                      recursive = deps_rec[order]))
+                      recursive = deps_rec[order],
+                      variables = intersect(used, variables),
+                      adjoint = intersect(used, name_adjoint(variables))))
 }
 
 

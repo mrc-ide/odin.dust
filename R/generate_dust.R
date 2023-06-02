@@ -28,7 +28,6 @@ generate_dust <- function(ir, options) {
   dat$compare_legacy <- dust_compare_info_legacy(dat, rewrite)
   dat$adjoint <- build_adjoint(dat)
 
-  browser()
   eqs <- generate_dust_equations(dat, rewrite)
 
   class <- generate_dust_core_class(eqs, dat, rewrite)
@@ -1281,20 +1280,69 @@ generate_dust_data_struct <- function(dat) {
 
 
 generate_dust_core_adjoint <- function(eqs, dat, rewrite) {
-  if (!dat$options$differentiate) {
+  if (is.null(dat$adjoint)) {
     return(NULL)
   }
-  rhs_eqs <- dat$components$rhs$equations
-  rhs_eqs <- rhs_eqs[!grepl("^update_", rhs_eqs)]
 
-  deps <- lapply(dat$equations, function(eq) eq$depends$variables)
+  list(size = generate_dust_core_adjoint_size(dat, rewrite),
+       initial = generate_dust_core_adjoint_initial(dat, rewrite),
+       update = generate_dust_core_adjoint_update(dat, rewrite),
+       compare = generate_dust_core_adjoint_compare(dat, rewrite))
+}
 
+
+generate_dust_core_adjoint_size <- function(dat, rewrite) {
+  stopifnot(!dat$features$continuous,
+            !dat$features$has_array)
+  body <- sprintf("return %s;", rewrite(length(dat$options$differentiate)))
+  cpp_function("size_t", "adjoint_size", NULL, body, TRUE)
+}
+
+
+generate_dust_core_adjoint_initial <- function(dat, rewrite) {
+  args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
+            "const real_type *" = dat$meta$state,
+            "const real_type *" = dat$meta$dust$adjoint_curr,
+            "const real_type *" = dat$meta$dust$adjoint_next,
+            "rng_state_type&" = dat$meta$dust$rng_state)
+  body <- character()
+  cpp_function("void", "adjoint_update", args, body)
+}
+
+
+generate_dust_core_adjoint_update <- function(dat, rewrite) {
+  args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
+            "const real_type *" = dat$meta$state,
+            "const real_type *" = dat$meta$dust$adjoint_curr,
+            "const real_type *" = dat$meta$dust$adjoint_next,
+            "rng_state_type&" = dat$meta$dust$rng_state)
+  ## TODO: probably better if variables are reordered
+  unpack_variables <- lapply(dat$adjoint$update$depends$variables,
+                             dust_unpack_variable,
+                             dat, dat$meta$state, rewrite)
+  ## TODO: this is the next bit - set up rewrite to find the
+  ## appropriate states, then make sure that the equations are all
+  ## correctly written, then copy them over and we're just about
+  ## there. The final equations need some extra work most likely.
+  unpack_adjoint <- lapply(dat$adjoint$update$depends$adjoint,
+                           dust_unpack_variable,
+                           dat, dat$meta$dust$adjoint_curr, rewrite)
   browser()
+  eqs <- generate_dust_equations(dat, rewrite)
+  body <- dust_flatten_eqs(c(unpack_variables, unpack_adjoint, eqs[equations]))
 
-  differentiate("n_IR", dat$equations$update_I)
 
-  ## We start with the last one here:
-  nm <- "n_IR" # tail(rhs_eqs, 1)
-  x <- names(which(vlapply(deps, function(el) nm %in% el)))
-  differentiate(dat$equations[x], nm, rewrite)
+
+  cpp_function("void", "adjoint_update", args, body)
+}
+
+
+generate_dust_core_adjoint_compare <- function(dat, rewrite) {
+  args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
+            "const real_type *" = dat$meta$state,
+            "const real_type *" = dat$meta$dust$adjoint_curr,
+            "const real_type *" = dat$meta$dust$adjoint_next,
+            "rng_state_type&" = dat$meta$dust$rng_state)
+  browser()
+  cpp_function("void", "adjoint_compare_data", args, body)
 }
