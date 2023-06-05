@@ -18,7 +18,10 @@ build_adjoint <- function(dat, parameters) {
   if (!dat$features$has_compare) {
     stop("You need a compare expression to differentiate!")
   }
-  parameters <- dat$differentiate
+  parameters <- dat$options$differentiate
+  if (length(parameters) == 0) {
+    stop("No parameters to differentiate")
+  }
   msg <- setdiff(parameters, names(dat$user))
   if (length(msg) > 0) {
     stop(sprintf("Can't differentiate with respect to non-parameter: %s",

@@ -1345,13 +1345,6 @@ generate_dust_core_adjoint_update <- function(eqs, dat, rewrite) {
                     generate_dust_equation, dat, rewrite,
                     gpu = FALSE, mixed = FALSE)
 
-  ## The ordering here is missing the parameter equations, otherwise
-  ## looking good.  We're also pulling in things like
-  ##
-  ## shared->p_IR = 1 - dust::math::exp(- (shared->gamma) * shared->dt);
-  ##
-  ## which we simply don't need (or want) to do - both of these are
-  ## issues with the 'order' component only.
   equations <- c(eqs, eqs_adj)[dat$adjoint$update$order]
   body <- dust_flatten_eqs(c(unpack_variables, unpack_adjoint, equations))
   cpp_function("void", "adjoint_update", args, body)
