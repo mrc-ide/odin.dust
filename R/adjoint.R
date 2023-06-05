@@ -73,6 +73,8 @@ name_adjoint <- function(nm) {
 }
 
 
+## The three functions below contain heaps of painful repetition,
+## because it's not yet totally clear what the pattern is here.
 adjoint_update <- function(variables, parameters, dat) {
   ## The update set is really the full set of things; we need all the
   ## equations, including those that are not actually time dependent,
@@ -114,7 +116,13 @@ adjoint_update <- function(variables, parameters, dat) {
   deps_rec <- odin:::recursive_dependencies(names(deps_all), deps_all)
 
   ## Then we do a prune down to the things that we care about (this
-  ## contains another bad regex that it would be good to eliminate).
+  ## contains another bad regex that it would be good to
+  ## eliminate). The other way here is do do this:
+  ##
+  ## name_adjoint(c(sprintf("update_%s", variables), parameters))
+  ##
+  ## Better is to get these adjoint equations labelled uniquely though
+  ## for later.
   include <- name_adjoint(c(grep("^update_", nms, value = TRUE), parameters))
   used <- unique(unlist(deps_rec[include], FALSE, FALSE))
   order <- intersect(odin:::topological_order(deps_all), union(include, used))

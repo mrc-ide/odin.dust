@@ -1357,6 +1357,23 @@ generate_dust_core_adjoint_compare <- function(eqs, dat, rewrite) {
             "const real_type *" = dat$meta$dust$adjoint_curr,
             "const real_type *" = dat$meta$dust$adjoint_next,
             "rng_state_type&" = dat$meta$dust$rng_state)
-  browser()
+
+  unpack_variables <- lapply(dat$adjoint$compare$depends$variables,
+                             dust_unpack_variable,
+                             dat, dat$meta$state, rewrite)
+  unpack_adjoint <- lapply(dat$adjoint$compare$depends$adjoint,
+                           dust_unpack_variable,
+                           dat, dat$meta$dust$adjoint_curr, rewrite)
+  ## A bit of a hack here - it might be good to add these to the main
+  ## set of equations, that would certainly be nicer, but it requires
+  ## tidying up a couple of small naming things (so that the three
+  ## different equation types don't conflict with one another - not
+  ## too hard)
+  eqs_adj <- lapply(dat$adjoint$compare$equations,
+                    generate_dust_equation, dat, rewrite,
+                    gpu = FALSE, mixed = FALSE)
+
+  equations <- c(eqs, eqs_adj)[dat$adjoint$compare$order]
+  body <- dust_flatten_eqs(c(unpack_variables, unpack_adjoint, equations))
   cpp_function("void", "adjoint_compare_data", args, body)
 }
