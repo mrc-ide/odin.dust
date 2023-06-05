@@ -100,6 +100,12 @@ adjoint_update <- function(variables, parameters, dat) {
   res <- Map(adjoint_equation, nms, nms_lhs, MoreArgs = list(deps, eqs))
   names(res) <- vcapply(res, "[[", "name")
 
+  ## Work out the "stage" of these; we could just count stage here as
+  ## "time" really but we use "adjoint" later so being internally
+  ## consistent even though we discard this.
+  stage <- c(vcapply(dat$data$elements, "[[", "stage"),
+             set_names(rep_len("adjoint", length(res)), names(res)))
+
   deps_adj <- lapply(res, function(eq) eq$depends$variables %||% character())
   deps_all <- c(deps_adj, deps)
   deps_rec <- odin:::recursive_dependencies(names(deps_all), deps_all)
@@ -109,6 +115,7 @@ adjoint_update <- function(variables, parameters, dat) {
   include <- name_adjoint(c(grep("^update_", nms, value = TRUE), parameters))
   used <- unique(unlist(deps_rec[include], FALSE, FALSE))
   order <- intersect(odin:::topological_order(deps_all), union(include, used))
+  order <- order[stage[order] %in% c("time", "adjoint")]
 
   list(equations = res,
        order = order,
@@ -132,6 +139,9 @@ adjoint_compare <- function(variables, parameters, dat) {
   res <- Map(adjoint_equation, nms, nms, MoreArgs = list(deps, eqs))
   names(res) <- vcapply(res, "[[", "name")
 
+  stage <- c(vcapply(dat$data$elements, "[[", "stage"),
+             set_names(rep_len("adjoint", length(res)), names(res)))
+
   deps_adj <- lapply(res, function(eq) eq$depends$variables %||% character())
   deps_all <- c(deps_adj, deps)
   deps_rec <- odin:::recursive_dependencies(names(deps_all), deps_all)
@@ -139,6 +149,7 @@ adjoint_compare <- function(variables, parameters, dat) {
   include <- name_adjoint(c(variables, parameters))
   used <- unique(unlist(deps_rec[include], FALSE, FALSE))
   order <- intersect(odin:::topological_order(deps_all), union(include, used))
+  order <- order[stage[order] %in% c("time", "adjoint")]
 
   list(equations = res,
        order = order,
@@ -163,6 +174,9 @@ adjoint_initial <- function(variables, parameters, dat) {
   res <- Map(adjoint_equation, nms, nms, MoreArgs = list(deps, eqs))
   names(res) <- vcapply(res, "[[", "name")
 
+  stage <- c(vcapply(dat$data$elements, "[[", "stage"),
+             set_names(rep_len("adjoint", length(res)), names(res)))
+
   deps_adj <- lapply(res, function(eq) eq$depends$variables %||% character())
   deps_all <- c(deps_adj, deps)
   deps_rec <- odin:::recursive_dependencies(names(deps_all), deps_all)
@@ -170,6 +184,7 @@ adjoint_initial <- function(variables, parameters, dat) {
   include <- name_adjoint(c(variables, parameters))
   used <- unique(unlist(deps_rec[include], FALSE, FALSE))
   order <- intersect(odin:::topological_order(deps_all), union(include, used))
+  order <- order[stage[order] %in% c("time", "adjoint")]
 
   list(equations = res,
        order = order,
