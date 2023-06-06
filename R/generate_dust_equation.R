@@ -84,11 +84,7 @@ generate_dust_equation_scalar <- function(eq, data_info, dat, rewrite, gpu) {
     lhs <- sprintf("%s[%s]", target, rewrite(offset))
   }
   rhs <- rewrite(eq$rhs$value)
-  ret <- sprintf("%s = %s;", lhs, rhs)
-  if (identical(ret, character())) {
-    browser()
-  }
-  ret
+  sprintf("%s = %s;", lhs, rhs)
 }
 
 

@@ -37,7 +37,6 @@ generate_dust <- function(ir, options) {
   create <- generate_dust_core_create(eqs, dat, rewrite)
   info <- generate_dust_core_info(dat, rewrite)
   data <- generate_dust_core_data(dat)
-  adjoint <- generate_dust_core_adjoint(eqs, dat, rewrite)
 
   include <- c(
     generate_dust_include(dat$config$include$data),
@@ -109,6 +108,8 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
     rhs <- NULL
     output <- NULL
   }
+
+  adjoint <- generate_dust_core_adjoint(eqs, dat, rewrite)
   compare <- generate_dust_core_compare(eqs, dat, rewrite)
   attributes <- generate_dust_core_attributes(dat)
 
@@ -124,6 +125,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ret$add(sprintf("  %s", rhs))
   ret$add(sprintf("  %s", output))
   ret$add(sprintf("  %s", compare)) # ensures we don't add trailing whitespace
+  ret$add(sprintf("  %s", adjoint))
   ret$add("private:")
   ret$add("  std::shared_ptr<const shared_type> %s;", dat$meta$dust$shared)
   ret$add("  internal_type %s;", dat$meta$internal)
@@ -1296,17 +1298,18 @@ generate_dust_core_adjoint <- function(eqs, dat, rewrite) {
     return(NULL)
   }
 
-  list(size = generate_dust_core_adjoint_size(dat, rewrite),
-       initial = generate_dust_core_adjoint_initial(eqs, dat, rewrite),
-       update = generate_dust_core_adjoint_update(eqs, dat, rewrite),
-       compare = generate_dust_core_adjoint_compare(eqs, dat, rewrite))
+  c(generate_dust_core_adjoint_size(dat, rewrite),
+    generate_dust_core_adjoint_initial(eqs, dat, rewrite),
+    generate_dust_core_adjoint_update(eqs, dat, rewrite),
+    generate_dust_core_adjoint_compare(eqs, dat, rewrite))
 }
 
 
 generate_dust_core_adjoint_size <- function(dat, rewrite) {
   stopifnot(!dat$features$continuous,
             !dat$features$has_array)
-  body <- sprintf("return %s;", rewrite(length(dat$options$differentiate)))
+  body <- sprintf("return size() + %s;",
+                  rewrite(length(dat$options$differentiate)))
   cpp_function("size_t", "adjoint_size", NULL, body, TRUE)
 }
 
@@ -1315,10 +1318,9 @@ generate_dust_core_adjoint_initial <- function(eqs, dat, rewrite) {
   args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
             "const real_type *" = dat$meta$state,
             "const real_type *" = dat$meta$dust$adjoint_curr,
-            "const real_type *" = dat$meta$dust$adjoint_next,
-            "rng_state_type&" = dat$meta$dust$rng_state)
+            "real_type *" = dat$meta$dust$adjoint_next)
   body <- character()
-  cpp_function("void", "adjoint_update", args, body)
+  cpp_function("void", "adjoint_initial", args, body)
 }
 
 
@@ -1326,8 +1328,7 @@ generate_dust_core_adjoint_update <- function(eqs, dat, rewrite) {
   args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
             "const real_type *" = dat$meta$state,
             "const real_type *" = dat$meta$dust$adjoint_curr,
-            "const real_type *" = dat$meta$dust$adjoint_next,
-            "rng_state_type&" = dat$meta$dust$rng_state)
+            "real_type *" = dat$meta$dust$adjoint_next)
 
   ## TODO: probably better if variables are reordered
   unpack_variables <- lapply(dat$adjoint$update$depends$variables,
@@ -1354,9 +1355,9 @@ generate_dust_core_adjoint_update <- function(eqs, dat, rewrite) {
 generate_dust_core_adjoint_compare <- function(eqs, dat, rewrite) {
   args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
             "const real_type *" = dat$meta$state,
+            "const data_type&" = dat$meta$dust$data,
             "const real_type *" = dat$meta$dust$adjoint_curr,
-            "const real_type *" = dat$meta$dust$adjoint_next,
-            "rng_state_type&" = dat$meta$dust$rng_state)
+            "real_type *" = dat$meta$dust$adjoint_next)
 
   unpack_variables <- lapply(dat$adjoint$compare$depends$variables,
                              dust_unpack_variable,
