@@ -128,11 +128,16 @@ adjoint_update <- function(variables, parameters, dat) {
   order <- intersect(odin:::topological_order(deps_all), union(include, used))
   order <- order[stage[order] %in% c("time", "adjoint")]
 
+  ## Yet one more dig into the set of variables to pull this out; this
+  ## can surely be simplified.
+  used_variables <- intersect(unique(unlist(deps_rec[order], FALSE, FALSE)),
+                              variables)
+
   list(equations = res,
        order = order,
        depends = list(direct = deps_all[order],
                       recursive = deps_rec[order],
-                      variables = intersect(used, variables),
+                      variables = used_variables,
                       adjoint = intersect(used, name_adjoint(variables))))
 }
 
@@ -162,12 +167,15 @@ adjoint_compare <- function(variables, parameters, dat) {
   order <- intersect(odin:::topological_order(deps_all), union(include, used))
   order <- order[stage[order] %in% c("time", "adjoint")]
 
+  used_variables <- intersect(unique(unlist(deps_rec[order], FALSE, FALSE)),
+                              variables)
+
   list(equations = res,
        order = order,
        variables = intersect(unlist(deps_rec[order], FALSE, FALSE), variables),
        depends = list(direct = deps_all[order],
                       recursive = deps_rec[order],
-                      variables = intersect(used, variables),
+                      variables = used_variables,
                       adjoint = intersect(used, name_adjoint(variables))))
 }
 
@@ -196,12 +204,14 @@ adjoint_initial <- function(variables, parameters, dat) {
   used <- unique(unlist(deps_rec[include], FALSE, FALSE))
   order <- intersect(odin:::topological_order(deps_all), union(include, used))
   order <- order[stage[order] %in% c("time", "adjoint")]
+  used_variables <- intersect(unique(unlist(deps_rec[order], FALSE, FALSE)),
+                              variables)
 
   list(equations = res,
        order = order,
        depends = list(direct = deps_all[order],
                       recursive = deps_rec[order],
-                      variables = intersect(used, variables),
+                      variables = used_variables,
                       adjoint = intersect(used, name_adjoint(variables))))
 }
 
