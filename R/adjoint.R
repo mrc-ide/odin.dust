@@ -218,12 +218,14 @@ adjoint_equation <- function(name, name_lhs, accumulate, deps, eqs) {
       return(1)
     }
     if (eq$type == "compare") {
+      ## TODO: some care needed here for interesting args,
+      ## unfortunately.
       expr <- log_density(eq$compare$distribution, eq$lhs, eq$compare$args)
       ## This is only correct if the lhs is data, which it should
       ## always be, but we should check this, really.
       name_adjoint <- 1
     } else {
-      expr <- list_to_lang(eq$rhs$value)
+      expr <- list_to_lang(make_deterministic(eq$rhs$value))
       name_adjoint <- as.name(name_adjoint(sub("^initial_", "", eq$lhs)))
     }
     call("*", name_adjoint, differentiate(expr, name_lhs))
@@ -266,6 +268,29 @@ list_to_lang <- function(expr) {
     expr
   }
 }
+
+
+
+
+make_deterministic <- function(expr) {
+  rules <- list(
+    rbinom = function(expr) list("*", expr[[2]], expr[[3]]),
+    rexp = function(expr) list("/", 1, expr[[2]]),
+    rnorm = function(expr) expr[[2]],
+    rgamma = function(expr) list("/", expr[[2]], expr[[3]]),
+    ## rhyper = list("*", expr[[2]], list("/", expr[[3]], list("(", list("+", expr[[3]], expr[[4]]))))
+    ## rnbinom = ,
+    rpois = function(expr) expr[[2]],
+    runif = function(expr) list("/", list("(", list("+", expr[[2]], expr[[3]])), 2))
+  if (is.recursive(expr) && is.character(expr[[1]]) && expr[[1]] %in% names(rules)) {
+    expr <- rules[[expr[[1]]]](expr)
+  }
+  if (is.recursive(expr)) {
+    expr <- lapply(expr, make_deterministic)
+  }
+  expr
+}
+
 
 lang_to_list <- function(expr) {
   if (is.recursive(expr)) {
