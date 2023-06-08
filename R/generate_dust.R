@@ -1319,7 +1319,21 @@ generate_dust_core_adjoint_initial <- function(eqs, dat, rewrite) {
             "const real_type *" = dat$meta$state,
             "const real_type *" = dat$meta$dust$adjoint_curr,
             "real_type *" = dat$meta$dust$adjoint_next)
-  body <- character()
+
+  unpack_variables <- lapply(dat$adjoint$initial$depends$variables,
+                             dust_unpack_variable,
+                             dat, dat$meta$state, rewrite)
+  unpack_adjoint <- lapply(dat$adjoint$initial$depends$adjoint,
+                           dust_unpack_variable,
+                           dat, dat$meta$dust$adjoint_curr, rewrite)
+
+  eqs_adj <- lapply(dat$adjoint$initial$equations,
+                    generate_dust_equation, dat, rewrite,
+                    gpu = FALSE, mixed = FALSE)
+
+  equations <- c(eqs, eqs_adj)[dat$adjoint$initial$order]
+  body <- dust_flatten_eqs(c(unpack_variables, unpack_adjoint, equations))
+
   cpp_function("void", "adjoint_initial", args, body)
 }
 
@@ -1330,18 +1344,12 @@ generate_dust_core_adjoint_update <- function(eqs, dat, rewrite) {
             "const real_type *" = dat$meta$dust$adjoint_curr,
             "real_type *" = dat$meta$dust$adjoint_next)
 
-  ## TODO: probably better if variables are reordered
   unpack_variables <- lapply(dat$adjoint$update$depends$variables,
                              dust_unpack_variable,
                              dat, dat$meta$state, rewrite)
   unpack_adjoint <- lapply(dat$adjoint$update$depends$adjoint,
                            dust_unpack_variable,
                            dat, dat$meta$dust$adjoint_curr, rewrite)
-  ## A bit of a hack here - it might be good to add these to the main
-  ## set of equations, that would certainly be nicer, but it requires
-  ## tidying up a couple of small naming things (so that the three
-  ## different equation types don't conflict with one another - not
-  ## too hard)
   eqs_adj <- lapply(dat$adjoint$update$equations,
                     generate_dust_equation, dat, rewrite,
                     gpu = FALSE, mixed = FALSE)
@@ -1365,11 +1373,6 @@ generate_dust_core_adjoint_compare <- function(eqs, dat, rewrite) {
   unpack_adjoint <- lapply(dat$adjoint$compare$depends$adjoint,
                            dust_unpack_variable,
                            dat, dat$meta$dust$adjoint_curr, rewrite)
-  ## A bit of a hack here - it might be good to add these to the main
-  ## set of equations, that would certainly be nicer, but it requires
-  ## tidying up a couple of small naming things (so that the three
-  ## different equation types don't conflict with one another - not
-  ## too hard)
   eqs_adj <- lapply(dat$adjoint$compare$equations,
                     generate_dust_equation, dat, rewrite,
                     gpu = FALSE, mixed = FALSE)

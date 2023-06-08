@@ -146,15 +146,12 @@ adjoint_update <- function(variables, parameters, dat) {
 ## The hope here is that I can discover whatever pattern I am actually
 ## doing with the update one above.
 adjoint_compare <- function(variables, parameters, dat) {
-  ## The zeros here are fine, this is actually an increment to the
-  ## existing equations for the compare (so x + 0 = 0 for everything,
-  ## and the incidence one is zero'd by the update)
   eqs <- dat$equations[dat$components$compare$equations]
   deps <- lapply(eqs, function(eq) eq$depends$variables %||% character())
 
   nms <- c(variables, parameters)
-  res <- Map(adjoint_equation, nms, nms, MoreArgs = list(FALSE, deps, eqs))
-  names(res) <- vcapply(res, "[[", "name")
+  res <- Map(adjoint_equation, nms, nms, MoreArgs = list(TRUE, deps, eqs))
+  names(res) <- sprintf("compare_%s", vcapply(res, "[[", "name"))
 
   stage <- c(vcapply(dat$data$elements, "[[", "stage"),
              set_names(rep_len("adjoint", length(res)), names(res)))
@@ -163,7 +160,7 @@ adjoint_compare <- function(variables, parameters, dat) {
   deps_all <- c(deps_adj, deps)
   deps_rec <- odin:::recursive_dependencies(names(deps_all), deps_all)
 
-  include <- name_adjoint(c(variables, parameters))
+  include <- sprintf("compare_%s", name_adjoint(c(variables, parameters)))
   used <- unique(unlist(deps_rec[include], FALSE, FALSE))
   order <- intersect(odin:::topological_order(deps_all), union(include, used))
   order <- order[stage[order] %in% c("time", "adjoint")]
@@ -181,9 +178,6 @@ adjoint_compare <- function(variables, parameters, dat) {
 }
 
 
-## This is not quite right, and we might need to revisit the
-## sequencing to get the right value out of the system, but the
-## partial equation is correct.
 adjoint_initial <- function(variables, parameters, dat) {
   eqs <- c(
     dat$equations[dat$components$initial$equations],
@@ -191,8 +185,8 @@ adjoint_initial <- function(variables, parameters, dat) {
   deps <- lapply(eqs, function(eq) eq$depends$variables)
 
   nms <- c(variables, parameters)
-  res <- Map(adjoint_equation, nms, nms, MoreArgs = list(FALSE, deps, eqs))
-  names(res) <- vcapply(res, "[[", "name")
+  res <- Map(adjoint_equation, nms, nms, MoreArgs = list(TRUE, deps, eqs))
+  names(res) <- sprintf("initial_%s", vcapply(res, "[[", "name"))
 
   stage <- c(vcapply(dat$data$elements, "[[", "stage"),
              set_names(rep_len("adjoint", length(res)), names(res)))
@@ -201,7 +195,7 @@ adjoint_initial <- function(variables, parameters, dat) {
   deps_all <- c(deps_adj, deps)
   deps_rec <- odin:::recursive_dependencies(names(deps_all), deps_all)
 
-  include <- name_adjoint(c(variables, parameters))
+  include <- sprintf("initial_%s", name_adjoint(c(variables, parameters)))
   used <- unique(unlist(deps_rec[include], FALSE, FALSE))
   order <- intersect(odin:::topological_order(deps_all), union(include, used))
   order <- order[stage[order] %in% c("time", "adjoint")]

@@ -14,6 +14,6 @@ test_that("sir adjoint model works", {
 
   expect_equal(res$log_likelihood, -44.0256051296862, tolerance = 1e-14)
   expect_equal(res$gradient,
-               c(244.877646917118, -140.566517375877, 0), #25.2152128116894),
+               c(244.877646917118, -140.566517375877, 25.2152128116894),
                tolerance = 1e-14)
 })

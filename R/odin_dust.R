@@ -92,7 +92,8 @@ odin_dust_ <- function(x, ..., options = NULL) {
 ##'   will be considerably slower. Currently not supported within
 ##'   package code.
 ##'
-##' @param differentiate **Experimental** Top secret project.
+##' @param differentiate **Experimental** Top secret project (this
+##'   interface will change soon anyway).
 ##'
 ##' @param options An [odin::odin_options] or [odin.dust::odin_dust_options]
 ##'   object. If given it overrides arguments; if it is already a
@@ -120,6 +121,8 @@ odin_dust_options <- function(..., real_type = NULL,
     stop("'odin_options' object passed as unnamed argument")
   }
 
+  ## For now, we take this in this way, but we'll move this all into
+  ## odin fairly shortly and then push it into an option on user()
   if (!is.null(differentiate) && !is.character(differentiate)) {
     stop("Expected a character vector for 'differentiate' if given")
   }

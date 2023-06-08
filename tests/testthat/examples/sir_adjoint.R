@@ -7,8 +7,8 @@ freq <- user(4)
 N <- S + I + R
 p_inf <- beta * I / N * dt
 p_SI <- 1 - exp(-(p_inf))
-n_SI <- S * p_SI
-n_IR <- I * p_IR
+n_SI <- S * p_SI # rbinom(S, p_SI)
+n_IR <- I * p_IR # rbinom(I, p_IR)
 
 update(S) <- S - n_SI
 update(I) <- I + n_SI - n_IR
