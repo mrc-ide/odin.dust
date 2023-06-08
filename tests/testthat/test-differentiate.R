@@ -1,5 +1,3 @@
-## So, here we generate out something which compiles but is not
-## correct! A good start but not quite right.
 test_that("sir adjoint model works", {
   gen <- odin_dust("examples/sir_adjoint.R",
                    differentiate = c("beta", "gamma", "I0"))

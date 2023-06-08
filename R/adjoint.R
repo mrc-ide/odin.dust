@@ -92,17 +92,18 @@ adjoint_update <- function(variables, parameters, dat) {
   nms_eqs <- names_if(vlapply(dat$equations, function(x) {
     x$type != "compare" && x$type != "user" && !grepl("^initial_", x$name)
   }))
-  nms <- c(nms_eqs, parameters)
-  eqs <- dat$equations[nms]
-
-  ## The name of the actual quantity, we care about this here but less
-  ## elsewhere.
+  eqs_update_parameters <- set_names(dat$equations[parameters],
+                                     sprintf("update_%s", parameters))
+  eqs <- c(dat$equations[nms_eqs], eqs_update_parameters)
   nms_lhs <- vcapply(eqs, "[[", "lhs", USE.NAMES = FALSE)
+  nms <- names(eqs)
+  accumulate <- rep(c(FALSE, TRUE), c(length(nms_eqs), length(parameters)))
 
   ## We then need to get all dependencies from this set of equations;
   ## this is what the algorithm traverses through.
   deps <- lapply(eqs, function(eq) eq$depends$variables %||% character())
-  res <- Map(adjoint_equation, nms, nms_lhs, MoreArgs = list(deps, eqs))
+  res <- Map(adjoint_equation, nms, nms_lhs, accumulate,
+             MoreArgs = list(deps, eqs))
   names(res) <- vcapply(res, "[[", "name")
 
   ## Work out the "stage" of these; we could just count stage here as
@@ -138,7 +139,7 @@ adjoint_update <- function(variables, parameters, dat) {
        depends = list(direct = deps_all[order],
                       recursive = deps_rec[order],
                       variables = used_variables,
-                      adjoint = intersect(used, name_adjoint(variables))))
+                      adjoint = intersect(used, name_adjoint(c(variables, parameters)))))
 }
 
 
@@ -152,7 +153,7 @@ adjoint_compare <- function(variables, parameters, dat) {
   deps <- lapply(eqs, function(eq) eq$depends$variables %||% character())
 
   nms <- c(variables, parameters)
-  res <- Map(adjoint_equation, nms, nms, MoreArgs = list(deps, eqs))
+  res <- Map(adjoint_equation, nms, nms, MoreArgs = list(FALSE, deps, eqs))
   names(res) <- vcapply(res, "[[", "name")
 
   stage <- c(vcapply(dat$data$elements, "[[", "stage"),
@@ -176,7 +177,7 @@ adjoint_compare <- function(variables, parameters, dat) {
        depends = list(direct = deps_all[order],
                       recursive = deps_rec[order],
                       variables = used_variables,
-                      adjoint = intersect(used, name_adjoint(variables))))
+                      adjoint = intersect(used, name_adjoint(c(variables, parameters)))))
 }
 
 
@@ -190,7 +191,7 @@ adjoint_initial <- function(variables, parameters, dat) {
   deps <- lapply(eqs, function(eq) eq$depends$variables)
 
   nms <- c(variables, parameters)
-  res <- Map(adjoint_equation, nms, nms, MoreArgs = list(deps, eqs))
+  res <- Map(adjoint_equation, nms, nms, MoreArgs = list(FALSE, deps, eqs))
   names(res) <- vcapply(res, "[[", "name")
 
   stage <- c(vcapply(dat$data$elements, "[[", "stage"),
@@ -212,11 +213,11 @@ adjoint_initial <- function(variables, parameters, dat) {
        depends = list(direct = deps_all[order],
                       recursive = deps_rec[order],
                       variables = used_variables,
-                      adjoint = intersect(used, name_adjoint(variables))))
+                      adjoint = intersect(used, name_adjoint(c(variables, parameters)))))
 }
 
 
-adjoint_equation <- function(name, name_lhs, deps, eqs) {
+adjoint_equation <- function(name, name_lhs, accumulate, deps, eqs) {
   use <- names(which(vlapply(deps, function(x) name_lhs %in% x)))
   parts <- fold_add(lapply(eqs[use], function(eq) {
     if (eq$type == "data") {
@@ -233,6 +234,11 @@ adjoint_equation <- function(name, name_lhs, deps, eqs) {
     }
     call("*", name_adjoint, differentiate(expr, name_lhs))
   }))
+  ## The other way of doing this might be to pass an additional
+  ## dependency on name_lhs / 2 through to the equation?
+  if (accumulate) {
+    parts <- call("+", as.name(name_adjoint(name_lhs)), parts)
+  }
   rhs_expr <- simplify(parts)
   lang_to_list <- identity # TODO: uncomment
   rhs <- list(value = lang_to_list(rhs_expr))
