@@ -136,9 +136,7 @@ adjoint_update <- function(variables, parameters, dat) {
 
   list(equations = res,
        order = order,
-       depends = list(direct = deps_all[order],
-                      recursive = deps_rec[order],
-                      variables = used_variables,
+       depends = list(variables = used_variables,
                       adjoint = intersect(used, name_adjoint(c(variables, parameters)))))
 }
 
@@ -171,9 +169,7 @@ adjoint_compare <- function(variables, parameters, dat) {
   list(equations = res,
        order = order,
        variables = intersect(unlist(deps_rec[order], FALSE, FALSE), variables),
-       depends = list(direct = deps_all[order],
-                      recursive = deps_rec[order],
-                      variables = used_variables,
+       depends = list(variables = used_variables,
                       adjoint = intersect(used, name_adjoint(c(variables, parameters)))))
 }
 
@@ -204,14 +200,13 @@ adjoint_initial <- function(variables, parameters, dat) {
 
   list(equations = res,
        order = order,
-       depends = list(direct = deps_all[order],
-                      recursive = deps_rec[order],
-                      variables = used_variables,
+       depends = list(variables = used_variables,
                       adjoint = intersect(used, name_adjoint(c(variables, parameters)))))
 }
 
 
 adjoint_equation <- function(name, name_lhs, accumulate, deps, eqs) {
+  ## TODO: also pass the data types here through too.
   use <- names(which(vlapply(deps, function(x) name_lhs %in% x)))
   parts <- fold_add(lapply(eqs[use], function(eq) {
     if (eq$type == "data") {
