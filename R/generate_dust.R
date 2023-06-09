@@ -20,10 +20,7 @@ generate_dust <- function(ir, options) {
 
   dat$options <- options
   dat$meta$dust <- generate_dust_meta(options, dat$features$continuous)
-  if (!is.null(dat$options$differentiate)) {
-    dat$adjoint <- build_adjoint(dat)
-    dat$data <- build_adjoint_data(dat)
-  }
+  dat <- add_adjoint(dat)
 
   rewrite <- function(x) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)

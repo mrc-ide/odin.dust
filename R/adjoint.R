@@ -1,14 +1,8 @@
-## There are two ways that we might approach this in the time/space
-## tradeoff. One is that we might try and capture all the intermediate
-## outputs into some additional structure (we already have most of
-## this via the internals, we just need to move the scalars there too)
-## and then capture that over time (not too bad). The other is the
-## graph replay version, which Marc has done.
-##
-## I think the simplest to get started with is the graph replaying
-## version - but this is just a time/space tradeoff really and it
-## might make sense to consider both options.
-build_adjoint <- function(dat, parameters) {
+add_adjoint <- function(dat) {
+  if (is.null(dat$options$differentiate)) {
+    return(dat)
+  }
+
   if (dat$features$continuous) {
     stop("Can't use differentiate with continuous time models")
   }
@@ -27,16 +21,20 @@ build_adjoint <- function(dat, parameters) {
     stop(sprintf("Can't differentiate with respect to non-parameter: %s",
                  paste(squote(msg), collapse = ", ")))
   }
+
   variables <- names(dat$data$variable$contents)
-  list(update = adjoint_update(variables, parameters, dat),
-       compare = adjoint_compare(variables, parameters, dat),
-       initial = adjoint_initial(variables, parameters, dat))
+  dat$adjoint <- list(
+    update = adjoint_update(variables, parameters, dat),
+    compare = adjoint_compare(variables, parameters, dat),
+    initial = adjoint_initial(variables, parameters, dat))
+  dat$data <- add_ajoint_data(dat)
+  dat
 }
 
 
 ## Augment the real data with some additional bits; this needs lots of
 ## work once we have arrays, because they also need storage.
-build_adjoint_data <- function(dat) {
+add_ajoint_data <- function(dat) {
   stopifnot(!dat$features$has_array)
 
   nms_adj <- unique_unlist(
