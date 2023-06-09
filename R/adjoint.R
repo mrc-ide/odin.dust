@@ -35,7 +35,7 @@ build_adjoint <- function(dat, parameters) {
 
 
 ## Augment the real data with some additional bits; this needs lots of
-## work once we have arrays!
+## work once we have arrays, because they also need storage.
 build_adjoint_data <- function(dat) {
   stopifnot(!dat$features$has_array)
 
@@ -219,7 +219,7 @@ adjoint_equation <- function(name, name_lhs, accumulate, deps, eqs) {
     }
     if (eq$type == "compare") {
       ## TODO: some care needed here for interesting args,
-      ## unfortunately.
+      ## unfortunately; try the exponential noise trick inline?
       expr <- log_density(eq$compare$distribution, eq$lhs, eq$compare$args)
       ## This is only correct if the lhs is data, which it should
       ## always be, but we should check this, really.
@@ -236,7 +236,6 @@ adjoint_equation <- function(name, name_lhs, accumulate, deps, eqs) {
     parts <- call("+", as.name(name_adjoint(name_lhs)), parts)
   }
   rhs_expr <- simplify(parts)
-  lang_to_list <- identity # TODO: uncomment
   rhs <- list(value = lang_to_list(rhs_expr))
 
   list(name = name_adjoint(name),
@@ -268,9 +267,6 @@ list_to_lang <- function(expr) {
     expr
   }
 }
-
-
-
 
 make_deterministic <- function(expr) {
   rules <- list(
