@@ -305,7 +305,7 @@ log_density <- function(distribution, target, args) {
   switch(
     distribution,
     poisson = substitute(
-      lambda * log(x) - x - lfactorial(lambda),
-      list(x = as.name(args[[1]]), lambda = as.name(target))),
+      x * log(lambda) - lambda - lfactorial(x),
+      list(x = as.name(target), lambda = as.name(args[[1]]))),
     stop(sprintf("Unsupported distribution '%s'", distribution)))
 }
