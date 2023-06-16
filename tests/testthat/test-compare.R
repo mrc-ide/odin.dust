@@ -286,6 +286,33 @@ test_that("build compare with new interface", {
 })
 
 
+test_that("build compare with new interface for ode models", {
+  gen <- odin_dust({
+    deriv(N) <- r * N * (1 - N / K)
+    initial(N) <- N0
+    N0 <- user(1)
+    K <- user(100)
+    r <- user(0.1)
+    sd_noise <- user(0.5)
+    observed <- data()
+    compare(observed) ~ normal(N, sd_noise)
+  })
+
+  mod <- gen$new(list(), 0, 1)
+  t <- seq(0, 100, by = 5)[-1]
+  d <- dust::dust_data(
+    data.frame(time = t,
+               observed = runif(length(t), 0, 100)))
+  expect_null(mod$compare_data())
+  mod$set_data(d)
+  expect_null(mod$compare_data())
+  y <- mod$run(t[[1]])
+  expect_equal(
+    mod$compare_data(),
+    dnorm(d[[1]][[2]]$observed, drop(y), 0.5, TRUE))
+})
+
+
 test_that("can't use both old and new interface", {
   expect_error(
     odin_dust({
