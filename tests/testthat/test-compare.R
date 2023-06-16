@@ -288,6 +288,7 @@ test_that("build compare with new interface", {
 
 test_that("build compare with new interface for ode models", {
   gen <- odin_dust({
+    # nolint start
     deriv(N) <- r * N * (1 - N / K)
     initial(N) <- N0
     N0 <- user(1)
@@ -296,6 +297,7 @@ test_that("build compare with new interface for ode models", {
     sd_noise <- user(0.5)
     observed <- data()
     compare(observed) ~ normal(N, sd_noise)
+    # nolint end
   })
 
   mod <- gen$new(list(), 0, 1)
