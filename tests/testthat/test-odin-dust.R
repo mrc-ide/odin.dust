@@ -938,6 +938,6 @@ test_that("can use pow() with negative powers of integers", {
     y <- user()
   })
 
-  expect_equal(drop(gen$new(list(y = -2), 0, 1)$run(10)), 0.25)
-  expect_equal(drop(gen$new(list(y = 2), 0, 1)$run(10)), 4)
+  expect_equal(drop(gen$new(list(a = 2, y = -2), 0, 1)$run(10)), 0.25)
+  expect_equal(drop(gen$new(list(a = 2, y = 2), 0, 1)$run(10)), 4)
 })
