@@ -16,12 +16,12 @@ test_that("^ becomes dust::math::pow", {
   expr <- list("^", "a", "b")
   expect_equal(
     generate_dust_sexp(expr, NULL, NULL, NULL, FALSE),
-    "dust::math::pow(a, b)")
+    "dust::math::pow<real_type>(a, b)")
 
   expr <- list("^", "a", list("+", "b", "c"))
   expect_equal(
     generate_dust_sexp(expr, NULL, NULL, NULL, FALSE),
-    "dust::math::pow(a, b + c)")
+    "dust::math::pow<real_type>(a, b + c)")
 })
 
 
