@@ -19,7 +19,8 @@ generate_dust_sexp <- function(x, data, meta, supported, gpu) {
       pos <- dust_array_access(args[[1L]], args[-1], data, meta, supported, gpu)
       ret <- sprintf("%s[%s]", values[[1L]], pos)
     } else if (fn == "^") {
-      ret <- sprintf("dust::math::pow(%s, %s)", values[[1]], values[[2]])
+      ret <- sprintf("dust::math::pow<real_type>(%s, %s)",
+                     values[[1]], values[[2]])
     } else if (fn == "+") {
       ret <- paste(values, collapse = " + ")
     } else if (n == 2L && fn %in% odin:::FUNCTIONS_INFIX) {

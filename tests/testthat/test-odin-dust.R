@@ -928,3 +928,16 @@ test_that("forward compiler and optimisation args", {
   expect_match(res$output, "-O3 -ffast-math", all = FALSE)
   expect_s3_class(res$result, "dust_generator")
 })
+
+
+test_that("can use pow() with negative powers of integers", {
+  gen <- odin_dust({
+    initial(x) <- 0
+    update(x) <- a^y
+    a <- user(integer = TRUE)
+    y <- user()
+  })
+
+  expect_equal(drop(gen$new(list(y = -2), 0, 1)$run(10)), 0.25)
+  expect_equal(drop(gen$new(list(y = 2), 0, 1)$run(10)), 4)
+})
