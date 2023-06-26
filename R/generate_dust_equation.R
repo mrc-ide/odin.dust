@@ -54,7 +54,7 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu, mixed) {
                                  dat$data$elements))
       req <- setdiff(req, names_data)
     }
-    err <- setdiff(req, names(dat$gpu$access))
+    stopifnot(all(req %in% names(dat$gpu$access)))
     access <- sprintf("const %s", dat$gpu$access[req])
     self <- if (data_info$rank == 0) NULL else dat$gpu$access[[eq$name]]
     ret <- cpp_block(c(access, self, ret))
