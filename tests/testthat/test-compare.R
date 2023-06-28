@@ -328,3 +328,66 @@ test_that("can't use both old and new interface", {
     "Can't mix config(compare) with new compare(x) ~ y() syntax",
     fixed = TRUE)
 })
+
+
+test_that("new compare interface copes with missing data", {
+  gen <- odin_dust({
+    initial(y) <- 0
+    update(y) <- y + rnorm(0, 1)
+    scale <- user(1)
+    observed <- data()
+    compare(observed) ~ normal(y, scale)
+  })
+
+  t <- seq(0, 50, by = 5)[-1]
+  d <- dust::dust_data(data.frame(time = t, observed = NA_real_))
+
+  mod <- gen$new(list(), 0, 10)
+  mod$set_data(d)
+  y <- mod$run(t[[1]])
+  expect_equal(mod$compare_data(), rep(0, 10))
+})
+
+
+test_that("new compare interface allows multiple data streams", {
+  gen <- odin_dust({
+    initial(x) <- 0
+    update(x) <- x + rnorm(0, 0.1)
+    initial(y) <- 0
+    update(y) <- y + rnorm(0, 1)
+    scale <- user(1)
+    a <- data()
+    b <- data()
+    compare(a) ~ normal(x, scale)
+    compare(b) ~ normal(y, a * scale) # using two bits of data here
+  })
+
+  scale <- 1 / pi
+  t <- c(10, 11, 12, 13)
+  d <- data.frame(time = t,
+                  a = 0.5 * c(1, 1, NA, NA),
+                  b = 0.1 * c(1, NA, 1, NA))
+  mod <- gen$new(list(scale = scale), 0, 10, seed = 1)
+  mod$set_data(dust::dust_data(d))
+  mod$set_index(c(x = 1, y = 2))
+
+  ## Correct likelihood with two non-zero components:
+  y1 <- mod$run(t[[1]])
+  expect_equal(mod$compare_data(),
+               dnorm(d$a[[1]], y1["x", ], scale, log = TRUE) +
+               dnorm(d$b[[1]], y1["y", ], d$a[[1]] * scale, log = TRUE))
+
+  ## One zero and one non-zero components:
+  y2 <- mod$run(t[[2]])
+  expect_equal(mod$compare_data(),
+               dnorm(d$a[[2]], y2["x", ], scale, log = TRUE))
+
+  ## No nonzero components because one of the compare streams uses two
+  ## bits of data:
+  y3 <- mod$run(t[[3]])
+  expect_equal(mod$compare_data(), rep(0, ncol(y3)))
+
+  ## No nonzero components because there is no data:
+  y4 <- mod$run(t[[4]])
+  expect_equal(mod$compare_data(), rep(0, ncol(y4)))
+})
