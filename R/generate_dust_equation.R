@@ -16,6 +16,7 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu, mixed) {
     expression_scalar = generate_dust_equation_scalar,
     expression_array = generate_dust_equation_array,
     alloc = generate_dust_equation_alloc,
+    compare = generate_dust_equation_compare,
     user = generate_dust_equation_user,
     copy = generate_dust_equation_copy,
     stop("Unknown type"))
@@ -47,6 +48,11 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu, mixed) {
                    c(odin:::INDEX, dat$meta$time, eq$name))
     if (eq$lhs != eq$name && !(eq$lhs %in% eq$depends$variables)) {
       req <- setdiff(req, eq$lhs)
+    }
+    if (dat$features$has_data) {
+      names_data <- names(Filter(function(x) x$location == "data",
+                                 dat$data$elements))
+      req <- setdiff(req, names_data)
     }
     stopifnot(all(req %in% names(dat$gpu$access)))
     access <- sprintf("const %s", dat$gpu$access[req])
@@ -103,6 +109,40 @@ generate_dust_equation_copy <- function(eq, data_info, dat, rewrite, gpu) {
              rewrite(eq$lhs), rewrite(data_info$dimnames$length),
             dat$meta$output, rewrite(x$offset))
   }
+}
+
+
+## This handling of missing data might need refining later as it's a
+## bit unsubtle, but it's easy to think about.
+##
+## If any of the data elements referred to in the compare function are
+## missing, then we return 0 for that likelihood component (meaning
+## that it does not contribute). This disallows a few barely useful
+## things:
+##
+## * users can't switch behaviour based on missingness (but odin does not
+##   support that anyway)
+## * even if users can't write things like '0 * data' and have the
+##   calculation succeed if 'data' is missing because 'data' is still
+##   a dependency even if it won't contribute.
+generate_dust_equation_compare <- function(eq, data_info, dat, rewrite, gpu) {
+  data_used <- names_if(vcapply(dat$data$elements[eq$depends$variables],
+                                function(x) x$location) == "data")
+  ## We assume this, I don't think that this makes any sense if false,
+  ## but it'll be easy enough to relax if not.
+  stopifnot(length(data_used) > 0)
+
+  check_missing <- sprintf("std::isnan(%s)", vcapply(data_used, rewrite))
+  args <- c(rewrite(eq$lhs), vcapply(eq$compare$args, rewrite), "true")
+  ret <- sprintf("%s = (%s) ? 0 : dust::density::%s(%s);",
+                 eq$name,
+                 paste(check_missing, collapse = " || "),
+                 eq$compare$distribution,
+                 paste(args, collapse = ", "))
+  if (!gpu) {
+    ret <- paste("const auto", ret)
+  }
+  ret
 }
 
 

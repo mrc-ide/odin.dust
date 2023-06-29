@@ -3,7 +3,7 @@ generate_dust <- function(ir, options) {
   features <- vlapply(dat$features, identity)
   supported <- c("initial_time_dependent", "has_user", "has_array", "has_debug",
                  "discrete", "has_stochastic", "has_include", "has_output",
-                 "continuous", "mixed")
+                 "continuous", "mixed", "has_data", "has_compare")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
@@ -25,7 +25,7 @@ generate_dust <- function(ir, options) {
     generate_dust_sexp(x, dat$data, dat$meta, dat$config$include$names, FALSE)
   }
 
-  dat$compare <- dust_compare_info(dat, rewrite)
+  dat$compare_legacy <- dust_compare_info_legacy(dat, rewrite)
   eqs <- generate_dust_equations(dat, rewrite)
 
   class <- generate_dust_core_class(eqs, dat, rewrite)
@@ -35,7 +35,7 @@ generate_dust <- function(ir, options) {
 
   include <- c(
     generate_dust_include(dat$config$include$data),
-    dat$compare$include)
+    dat$compare_legacy$include)
 
   used <- unique(unlist(lapply(dat$equations, function(x) {
     x$depends$functions
@@ -101,8 +101,8 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
     rhs <- NULL
     output <- NULL
   }
+  compare <- generate_dust_core_compare(eqs, dat, rewrite)
   attributes <- generate_dust_core_attributes(dat)
-  compare <- generate_dust_compare_method(dat)
 
   ret <- collector()
   ret$add(attributes)
@@ -139,14 +139,7 @@ generate_dust_core_struct <- function(dat) {
   els <- vcapply(unname(dat$data$elements[i]), struct_element)
   i_internal <- vcapply(dat$data$elements[i], "[[", "stage") == "time"
 
-  if (is.null(dat$compare)) {
-    data_type <- "using data_type = dust::no_data;"
-  } else {
-    data_type <- c(
-      "struct __align__(16) data_type {",
-      sprintf("  %s %s;", unname(dat$compare$data), names(dat$compare$data)),
-      "};")
-  }
+  data_type <- generate_dust_data_struct(dat)
 
   c(sprintf("using real_type = %s;", dat$meta$dust$real_type),
     sprintf("using rng_state_type = %s;", dat$meta$dust$rng_state_type),
@@ -633,7 +626,7 @@ check_compare_args <- function(args, name, filename) {
 }
 
 
-dust_compare_info <- function(dat, rewrite) {
+dust_compare_info_legacy <- function(dat, rewrite) {
   i <- vcapply(dat$config$custom, function(x) x$name) == "compare"
   if (sum(i) == 0) {
     return(NULL)
@@ -644,6 +637,9 @@ dust_compare_info <- function(dat, rewrite) {
     ## in the parse section with all the source code details.
     stop("Only one 'config(compare)' statement is allowed")
   }
+  if (dat$features$has_compare) {
+    stop("Can't mix config(compare) with new compare(x) ~ y() syntax")
+  }
   filename <- dat$config$custom[[which(i)]]$value
   ret <- read_compare_dust(filename)
   ret$filename <- filename
@@ -653,6 +649,35 @@ dust_compare_info <- function(dat, rewrite) {
   ret$used <- res$used
   ret$include <- res$result
   ret
+}
+
+
+generate_dust_core_compare <- function(eqs, dat, rewrite) {
+  if (!is.null(dat$compare_legacy)) {
+    return(generate_dust_compare_method_legacy(dat))
+  }
+  if (!dat$features$has_compare) {
+    return(NULL)
+  }
+  variables <- dat$components$compare$variables
+  equations <- dat$components$compare$equations
+  unpack <- lapply(variables, dust_unpack_variable,
+                   dat, dat$meta$state, rewrite)
+  collect <- generate_dust_compare_collect(dat)
+  body <- dust_flatten_eqs(c(unpack, eqs[equations], collect))
+  args <- c("const real_type *" = dat$meta$state,
+            "const data_type&" = dat$meta$dust$data,
+            "rng_state_type&" = dat$meta$dust$rng_state)
+  cpp_function("real_type",
+               "compare_data",
+               args,
+               body)
+}
+
+
+generate_dust_compare_collect <- function(dat) {
+  collect <- names(which(vcapply(dat$equations, "[[", "type") == "compare"))
+  sprintf("return %s;", paste(collect, collapse = " + "))
 }
 
 
@@ -673,15 +698,12 @@ dust_compare_rewrite <- function(text, dat, rewrite, filename) {
 }
 
 
-generate_dust_compare_method <- function(dat) {
-  if (is.null(dat$compare)) {
-    return(NULL)
-  }
+generate_dust_compare_method_legacy <- function(dat) {
   args <- c("const real_type *" = dat$meta$state,
             "const data_type&" = dat$meta$dust$data,
             "rng_state_type&" = dat$meta$dust$rng_state)
   body <- sprintf("return %s<%s>(%s, %s, %s, %s, %s);",
-                  dat$compare$function_name,
+                  dat$compare_legacy$function_name,
                   dat$config$base,
                   dat$meta$state,
                   dat$meta$dust$data,
@@ -696,13 +718,20 @@ generate_dust_compare_method <- function(dat) {
 
 
 generate_dust_core_data <- function(dat) {
-  if (is.null(dat$compare)) {
+  if (!is.null(dat$compare_legacy)) {
+    data <- dat$compare_legacy$data
+  } else if (dat$features$has_data) {
+    els <- Filter(function(x) x$location == "data", dat$data$elements)
+    data <- set_names(
+      vcapply(els, function(x) dust_type(x$storage_type)),
+      vcapply(els, "[[", "name"))
+  } else {
     return(NULL)
   }
+
   contents <- sprintf('    cpp11::as_cpp<%s>(data["%s"])%s',
-                      unname(dat$compare$data),
-                      names(dat$compare$data),
-                      rep(c(",", ""), c(length(dat$compare$data) - 1, 1)))
+                      unname(data), names(data),
+                      rep(c(",", ""), c(length(data) - 1, 1)))
   body <- c(sprintf("using real_type = %s::real_type;", dat$config$base),
             sprintf("return %s::data_type{", dat$config$base),
             contents,
@@ -713,7 +742,6 @@ generate_dust_core_data <- function(dat) {
                  c("cpp11::list" = dat$meta$dust$data),
                  body))
 }
-
 
 ## Convert the 'odin(var)' expressions within the C code to point at
 ## the location of the odin variable. Depending on if var is a
@@ -811,11 +839,43 @@ generate_dust_gpu_update <- function(dat) {
 
 
 generate_dust_gpu_compare <- function(dat) {
-  if (is.null(dat$compare)) {
+  if (!is.null(dat$compare_legacy)) {
+    return(generate_dust_gpu_compare_legacy(dat))
+  }
+  if (!dat$features$has_compare) {
     return(NULL)
   }
 
-  code <- dat$compare$function_defn
+  base <- dat$config$base
+  return_type <- sprintf("__device__ %s::real_type", base)
+  name <- sprintf("compare_gpu<%s>", base)
+
+  args <- c(
+    "const dust::gpu::interleaved<%s::real_type>" = "state",
+    "const %s::data_type&" = "data",
+    "dust::gpu::interleaved<int>" = "internal_int",
+    "dust::gpu::interleaved<%s::real_type>" = "internal_real",
+    "const int *" = "shared_int",
+    "const %s::real_type *" = "shared_real",
+    "%s::rng_state_type&" = "rng_state")
+  names(args) <- sub("%s", base, names(args), fixed = TRUE)
+
+
+  names_compare <- names_if(vcapply(dat$equations, "[[", "type") == "compare")
+  real_type <- sprintf("using real_type = %s::real_type;", dat$config$base)
+  decl <- sprintf("real_type %s = static_cast<real_type>(0);",
+                  names_compare)
+  eqs <- generate_dust_equations(dat, NULL, dat$components$compare$equations,
+                                 TRUE)
+  collect <- generate_dust_compare_collect(dat)
+  body <- c(real_type, decl, dust_flatten_eqs(eqs), collect)
+  c("template<>",
+    cpp_function(return_type, name, args, body))
+}
+
+
+generate_dust_gpu_compare_legacy <- function(dat) {
+  code <- dat$compare_legacy$function_defn
 
   base <- dat$config$base
   return_type <- sprintf("__device__ %s::real_type", base)
@@ -833,7 +893,7 @@ generate_dust_gpu_compare <- function(dat) {
 
   body <- collector()
   body$add("using real_type = %s::real_type;", base)
-  body$add(dat$gpu$access[dat$compare$used])
+  body$add(dat$gpu$access[dat$compare_legacy$used])
   body$add(transform_compare_odin_gpu(code))
 
   c("template<>",
@@ -889,14 +949,15 @@ generate_dust_gpu_copy <- function(dat, rewrite) {
 
 
 generate_dust_gpu_storage <- function(dat) {
-  equations <- dat$components$rhs$equations
+  equations <- union(dat$components$rhs$equations,
+                     dat$components$compare$equations)
   used <- unique(unlist(
     lapply(dat$equations[equations], function(x) {
       c(x$depends$variables, x$lhs)
     }), FALSE, FALSE))
 
-  if (!is.null(dat$compare)) {
-    used <- union(used, dat$compare$used)
+  if (!is.null(dat$compare_legacy)) {
+    used <- union(used, dat$compare_legacy$used)
   }
 
   ## Make sure we have all dimension and variable offset information
@@ -1188,4 +1249,28 @@ generate_dust_debug <- function(debug, dat, rewrite) {
   }
 
   ret$get()
+}
+
+
+generate_dust_data_struct <- function(dat) {
+  ## TODO: collect names/types and generate separately.
+  if (!is.null(dat$compare_legacy)) {
+    c(
+      "struct __align__(16) data_type {",
+      sprintf("  %s %s;", unname(dat$compare_legacy$data),
+              names(dat$compare_legacy$data)),
+      "};")
+  } else if (dat$features$has_data) {
+    ## TODO: there's an argument for processing this, like above, but
+    ## not sure.
+    els <- Filter(function(x) x$location == "data", dat$data$elements)
+    c(
+      "struct __align__(16) data_type {",
+      sprintf("  %s %s;",
+              vcapply(els, function(x) dust_type(x$storage_type)),
+              vcapply(els, "[[", "name")),
+      "};")
+  } else {
+    "using data_type = dust::no_data;"
+  }
 }
