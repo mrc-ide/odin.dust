@@ -380,8 +380,16 @@ generate_dust_core_info <- function(dat, rewrite) {
   len <- generate_dust_core_info_len(nms_variable, nms_output, dat, rewrite)
   body$add(sprintf("size_t len = %s;", len))
 
+  if (dat$features$has_derivative) {
+    body$add(sprintf("cpp11::writable::strings adjoint({%s});",
+                     paste(dquote(dat$derivative$parameters), collapse = ", ")))
+  }
+
   body$add("using namespace cpp11::literals;")
   body$add("return cpp11::writable::list({")
+  if (dat$features$has_derivative) {
+    body$add('         "adjoint"_nm = adjoint,')
+  }
   body$add('         "dim"_nm = dim,')
   body$add('         "len"_nm = len,')
   body$add('         "index"_nm = index});')
