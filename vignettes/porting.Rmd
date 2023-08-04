@@ -224,7 +224,7 @@ In the binomial case you can rewrite the multinomial sampling as a series of bin
 
 ```r
 y[1] <- rbinom(size, prob[1])
-y[2:length(y)] <- rbinom(size - sum(y[1:(i - 1)]), prob[i])
+y[2:length(y)] <- rbinom(size - sum(y[1:(i - 1)]), prob[i]/ sum(prob[i:length(y)]))
 ```
 
 A similar transform is possible for the multivariate hypergeometric from the hypergeometric (see [odin's `rmhyper` implementation for details](https://github.com/mrc-ide/odin/blob/f36738bb106e2f9289dbb2b94c67ffdb6cf5e0ed/inst/library.c#L358-L375)).
