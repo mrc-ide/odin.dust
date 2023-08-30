@@ -81,3 +81,40 @@ test_that("spline", {
   expect_equal(yy[1, ], cmp, tolerance = 1e-5)
   expect_equal(yy[2, ], pulse(tt))
 })
+
+
+test_that("can't interpolate in discrete time models yet", {
+  expect_error(
+    odin_dust({
+      update(y) <- y + pulse
+      initial(y) <- 0
+      ##
+      pulse <- interpolate(tp, zp, "spline")
+      ##
+      tp[] <- user()
+      zp[] <- user()
+      dim(tp) <- user()
+      dim(zp) <- user()
+    }),
+    "Using unsupported features: 'has_interpolate'")
+})
+
+
+test_that("can't interpolate with vector output", {
+  expect_error(
+    odin_dust({
+      deriv(y[]) <- pulse[i]
+      initial(y[]) <- 0
+      ##
+      pulse[] <- interpolate(tp, zp, "constant")
+      ##
+      tp[] <- user()
+      zp[, ] <- user()
+      dim(tp) <- user()
+      dim(zp) <- user()
+      dim(pulse) <- 2
+      dim(y) <- 2
+    }),
+    "Can't yet interpolate vector valued variables but tried to for 'pulse'.",
+    fixed = TRUE)
+})

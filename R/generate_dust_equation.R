@@ -249,7 +249,9 @@ generate_dust_equation_alloc_interpolate <- function(eq, data_info, dat,
                                                      rewrite, gpu) {
   data_info_target <- dat$data$elements[[eq$interpolate$equation]]
   if (data_info_target$rank != 0) {
-    stop("this won't work")
+    stop(paste("Can't yet interpolate vector valued variables",
+               sprintf("but tried to for '%s'.", data_info_target$name),
+               "Please let us know if you need this functionality"))
   }
 
   constructor <- switch(
