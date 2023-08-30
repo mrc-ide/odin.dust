@@ -19,6 +19,8 @@ generate_dust_equation <- function(eq, dat, rewrite, gpu, mixed) {
     compare = generate_dust_equation_compare,
     user = generate_dust_equation_user,
     copy = generate_dust_equation_copy,
+    alloc_interpolate = generate_dust_equation_alloc_interpolate,
+    interpolate = generate_dust_equation_interpolate,
     stop("Unknown type"))
 
   data_info <- dat$data$elements[[eq$lhs]]
@@ -240,4 +242,37 @@ generate_dust_equation_array_rhs <- function(value, index, lhs, rewrite) {
     ret <- c("{", paste("  ", ret), "}")
   }
   ret
+}
+
+
+generate_dust_equation_alloc_interpolate <- function(eq, data_info, dat,
+                                                     rewrite, gpu) {
+  data_info_target <- dat$data$elements[[eq$interpolate$equation]]
+  if (data_info_target$rank != 0) {
+    stop("this won't work")
+  }
+
+  constructor <- switch(
+    eq$interpolate$type,
+    constant = "dust::interpolate::InterpolateConstant",
+    linear = "dust::interpolate::InterpolateLinear",
+    stop(sprintf("%s interpolation not supported", eq$interpolate$type)))
+
+  t <- rewrite(eq$interpolate$t)
+  y <- rewrite(eq$interpolate$y)
+
+  sprintf("%s = %s(%s, %s);", rewrite(eq$lhs), constructor, t, y)
+}
+
+
+generate_dust_equation_interpolate <- function(eq, data_info, dat,
+                                               rewrite, gpu) {
+  lhs <- rewrite(eq$lhs)
+  if (data_info$location == "transient") {
+    lhs <- paste("const auto", lhs)
+  }
+  if (data_info$rank == 0L) {
+    fmt <- "%s = %s.eval(%s);"
+  }
+  sprintf(fmt, lhs, rewrite(eq$interpolate), dat$meta$time)
 }
