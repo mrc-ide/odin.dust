@@ -263,7 +263,9 @@ generate_dust_equation_alloc_interpolate <- function(eq, data_info, dat,
   t <- rewrite(eq$interpolate$t)
   y <- rewrite(eq$interpolate$y)
 
-  sprintf("%s = %s<real_type>(%s, %s);", rewrite(eq$lhs), constructor, t, y)
+  sprintf('%s = %s<real_type>(%s, %s, "%s", "%s");',
+          rewrite(eq$lhs), constructor, t, y,
+          eq$interpolate$t, eq$interpolate$y)
 }
 
 

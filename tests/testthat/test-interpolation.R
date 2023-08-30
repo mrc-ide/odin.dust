@@ -21,6 +21,12 @@ test_that("constant", {
   zz <- ifelse(tt < 1, 0, ifelse(tt > 2, 1, tt - 1))
   expect_equal(yy[1, ], zz, tolerance = 1e-5)
   expect_equal(yy[2, ], approx(tp, zp, tt, "constant", rule = 2)$y)
+
+  expect_error(
+    gen$new(list(tp = tp, zp = 1), 0, 1),
+    paste("Time variable 'tp' and interpolation target 'zp'",
+          "must have the same length, but do not (3 vs 1)"),
+    fixed = TRUE)
 })
 
 
