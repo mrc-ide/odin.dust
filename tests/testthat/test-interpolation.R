@@ -53,7 +53,7 @@ test_that("linear", {
 })
 
 
-test_that_odin("spline", {
+test_that("spline", {
   gen <- odin_dust({
     deriv(y) <- pulse
     initial(y) <- 0
