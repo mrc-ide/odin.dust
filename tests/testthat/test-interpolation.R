@@ -44,9 +44,40 @@ test_that("linear", {
   tt <- seq(0, 2, length.out = 101)
   yy <- drop(mod$simulate(tt))
 
-  expect_equal(yy[2, ], approx(tp, zp, tt, "linear")$y)
-
   pulse <- approxfun(tp, zp, "linear")
   target <- function(t, x, .) pulse(t)
-  expect_equal(yy[1, ], dde::dopri(0, tt, target, NULL)[, 2], tolerance = 1e-5)
+  cmp <- dde::dopri(0, tt, target, NULL)[, 2]
+
+  expect_equal(yy[1, ], cmp, tolerance = 1e-5)
+  expect_equal(yy[2, ], pulse(tt))
+})
+
+
+test_that_odin("spline", {
+  gen <- odin_dust({
+    deriv(y) <- pulse
+    initial(y) <- 0
+    ##
+    pulse <- interpolate(tp, zp, "spline")
+    ##
+    tp[] <- user()
+    zp[] <- user()
+    dim(tp) <- user()
+    dim(zp) <- user()
+    output(p) <- pulse
+  })
+
+  tp <- seq(0, pi, length.out = 31)
+  zp <- sin(tp)
+  mod <- gen$new(list(tp = tp, zp = zp), 0, 1)
+
+  tt <- seq(0, pi, length.out = 101)
+  yy <- drop(mod$simulate(tt))
+
+  pulse <- splinefun(tp, zp, "natural")
+  target <- function(t, x, .) pulse(t)
+  cmp <- dde::dopri(0, tt, target, NULL)[, 2]
+
+  expect_equal(yy[1, ], cmp, tolerance = 1e-5)
+  expect_equal(yy[2, ], pulse(tt))
 })

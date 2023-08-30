@@ -256,7 +256,7 @@ generate_dust_equation_alloc_interpolate <- function(eq, data_info, dat,
     eq$interpolate$type,
     constant = "dust::interpolate::InterpolateConstant",
     linear = "dust::interpolate::InterpolateLinear",
-    stop(sprintf("%s interpolation not supported", eq$interpolate$type)))
+    spline = "dust::interpolate::InterpolateSpline")
 
   t <- rewrite(eq$interpolate$t)
   y <- rewrite(eq$interpolate$y)
