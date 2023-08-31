@@ -43,7 +43,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.8</span>
       </span>
     </div>
 
@@ -97,6 +97,17 @@
 
 <p>Compile an <a href="https://mrc-ide.github.io/odin/" class="external-link">odin</a> model to work with <a href="https://mrc-ide.github.io/dust/" class="external-link">dust</a>, so that a stochastic model can be run in parallel, for example in a particle filter such as <a href="https://mrc-ide.github.io/mcstate/" class="external-link">mcstate</a>.</p>
 <p>This works only for models that are discrete time, and makes sense only for models that are stochastic. Within these models you cannot use <code>output()</code>, interpolation functions or delays. Not all distributions are supported by dust. See <code><a href="articles/porting.html">vignette("porting")</a></code> for details.</p>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<p>Please install from our <a href="https://mrc-ide.r-universe.dev/" class="external-link">r-universe</a>:</p>
+<pre><code><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span></span>
+<span>  <span class="st">"odin.dust"</span>,</span>
+<span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://mrc-ide.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<p>If you prefer, you can install from GitHub with remotes:</p>
+<pre><code><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"mrc-ide/odin.dust"</span><span class="op">)</span></span></code></pre>
+<p>You will need recent versions of the <code>dust</code> and <code>odin</code> to use this package, which can be installed in the same way.</p>
+</div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
 </h2>
