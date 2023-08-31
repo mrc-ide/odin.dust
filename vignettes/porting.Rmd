@@ -79,13 +79,11 @@ t(drop(gen$new(list(), 0, 1)$simulate(0:5)))
 
 Here, the first column is `x` as in the first column. The second column computes the relationship with the `x` at the beginning of the time step, while the third is most equivalent to our previous `output` command and requires storing the that will become the updated `x` in order to use that value to both update `x` and `y2`.
 
-## Avoiding `interpolate()`
+## Limited support for `interpolate()`
 
-*We may support this in future for ODE models, but are undecided as to if this makes sense for discrete-time models.*
+This is supported for ODE models, though only for interpolating scalar outputs (this was by far the most common use case).
 
-For ODE models, unfortunately there's nothing you can do at present. Get in touch if this is a limitation that you would like to overcome as we will need to implement support both in this package and in `mode`.
-
-For discrete-time models we recommend doing the interpolation as part of your parameter preparation and passing in an expanded vector which you then look up. This also makes it (somewhat) more obvious how time is being treated in your model.
+Interpolation is not supported for discrete time models.  For these models, we recommend doing the interpolation as part of your parameter preparation and passing in an expanded vector which you then look up. This also makes it (somewhat) more obvious how time is being treated in your model.
 
 For an example, here's a model of logistic growth in discrete time, where the carrying capacity varies seasonally, implemented as a piecewise-constant interpolation between some points.  It's easy enough to create some sort of time varying time series to use:
 
