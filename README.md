@@ -12,9 +12,9 @@ Compile an [odin](https://mrc-ide.github.io/odin/) model to work with [dust](htt
 This works only for models that are discrete time, and makes sense only for models that are stochastic. Within these models you cannot use `output()`, interpolation functions or delays. Not all distributions are supported by dust.
 See `vignette("porting")` for details.
 
-## Instalation
+## Installation
 
-Please install from our r-universe:
+Please install from our [r-universe](https://mrc-ide.r-universe.dev/):
 
 ```
 install.packages(
