@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">odin.dust</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.9</span>
       </span>
     </div>
 
@@ -198,18 +198,15 @@ become the updated <code>x</code> in order to use that value to both
 update <code>x</code> and <code>y2</code>.</p>
 </div>
 <div class="section level2">
-<h2 id="avoiding-interpolate">Avoiding <code>interpolate()</code><a class="anchor" aria-label="anchor" href="#avoiding-interpolate"></a>
+<h2 id="limited-support-for-interpolate">Limited support for <code>interpolate()</code><a class="anchor" aria-label="anchor" href="#limited-support-for-interpolate"></a>
 </h2>
-<p><em>We may support this in future for ODE models, but are undecided
-as to if this makes sense for discrete-time models.</em></p>
-<p>For ODE models, unfortunately there’s nothing you can do at present.
-Get in touch if this is a limitation that you would like to overcome as
-we will need to implement support both in this package and in
-<code>mode</code>.</p>
-<p>For discrete-time models we recommend doing the interpolation as part
-of your parameter preparation and passing in an expanded vector which
-you then look up. This also makes it (somewhat) more obvious how time is
-being treated in your model.</p>
+<p>This is supported for ODE models, though only for interpolating
+scalar outputs (this was by far the most common use case).</p>
+<p>Interpolation is not supported for discrete time models. For these
+models, we recommend doing the interpolation as part of your parameter
+preparation and passing in an expanded vector which you then look up.
+This also makes it (somewhat) more obvious how time is being treated in
+your model.</p>
 <p>For an example, here’s a model of logistic growth in discrete time,
 where the carrying capacity varies seasonally, implemented as a
 piecewise-constant interpolation between some points. It’s easy enough
