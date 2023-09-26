@@ -4,7 +4,7 @@ generate_dust <- function(ir, options) {
   supported <- c("initial_time_dependent", "has_user", "has_array", "has_debug",
                  "discrete", "has_stochastic", "has_include", "has_output",
                  "continuous", "mixed", "has_data", "has_compare",
-                 "has_interpolate")
+                 "has_interpolate", "has_derivative")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
@@ -90,7 +90,9 @@ generate_dust_meta <- function(options, continuous) {
        internal_int = "internal_int",
        internal_real  = "internal_real",
        shared_int = "shared_int",
-       shared_real = "shared_real")
+       shared_real = "shared_real",
+       adjoint_curr = "adjoint_curr",
+       adjoint_next = "adjoint_next")
 }
 
 
@@ -109,6 +111,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
     output <- NULL
   }
   compare <- generate_dust_core_compare(eqs, dat, rewrite)
+  adjoint <- generate_dust_core_adjoint(eqs, dat, rewrite)
   attributes <- generate_dust_core_attributes(dat)
 
   ret <- collector()
@@ -123,6 +126,7 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
   ret$add(sprintf("  %s", rhs))
   ret$add(sprintf("  %s", output))
   ret$add(sprintf("  %s", compare)) # ensures we don't add trailing whitespace
+  ret$add(sprintf("  %s", adjoint))
   ret$add("private:")
   ret$add("  std::shared_ptr<const shared_type> %s;", dat$meta$dust$shared)
   ret$add("  internal_type %s;", dat$meta$internal)
@@ -235,8 +239,7 @@ generate_dust_core_update <- function(eqs, dat, rewrite) {
   variables <- dat$components$rhs$variables
   equations <- dat$components$rhs$equations
 
-  unpack <- lapply(variables, dust_unpack_variable,
-                   dat, dat$meta$state, rewrite)
+  unpack <- lapply(variables, dust_unpack_variable, dat, rewrite)
   debug <- generate_dust_debug(dat$debug, dat, rewrite)
   body <- dust_flatten_eqs(c(unpack, eqs[equations], debug))
 
@@ -252,8 +255,7 @@ generate_dust_core_update_stochastic <- function(eqs, dat, rewrite) {
   variables <- dat$components$update_stochastic$variables
   equations <- dat$components$update_stochastic$equations
 
-  unpack <- lapply(variables, dust_unpack_variable,
-                   dat, dat$meta$state, rewrite)
+  unpack <- lapply(variables, dust_unpack_variable, dat, rewrite)
 
   body <- dust_flatten_eqs(
     c(unpack,
@@ -271,8 +273,7 @@ generate_dust_core_output <- function(eqs, dat, rewrite) {
   variables <- dat$components$output$variables
   equations <- dat$components$output$equations
 
-  unpack <- lapply(variables, dust_unpack_variable,
-                   dat, dat$meta$state, rewrite)
+  unpack <- lapply(variables, dust_unpack_variable, dat, rewrite)
   body <- dust_flatten_eqs(c(unpack, eqs[equations]))
   args <- c("double" = dat$meta$time,
             "const std::vector<double>&" = dat$meta$state,
@@ -285,8 +286,7 @@ generate_dust_core_rhs <- function(eqs, dat, rewrite) {
   variables <- dat$components$rhs$variables
   equations <- dat$components$rhs$equations
 
-  unpack <- lapply(variables, dust_unpack_variable,
-                   dat, dat$meta$state, rewrite)
+  unpack <- lapply(variables, dust_unpack_variable, dat, rewrite)
   body <- dust_flatten_eqs(c(unpack, eqs[equations]))
 
   args <- c("double" = dat$meta$time,
@@ -380,8 +380,16 @@ generate_dust_core_info <- function(dat, rewrite) {
   len <- generate_dust_core_info_len(nms_variable, nms_output, dat, rewrite)
   body$add(sprintf("size_t len = %s;", len))
 
+  if (dat$features$has_derivative) {
+    body$add(sprintf("cpp11::writable::strings adjoint({%s});",
+                     paste(dquote(dat$derivative$parameters), collapse = ", ")))
+  }
+
   body$add("using namespace cpp11::literals;")
   body$add("return cpp11::writable::list({")
+  if (dat$features$has_derivative) {
+    body$add('         "adjoint"_nm = adjoint,')
+  }
   body$add('         "dim"_nm = dim,')
   body$add('         "len"_nm = len,')
   body$add('         "index"_nm = index});')
@@ -511,11 +519,15 @@ generate_dust_core_attributes <- function(dat) {
 }
 
 
-dust_unpack_variable <- function(name, dat, state, rewrite) {
-  x <- dat$data$variable$contents[[name]]
+dust_unpack_variable <- function(name, dat, rewrite) {
   data_info <- dat$data$elements[[name]]
-  rhs <- dust_extract_variable(x, dat$data$elements, state, rewrite,
-                                dat$features$continuous)
+  location <- switch(dat$data$elements[[name]]$location,
+                     variable = dat$meta$state,
+                     adjoint = dat$meta$dust$adjoint_curr,
+                     stop("invalid location [odin.dust bug]")) # nocov
+  x <- dat$data[[data_info$location]]$contents[[name]]
+  rhs <- dust_extract_variable(x, dat$data$elements, location, rewrite,
+                               dat$features$continuous)
   if (data_info$rank == 0L) {
     fmt <- "const %s %s = %s;"
   } else {
@@ -676,8 +688,7 @@ generate_dust_core_compare <- function(eqs, dat, rewrite) {
   }
   variables <- dat$components$compare$variables
   equations <- dat$components$compare$equations
-  unpack <- lapply(variables, dust_unpack_variable,
-                   dat, dat$meta$state, rewrite)
+  unpack <- lapply(variables, dust_unpack_variable, dat, rewrite)
   collect <- generate_dust_compare_collect(dat)
   body <- dust_flatten_eqs(c(unpack, eqs[equations], collect))
   args <- c("const real_type *" = dat$meta$state,
@@ -1236,8 +1247,7 @@ generate_dust_debug <- function(debug, dat, rewrite) {
                            dat$components$rhs$variables),
                    unlist(lapply(debug, function(x) x$depends$variables)))
   if (length(msg) > 0) {
-    ret$add(dust_flatten_eqs(
-      lapply(msg, dust_unpack_variable, dat, dat$meta$state, rewrite)))
+    ret$add(dust_flatten_eqs(lapply(msg, dust_unpack_variable, dat, rewrite)))
   }
 
   time_fmt <- if (dat$features$continuous) "%f" else "%d"
@@ -1288,4 +1298,75 @@ generate_dust_data_struct <- function(dat) {
   } else {
     "using data_type = dust::no_data;"
   }
+}
+
+
+generate_dust_core_adjoint <- function(eqs, dat, rewrite) {
+  if (!dat$features$has_derivative) {
+    return(NULL)
+  }
+
+  c(generate_dust_core_adjoint_size(dat, rewrite),
+    generate_dust_core_adjoint_initial(eqs, dat, rewrite),
+    generate_dust_core_adjoint_update(eqs, dat, rewrite),
+    generate_dust_core_adjoint_compare(eqs, dat, rewrite))
+}
+
+
+generate_dust_core_adjoint_size <- function(dat, rewrite) {
+  stopifnot(!dat$features$continuous,
+            !dat$features$has_array)
+  body <- sprintf("return %s;",
+                  rewrite(dat$data$adjoint$length))
+  cpp_function("size_t", "adjoint_size", NULL, body, TRUE)
+}
+
+
+## Remember that this is *not* initial conditions of the adjoint
+## system, but the application of the forward model's initial
+## conditions into the adjoint model art the end!
+generate_dust_core_adjoint_initial <- function(eqs, dat, rewrite) {
+  args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
+            "const real_type *" = dat$meta$state,
+            "const real_type *" = dat$meta$dust$adjoint_curr,
+            "real_type *" = dat$meta$dust$adjoint_next)
+  adjoint_initial <- dat$derivative$adjoint$components$initial
+
+  unpack <- lapply(adjoint_initial$variables, dust_unpack_variable, dat,
+                   rewrite)
+  body <- dust_flatten_eqs(c(unpack, eqs[adjoint_initial$equations]))
+  cpp_function("void", "adjoint_initial", args, body)
+}
+
+
+generate_dust_core_adjoint_update <- function(eqs, dat, rewrite) {
+  args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
+            "const real_type *" = dat$meta$state,
+            "const real_type *" = dat$meta$dust$adjoint_curr,
+            "real_type *" = dat$meta$dust$adjoint_next)
+
+  ## Currently missing some equations from here -
+  ##
+  ## adjoint_N, adjoint_p_inf, adjoint_n_R, adjoint_n_SI and p_inf
+  adjoint_update <- dat$derivative$adjoint$components$rhs
+
+  unpack <- lapply(adjoint_update$variables, dust_unpack_variable, dat,
+                   rewrite)
+  body <- dust_flatten_eqs(c(unpack, eqs[adjoint_update$equations]))
+  cpp_function("void", "adjoint_update", args, body)
+}
+
+
+generate_dust_core_adjoint_compare <- function(eqs, dat, rewrite) {
+  args <- c(set_names(dat$meta$time, dat$meta$dust$time_type),
+            "const real_type *" = dat$meta$state,
+            "const data_type&" = dat$meta$dust$data,
+            "const real_type *" = dat$meta$dust$adjoint_curr,
+            "real_type *" = dat$meta$dust$adjoint_next)
+
+  adjoint_compare <- dat$derivative$adjoint$components$compare
+  unpack <- lapply(adjoint_compare$variables, dust_unpack_variable, dat,
+                   rewrite)
+  body <- dust_flatten_eqs(c(unpack, eqs[adjoint_compare$equations]))
+  cpp_function("void", "adjoint_compare_data", args, body)
 }
