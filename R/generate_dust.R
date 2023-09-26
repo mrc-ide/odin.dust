@@ -143,7 +143,7 @@ generate_dust_core_struct <- function(dat) {
                                 dat$equations[[x$name]]$interpolate$type)
     }
     type <- dust_type(x$storage_type)
-    is_ptr <- (x$rank > 0L || type == "void") && !is_interpolate # void imposs?
+    is_ptr <- x$rank > 0L && !is_interpolate
     if (is_ptr) {
       sprintf("  std::vector<%s> %s;", type, x$name)
     } else {
