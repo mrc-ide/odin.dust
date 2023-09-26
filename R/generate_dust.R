@@ -3,7 +3,8 @@ generate_dust <- function(ir, options) {
   features <- vlapply(dat$features, identity)
   supported <- c("initial_time_dependent", "has_user", "has_array", "has_debug",
                  "discrete", "has_stochastic", "has_include", "has_output",
-                 "continuous", "mixed", "has_data", "has_compare")
+                 "continuous", "mixed", "has_data", "has_compare",
+                 "has_interpolate")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
@@ -11,6 +12,9 @@ generate_dust <- function(ir, options) {
   }
   if (dat$features$has_output && !dat$features$continuous) {
     stop("Using unsupported features: 'has_output'")
+  }
+  if (dat$features$has_interpolate && !dat$features$continuous) {
+    stop("Using unsupported features: 'has_interpolate'")
   }
 
   ## There's no feature flag on "in place" expressions, though there
@@ -35,12 +39,15 @@ generate_dust <- function(ir, options) {
 
   include <- c(
     generate_dust_include(dat$config$include$data),
-    dat$compare_legacy$include)
+    dat$compare_legacy$include,
+    if (dat$features$has_interpolate)
+      "#include <dust/interpolate/interpolate.hpp>")
 
   used <- unique(unlist(lapply(dat$equations, function(x) {
     x$depends$functions
   }), FALSE, FALSE))
   support <- NULL
+
   if (any(c("sum", "odin_sum") %in% used)) {
     ranks <- sort(unique(viapply(dat$data$elements, "[[", "rank")))
     ranks <- ranks[ranks > 0]
@@ -127,8 +134,16 @@ generate_dust_core_class <- function(eqs, dat, rewrite) {
 
 generate_dust_core_struct <- function(dat) {
   struct_element <- function(x) {
+    is_interpolate <- x$storage_type == "interpolate_data"
+    if (is_interpolate) {
+      ## This is a bit unfortunate, we have to go digging here for
+      ## enough to be able to work out the order of interpolation:
+      x$storage_type <- sprintf("%s_%s",
+                                x$storage_type,
+                                dat$equations[[x$name]]$interpolate$type)
+    }
     type <- dust_type(x$storage_type)
-    is_ptr <- x$rank > 0L || type == "void"
+    is_ptr <- x$rank > 0L && !is_interpolate
     if (is_ptr) {
       sprintf("  std::vector<%s> %s;", type, x$name)
     } else {

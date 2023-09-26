@@ -151,6 +151,12 @@ dust_type <- function(type) {
   switch(type,
          double = "real_type",
          int = "int",
+         interpolate_data_constant =
+           "dust::interpolate::InterpolateConstant<real_type>",
+         interpolate_data_linear =
+           "dust::interpolate::InterpolateLinear<real_type>",
+         interpolate_data_spline =
+           "dust::interpolate::InterpolateSpline<real_type>",
          stop(sprintf("Unknown type '%s'", type)))
 }
 
