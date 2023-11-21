@@ -478,7 +478,7 @@ test_that("integer divide works", {
   expect_identical(as.numeric(yy$w)[-1], steps %/% 2)
   expect_identical(as.numeric(yy$x)[-1], steps %/% 1.5)
   expect_identical(as.numeric(yy$y)[-1], 5.5 %/% (steps + 0.5))
-  
+
 })
 
 
