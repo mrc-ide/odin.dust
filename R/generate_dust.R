@@ -56,7 +56,7 @@ generate_dust <- function(ir, options) {
     }
   }
 
-  if (any(c("%%", "min", "max", "sign") %in% used)) {
+  if (any(c("%/%", "%%", "min", "max", "sign") %in% used)) {
     lib <- list(name = "library",
                 declaration = readLines(odin_dust_file("library.hpp")),
                 definition = NULL)
