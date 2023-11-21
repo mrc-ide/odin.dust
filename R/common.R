@@ -5,7 +5,8 @@ FUNCTIONS_RENAME <- c( # nolint
   as.integer = "static_cast<int>",
   as.numeric = "static_cast<real_type>",
   sign = "odin_sign",
-  "%%" = "fmodr<real_type>")
+  "%%" = "fmodr<real_type>",
+  "%/%" = "fintdiv<real_type>")
 
 ## Basically odin's FUNCTIONS_MATH (beta requires C++17, so is excluded):
 FUNCTIONS_DUST_MATH <- c( # nolint
