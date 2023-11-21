@@ -1,4 +1,9 @@
 template <typename real_type, typename T, typename U>
+__host__ __device__ real_type fintdiv(T x, U y) {
+  return std::floor(x / y);
+}
+
+template <typename real_type, typename T, typename U>
 __host__ __device__ real_type fmodr(T x, U y) {
   real_type tmp = std::fmod(static_cast<real_type>(x),
                             static_cast<real_type>(y));

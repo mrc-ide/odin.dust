@@ -11,7 +11,6 @@ test_that("Can use parens", {
     "a * (b + c)")
 })
 
-
 test_that("^ becomes dust::math::pow", {
   expr <- list("^", "a", "b")
   expect_equal(
@@ -185,6 +184,9 @@ test_that("renames", {
   expect_equal(
     generate_dust_sexp(list("%%", "x", "y"), NULL, NULL, NULL, FALSE),
     "fmodr<real_type>(x, y)")
+  expect_equal(
+    generate_dust_sexp(list("%/%", "x", "y"), NULL, NULL, NULL, FALSE),
+    "fintdiv<real_type>(x, y)")
 })
 
 

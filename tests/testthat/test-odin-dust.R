@@ -460,6 +460,27 @@ test_that("modulo works", {
   expect_equal(yy$y, yy$z %% 5)
 })
 
+test_that("integer divide works", {
+  gen <- odin_dust({
+    initial(w) <- 0
+    update(w) <- step %/% 2
+    initial(x) <- 0
+    update(x) <- step %/% 1.5
+    initial(y) <- 0
+    update(y) <- 5.5 %/% (step + 0.5)
+    initial(z) <- 0
+    update(z) <- step
+  })
+  mod <- gen$new(list(), 0, 1)
+  y <- mod$simulate(0:10)
+  yy <- mod$transform_variables(y)
+  steps <- as.numeric(yy$z)[-1]
+  expect_identical(as.numeric(yy$w)[-1], steps %/% 2)
+  expect_identical(as.numeric(yy$x)[-1], steps %/% 1.5)
+  expect_identical(as.numeric(yy$y)[-1], 5.5 %/% (steps + 0.5))
+
+})
+
 
 ## See #63; if this compiles it's certainly correct as it was an error
 ## in inclusion of the correct support function. However we check the
