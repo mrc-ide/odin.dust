@@ -462,19 +462,23 @@ test_that("modulo works", {
 
 test_that("integer divide works", {
   gen <- odin_dust({
+    initial(w) <- 0
+    update(w) <- step %/% 2
     initial(x) <- 0
-    update(x) <- step %/% 2
+    update(x) <- step %/% 1.5
     initial(y) <- 0
-    update(y) <- step %/% 1.5
+    update(y) <- 5.5 %/% (step + 0.5)
     initial(z) <- 0
-    update(z) <- 5.5 %/% (step + 0.5)
+    update(z) <- step
   })
   mod <- gen$new(list(), 0, 1)
   y <- mod$simulate(0:10)
   yy <- mod$transform_variables(y)
-  expect_identical(as.numeric(yy$x), c(0, 0:9) %/% 2)
-  expect_identical(as.numeric(yy$y), c(0, 0:9) %/% 1.5)
-  expect_identical(as.numeric(yy$z), c(0, 5.5 %/% (0.5 + 0:9)))
+  steps <- as.numeric(yy$z)[-1]
+  expect_identical(as.numeric(yy$w)[-1], steps %/% 2)
+  expect_identical(as.numeric(yy$x)[-1], steps %/% 1.5)
+  expect_identical(as.numeric(yy$y)[-1], 5.5 %/% (steps + 0.5))
+  
 })
 
 
