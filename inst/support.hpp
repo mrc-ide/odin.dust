@@ -76,7 +76,7 @@ void user_check_array_dim(cpp11::sexp x, const char *name,
   for (size_t i = 0; i < N; ++i) {
     if (dim[(int)i] != dim_expected[i]) {
       Rf_error("Incorrect size of dimension %d of '%s' (expected %d)",
-               i + 1, name, dim_expected[i]);
+               static_cast<unsigned int>(i + 1), name, dim_expected[i]);
     }
   }
 }
