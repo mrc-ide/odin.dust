@@ -64,7 +64,8 @@ void user_check_array_rank(cpp11::sexp x, const char *name) {
     } else if (N == 2) {
       cpp11::stop("Expected a matrix for '%s'", name);
     } else {
-      cpp11::stop("Expected an array of rank %d for '%s'", N, name);
+      cpp11::stop("Expected an array of rank %d for '%s'",
+                  static_cast<int>(N), name);
     }
   }
 }
@@ -76,7 +77,7 @@ void user_check_array_dim(cpp11::sexp x, const char *name,
   for (size_t i = 0; i < N; ++i) {
     if (dim[(int)i] != dim_expected[i]) {
       Rf_error("Incorrect size of dimension %zu of '%s' (expected %d)",
-               i + 1, name, dim_expected[i]);
+               static_cast<int>(i + 1), name, dim_expected[i]);
     }
   }
 }
